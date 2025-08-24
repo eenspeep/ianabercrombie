@@ -204,14 +204,22 @@
     }
 
     function goToPage(page) {
-      if (page < 1) page = 1;
-      if (page > totalPages) {
-        window.location.href = "comingsoon.html";
-        return;
-      }
-      const file = getCurrentFileName();
-      window.location.href = `${file}?page=${page}`;
-    }
+  if (page < 1) page = 1;
+  if (page > totalPages) {
+    window.location.href = "comingsoon.html";
+    return;
+  }
+
+  const file = getCurrentFileName();
+
+  // If page 1, go to plain comic.html
+  if (page === 1) {
+    window.location.href = file; 
+  } else {
+    window.location.href = `${file}?page=${page}`;
+  }
+}
+
 
     function setCaption(page) {
       const el = document.getElementById("caption");
