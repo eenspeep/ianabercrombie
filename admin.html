@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Comic Admin Page</title>
+  <style>
+    body {
+      font-family: 'Courier New', monospace;
+      background: #fefefe;
+      padding: 40px;
+    }
+    label {
+      display: block;
+      margin-top: 20px;
+    }
+    input, textarea {
+      font-family: 'Courier New', monospace;
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid black;
+    }
+    #preview {
+      margin-top: 20px;
+      border: 1px solid black;
+      max-width: 100%;
+      height: auto;
+    }
+    #output {
+      margin-top: 30px;
+      padding: 20px;
+      background: #eee;
+      border: 1px dashed #000;
+      white-space: pre-wrap;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-family: 'Courier New', monospace;
+      background: white;
+      border: 1px solid black;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧙‍♂️ Comic Page Generator</h1>
+
+  <label for="image">Select comic image:</label>
+  <input type="file" id="image" accept="image/*">
+
+  <label for="caption">Write your comic caption:</label>
+  <textarea id="caption" rows="4" placeholder="The wizard emerges from the shrubbery..."></textarea>
+
+  <button onclick="generateCode()">Generate Comic Entry</button>
+
+  <img id="preview" src="" alt="Preview will appear here...">
+
+  <div id="output"></div>
+
+  <script>
+    const imageInput = document.getElementById('image');
+    const preview = document.getElementById('preview');
+    let filename = '';
+
+    imageInput.addEventListener('change', function () {
+      const file = this.files[0];
+      if (file) {
+        filename = file.name;
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          preview.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    function generateCode() {
+      const caption = document.getElementById('caption').value.trim();
+      if (!filename || !caption) {
+        alert('Please select an image and write a caption.');
+        return;
+      }
+
+      const code = `{
+  src: 'comics/${filename}',
+  text: '${caption.replace(/'/g, "\\'")}'
+},`;
+
+      document.getElementById('output').textContent = code;
+    }
+  </script>
+</body>
+</html>

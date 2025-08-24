@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Courier Comic</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      width: 100%;
+    }
+
+    body {
+      background: linear-gradient(to bottom, #ffffff 0%, #ffffff 95%, #000000 100%);
+      font-family: 'Courier New', monospace;
+      color: #000;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .topbar {
+      background-color: #f5f5f5;
+      border-bottom: 1px solid black;
+      padding: 10px 20px;
+      display: flex;
+      gap: 15px;
+    }
+
+    .topbar a {
+      text-decoration: none;
+      color: black;
+      font-weight: bold;
+    }
+
+    .comic-container {
+      position: absolute;
+      top: 60px;
+      left: 20px;
+      right: 20px;
+      bottom: 20px;
+      background: white;
+      height: calc(100% - 80px);
+      box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.2);
+      border: 1px solid black;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      overflow-y: auto;
+    }
+
+    .comic-panel {
+      width: 80%;
+      max-width: 600px;
+      aspect-ratio: 4 / 3;
+      background-color: #ccc;
+      background-size: cover;
+      background-position: center;
+      border: 1px solid black;
+      margin-bottom: 20px;
+    }
+
+    .comic-text {
+      font-size: 1.1rem;
+      line-height: 1.6;
+      letter-spacing: 0.5px;
+      text-align: center;
+      white-space: pre-wrap;
+    }
+
+    .nav-buttons, .save-load-buttons {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .nav-buttons a,
+    .nav-buttons input[type="number"],
+    .save-load-buttons button {
+      padding: 10px 14px;
+      border: 1px solid black;
+      text-decoration: none;
+      color: black;
+      background-color: #fff;
+      transition: background-color 0.2s ease, transform 0.2s ease;
+      font-family: 'Courier New', monospace;
+      cursor: pointer;
+    }
+
+    .nav-buttons a:hover,
+    .save-load-buttons button:hover {
+      background-color: #ddd;
+      transform: translateY(-2px);
+    }
+
+    .nav-buttons input[type="number"] {
+      width: 60px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <a href="index.html">Home</a>
+    <a href="about.html">About</a>
+    <a href="projects.html">Projects</a>
+    <a href="contact.html">Contact</a>
+    <a href="comic.html">DNGN</a>
+  </div>
+
+  <div class="comic-container">
+    <div class="comic-panel" id="panel"></div>
+    <div class="comic-text" id="caption"></div>
+
+    <div class="nav-buttons">
+      <a id="first" href="#">First</a>
+      <a id="prev" href="#">Previous</a>
+      <input type="number" id="page-jump" min="1" placeholder="Page #">
+      <a id="next" href="#">Next</a>
+      <a id="latest" href="#">Latest</a>
+    </div>
+
+    <div class="save-load-buttons">
+      <button id="save-btn">Save Game</button>
+      <button id="load-btn">Load Game</button>
+    </div>
+  </div>
+
+  <script>
+    const totalPages = 12; // Update this when new comics are added
+    const captions = {
+      1: "Your caption or comic text goes here.",
+      2: "Continuation of the tale...",
+      3: "Something wild happens here...",
+    };
+
+    function getPageFromURL() {
+      const match = window.location.search.match(/\?page=(\d+)/);
+      return match ? parseInt(match[1]) : 1;
+    }
+
+    function goToPage(page) {
+      if (page < 1) page = 1;
+      if (page > totalPages) {
+        window.location.href = "comingsoon.html";
+        return;
+      }
+      window.location.href = `comic.html?page=${page}`;
+    }
+
+    function renderPage() {
+      const currentPage = getPageFromURL();
+      const panelEl = document.getElementById("panel");
+const extensions = ['png', 'jpg', 'jpeg', 'webp', 'gif'];
+let found = false;
+
+for (let ext of extensions) {
+  const img = new Image();
+  const path = `Comics/page${String(currentPage).padStart(2, '0')}.${ext}`;
+  img.src = path;
+
+  img.onload = () => {
+    if (!found) {
+      panelEl.style.backgroundImage = `url('${path}')`;
+      found = true;
+    }
+  };
+}
+      document.getElementById("caption").textContent = captions[currentPage] || "";
+
+      document.getElementById("first").onclick = () => goToPage(1);
+      document.getElementById("prev").onclick = () => goToPage(currentPage - 1);
+      document.getElementById("next").onclick = () => goToPage(currentPage + 1);
+      document.getElementById("latest").onclick = () => goToPage(totalPages);
+
+      document.getElementById("page-jump").addEventListener("change", (e) => {
+        const val = parseInt(e.target.value);
+        if (!isNaN(val)) goToPage(val);
+      });
+
+      document.getElementById("save-btn").onclick = () => {
+        localStorage.setItem("comicSave", currentPage);
+        alert("Game saved!");
+      };
+
+      document.getElementById("load-btn").onclick = () => {
+        const saved = parseInt(localStorage.getItem("comicSave"));
+        if (!isNaN(saved)) {
+          goToPage(saved);
+        } else {
+          alert("No saved game found.");
+        }
+      };
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight') goToPage(currentPage + 1);
+        if (e.key === 'ArrowLeft') goToPage(currentPage - 1);
+        if (e.key === 'Home') goToPage(1);
+        if (e.key === 'End') goToPage(totalPages);
+      });
+    }
+
+    renderPage();
+  </script>
+</body>
+</html>

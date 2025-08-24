@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Coming Soon...</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(to bottom, #ffffff 0%, #ffffff 95%, #000000 100%);
+      font-family: 'Courier New', monospace;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .gnome {
+      position: absolute;
+      font-size: 28px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .gnome.flip {
+      transform: scaleX(-1);
+    }
+
+    @keyframes run-left {
+      0% { left: -60px; opacity: 1; }
+      100% { left: 110vw; opacity: 0; }
+    }
+
+    @keyframes run-right {
+      0% { left: 110vw; opacity: 1; }
+      100% { left: -60px; opacity: 0; }
+    }
+
+    .site-container {
+      position: absolute;
+      top: 80px;
+      left: 80px;
+      right: 80px;
+      bottom: 80px;
+      background: white;
+      box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.2);
+      border: 1px solid black;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Courier New', monospace;
+      z-index: 1;
+    }
+
+    .message {
+      font-size: 2rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="site-container">
+    <div class="message">Coming soon... <br>
+	the gnomes are hard at work.</div>
+  </div>
+
+  <script>
+    function spawnGnome(y, direction) {
+      const gnome = document.createElement('div');
+      gnome.className = 'gnome';
+      gnome.textContent = '🧙‍♂️';
+      gnome.style.top = `${y}px`;
+
+      const duration = (Math.random() * 2 + 3).toFixed(2); // 3–5s
+      gnome.style.animationDuration = `${duration}s`;
+      gnome.style.animationTimingFunction = 'linear';
+      gnome.style.animationFillMode = 'forwards';
+
+      if (direction === 'left') {
+        gnome.style.left = '-60px';
+        gnome.style.animationName = 'run-left';
+      } else {
+        gnome.style.left = '110vw';
+        gnome.classList.add('flip');
+        gnome.style.animationName = 'run-right';
+      }
+
+      document.body.appendChild(gnome);
+
+      gnome.addEventListener('animationend', () => gnome.remove());
+    }
+
+    function startGnomeParade() {
+      setInterval(() => {
+        spawnGnome(20, 'left');
+        spawnGnome(20, 'right');
+        spawnGnome(window.innerHeight - 40, 'left');
+        spawnGnome(window.innerHeight - 40, 'right');
+      }, 500);
+    }
+
+    startGnomeParade();
+  </script>
+</body>
+</html>

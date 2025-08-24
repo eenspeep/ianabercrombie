@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Courier Gnome Site</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      width: 100%;
+    }
+
+    body {
+      background: linear-gradient(to bottom, #ffffff 0%, #ffffff 95%, #000000 100%);
+      font-family: 'Courier New', monospace;
+      color: #000;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .cursor-shadow {
+      position: fixed;
+      width: 24px;
+      height: 24px;
+      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><polygon points="0,0 0,32 8,24 14,30 16,28 10,22 18,22" fill="black"/></svg>') no-repeat center center;
+      background-size: contain;
+      opacity: 0.3;
+      pointer-events: none;
+      z-index: 10000;
+    }
+
+    .site-container {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      right: 20px;
+      bottom: 20px;
+      background: white;
+      height: calc(100% - 40px);
+      box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.2);
+      border: 1px solid black;
+      display: flex;
+      font-family: 'Courier New', monospace;
+      z-index: 2;
+    }
+
+    .sidebar {
+      width: 200px;
+      background-color: #f5f5f5;
+      border-right: 1px solid black;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .sidebar a {
+      display: block;
+      padding: 12px 16px;
+      background-color: #ffffff;
+      border: 1px solid #000;
+      color: #000;
+      text-decoration: none;
+      font-size: 16px;
+      font-family: 'Courier New', monospace;
+      transition: transform 0.2s ease, background-color 0.2s ease;
+    }
+
+    .sidebar a:hover {
+      transform: translateX(5px);
+      background-color: #ddd;
+    }
+
+    .main {
+      flex: 1;
+      padding: 40px;
+      overflow-y: auto;
+    }
+
+    h1.shadow-text, p.shadow-text {
+      white-space: pre-wrap;
+    }
+
+    h1, p {
+      font-family: 'Courier New', monospace;
+      font-size: 1.1rem;
+      line-height: 1.6;
+      letter-spacing: 0.5px;
+    }
+
+    .shadow-text span {
+      display: inline-block;
+      transition: text-shadow 0.2s ease;
+    }
+
+    .shadow-text span:hover {
+      animation: wiggle-shadow 0.4s infinite alternate;
+    }
+
+    @keyframes wiggle-shadow {
+      0%   { text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.6); }
+      25%  { text-shadow: -1px 2px 1px rgba(0, 0, 0, 0.5); }
+      50%  { text-shadow: 2px -1px 1px rgba(0, 0, 0, 0.5); }
+      75%  { text-shadow: -2px 1px 2px rgba(0, 0, 0, 0.6); }
+      100% { text-shadow: 1px -2px 1px rgba(0, 0, 0, 0.4); }
+    }
+
+    .photo-frame {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      border: 1px solid black;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #fff;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .photo-frame img#profile-pic {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      font-family: 'Courier New', monospace;
+      cursor: pointer;
+    }
+
+    #explosion {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 200%;
+      height: 200%;
+      pointer-events: none;
+      display: none;
+      z-index: 10;
+    }
+
+    .screen-shake {
+      animation: shake 0.3s linear 1;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translate(0, 0); }
+      25% { transform: translate(2px, -2px); }
+      50% { transform: translate(-2px, 2px); }
+      75% { transform: translate(2px, 2px); }
+    }
+
+    #gnome-wrapper {
+      position: fixed;
+      bottom: 10px;
+      left: -60px;
+      z-index: 9999;
+      pointer-events: none;
+      opacity: 0;
+    }
+
+    #gnome {
+      font-size: 28px;
+      animation: bob 0.6s ease-in-out infinite;
+    }
+
+    @keyframes bob {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+
+    @keyframes gnome-run-left {
+      0% { transform: translateX(-60px); opacity: 1; }
+      100% { transform: translateX(110vw); opacity: 0; }
+    }
+
+    @keyframes gnome-run-right {
+      0% { transform: translateX(110vw); opacity: 1; }
+      100% { transform: translateX(-60px); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+<div class="cursor-shadow" id="cursor-shadow"></div>
+<div class="site-container">
+  <div class="sidebar">
+    <div class="photo-frame" id="photo-frame">
+      <img src="Icons/sandhill.jpg" alt="Profile or Logo" id="profile-pic">
+      <img src="Animations/explosion.gif" alt="Explosion" id="explosion">
+      <audio id="boom" src="Animations/explosion.mp3"></audio>
+    </div>
+    <a href="index.html">Home</a>
+    <a href="about.html">About</a>
+    <a href="projects.html">Projects</a>
+    <a href="contact.html">Contact</a>
+	<a href="comic.html">DNGN</a>
+  </div>
+
+  <div class="main">
+    <h1 class="shadow-text">Welcome to My Site</h1>
+    <p class="shadow-text">This Courier-style site features animated shadows, a clean layout, and a little gnome who bobs as he runs randomly across the screen. Hover over the letters to see them wiggle!</p>
+  </div>
+</div>
+
+<div id="gnome-wrapper">
+  <div id="gnome">🧙‍♂️</div>
+</div>
+
+<script>
+  const images = [
+    "Icons/karkat.gif",
+    "Icons/sandhill.jpg",
+    "Icons/epcotball.jpg",
+    "Icons/alf.webp"
+  ];
+
+  const pic = document.getElementById('profile-pic');
+  const explosion = document.getElementById('explosion');
+  const boom = document.getElementById('boom');
+  const frame = document.getElementById('photo-frame');
+
+  pic.addEventListener('click', e => {
+    explosion.style.display = 'block';
+    boom.volume = 0.4;
+    boom.currentTime = 0;
+    boom.play();
+    frame.classList.add('screen-shake');
+    setTimeout(() => {
+      explosion.style.display = 'none';
+      frame.classList.remove('screen-shake');
+let current = pic.src.split('/').pop();
+let next;
+do {
+  next = images[Math.floor(Math.random() * images.length)];
+} while (next.split('/').pop() === current);
+pic.src = next;
+    }, 400);
+  });
+
+  document.querySelectorAll('.shadow-text').forEach(el => {
+    el.innerHTML = el.textContent
+      .split('')
+      .map(char => `<span>${char}</span>`)
+      .join('');
+  });
+
+  const gnomeWrapper = document.getElementById('gnome-wrapper');
+
+  function runGnome() {
+    const fromLeft = Math.random() < 0.5;
+    gnomeWrapper.style.left = fromLeft ? '-60px' : '110vw';
+    gnomeWrapper.style.animation = fromLeft ? 'gnome-run-left 2s linear forwards' : 'gnome-run-right 2s linear forwards';
+    gnomeWrapper.style.opacity = 1;
+  }
+
+  function randomIntervalGnome() {
+    const delay = Math.random() * 100000;
+    setTimeout(() => {
+      runGnome();
+      randomIntervalGnome();
+    }, delay);
+  }
+
+  randomIntervalGnome();
+
+  const cursorShadow = document.getElementById('cursor-shadow');
+  document.addEventListener('mousemove', e => {
+    cursorShadow.style.left = `${e.clientX + 3}px`;
+    cursorShadow.style.top = `${e.clientY + 3}px`;
+  });
+</script>
+</body>
+</html>
