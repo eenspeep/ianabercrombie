@@ -5,16 +5,9 @@
   <title>DNGN</title>
   <link rel="icon" type="image/png" href="screamgnome.png">
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
-    html, body {
-      height: 100%;
-      width: 100%;
-    }
+    html, body { height: 100%; width: 100%; }
 
     body {
       background: linear-gradient(to bottom, #ffffff 0%, #ffffff 95%, #000000 100%);
@@ -43,16 +36,12 @@
     .comic-container {
       position: relative;
       z-index: 1;
-
-      /* restored margins */
       margin: 60px 20px 20px; /* top, right, bottom, left */
-
       background: white;
-      height: calc(100% - 80px); /* adjusted for top and bottom margins */
+      height: calc(100% - 80px);
       box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.2);
       border: 1px solid black;
       padding: 20px;
-
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -64,7 +53,7 @@
       content: "";
       position: absolute;
       inset: 0;
-      background-image: url('bricks.png'); /* replace with your path */
+      background-image: url('bricks.png');
       background-repeat: repeat;
       background-size: auto;
       opacity: 0.2;
@@ -180,7 +169,10 @@
         window.location.href = "comingsoon.html";
         return;
       }
-      window.location.href = `comic.html?page=${page}`;
+      // keep pathname stable in case the file is renamed
+      const base = window.location.pathname.split('/').pop();
+      const file = base || 'comic.html';
+      window.location.href = `${file}?page=${page}`;
     }
 
     function renderPage() {
@@ -193,7 +185,6 @@
         const img = new Image();
         const path = `Comics/page${String(currentPage).padStart(2, '0')}.${ext}`;
         img.src = path;
-
         img.onload = () => {
           if (!found) {
             panelEl.style.backgroundImage = `url('${path}')`;
@@ -204,10 +195,11 @@
 
       document.getElementById("caption").textContent = captions[currentPage] || "";
 
-      document.getElementById("first").onclick = () => goToPage(1);
-      document.getElementById("prev").onclick = () => goToPage(currentPage - 1);
-      document.getElementById("next").onclick = () => goToPage(currentPage + 1);
-      document.getElementById("latest").onclick = () => goToPage(totalPages);
+      // preventDefault on anchor clicks so '#' doesn't interfere
+      document.getElementById("first").addEventListener("click", (e) => { e.preventDefault(); goToPage(1); });
+      document.getElementById("prev").addEventListener("click", (e) => { e.preventDefault(); goToPage(currentPage - 1); });
+      document.getElementById("next").addEventListener("click", (e) => { e.preventDefault(); goToPage(currentPage + 1); });
+      document.getElementById("latest").addEventListener("click", (e) => { e.preventDefault(); goToPage(totalPages); });
 
       document.getElementById("page-jump").addEventListener("change", (e) => {
         const val = parseInt(e.target.value);
@@ -235,7 +227,7 @@
         if (e.key === 'End') goToPage(totalPages);
       });
     }
-`
+
     renderPage();
   </script>
 </body>
