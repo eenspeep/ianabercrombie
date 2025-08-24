@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>DNGN</title>
-  <link rel="icon" type="image/png" href="screamgnome.png">
+  <link rel="icon" type="image/png" href="screamgnome.png" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -11,7 +11,7 @@
 
     body {
       background: linear-gradient(to bottom, #ffffff 0%, #ffffff 95%, #000000 100%);
-      font-family: 'Courier New', monospace;
+      font-family: "Courier New", monospace;
       color: #000;
       overflow: hidden;
       position: relative;
@@ -22,26 +22,51 @@
       border-bottom: 1px solid black;
       padding: 10px 20px;
       display: flex;
+	  justify-content: center;
       gap: 15px;
       position: relative;
       z-index: 10;
     }
 
     .topbar a {
-      text-decoration: none;
-      color: black;
-      font-weight: bold;
-    }
+  text-decoration: none;
+  color: black;
+  font-weight: bold;
 
+  /* button-like style */
+  border: 1px solid black;
+  padding: 6px 12px;
+  background-color: #fff;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.topbar a:hover {
+  background-color: #ddd;
+  transform: translateY(-2px);
+}
+
+    /* Layered backgrounds:
+       1) semi-opaque white overlay
+       2) brick tile (repeats)
+       Both clipped to padding-box so the border stays clean. */
     .comic-container {
       position: relative;
       z-index: 1;
       margin: 60px 20px 20px; /* top, right, bottom, left */
-      background: white;
       height: calc(100% - 80px);
       box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.2);
       border: 1px solid black;
       padding: 20px;
+
+      background:
+        linear-gradient(rgba(255,255,255,0.8), rgba(255,255,255,0.8)) padding-box,
+        url("bricks.png") padding-box;
+      background-repeat: no-repeat, repeat;
+      background-size: auto, auto;
+      background-position: 0 0, 0 0;
+      background-origin: padding-box, padding-box;
+      background-clip: padding-box, padding-box;
+
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -49,17 +74,19 @@
       overflow-y: auto;
     }
 
-    .comic-container::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background-image: url('bricks.png');
-      background-repeat: repeat;
-      background-size: auto;
-      opacity: 0.2;
-      z-index: 0;
-      pointer-events: none;
-    }
+/* Hide or style scrollbars inside the comic container */
+
+/* Chrome, Edge, Safari */
+.comic-container::-webkit-scrollbar {
+  width: 3px;              
+  background: transparent; /* no background */
+}
+
+/* Ensure no track shows */
+.comic-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
 
     .comic-panel {
       position: relative;
@@ -107,7 +134,7 @@
       color: black;
       background-color: #fff;
       transition: background-color 0.2s ease, transform 0.2s ease;
-      font-family: 'Courier New', monospace;
+      font-family: "Courier New", monospace;
       cursor: pointer;
     }
 
@@ -139,7 +166,7 @@
     <div class="nav-buttons">
       <a id="first" href="#">First</a>
       <a id="prev" href="#">Previous</a>
-      <input type="number" id="page-jump" min="1" placeholder="Page #">
+      <input type="number" id="page-jump" min="1" placeholder="Page #" />
       <a id="next" href="#">Next</a>
       <a id="latest" href="#">Latest</a>
     </div>
@@ -151,16 +178,29 @@
   </div>
 
   <script>
-    const totalPages = 12; // Update this when new comics are added
+    "use strict";
+
+    // --- Config you can edit ---
+    const totalPages = 12; // Update when adding comics
     const captions = {
-      1: "Your caption or comic text goes here.",
+      1: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed sit amet lacus in odio laoreet fermentum nec vel lectus. Donec id massa eget nulla egestas tristique. Proin luctus, justo non gravida gravida, metus odio efficitur augue, non varius justo magna ut nibh. Mauris a dui ut magna consequat gravida. Integer ultrices lectus magna, vitae sollicitudin orci consequat sit amet. Suspendisse potenti. In blandit metus sit amet erat ullamcorper, eget porta odio lacinia. Aenean sed dui in purus elementum ultrices at sit amet turpis. Cras non est eget arcu mattis luctus. Quisque varius nisi sed odio scelerisque egestas. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed sit amet lacus in odio laoreet fermentum nec vel lectus. Donec id massa eget nulla egestas tristique. Proin luctus, justo non gravida gravida, metus odio efficitur augue, non varius justo magna ut nibh. Mauris a dui ut magna consequat gravida. Integer ultrices lectus magna, vitae sollicitudin orci consequat sit amet. Suspendisse potenti. In blandit metus sit amet erat ullamcorper, eget porta odio lacinia. Aenean sed dui in purus elementum ultrices at sit amet turpis. Cras non est eget arcu mattis luctus. Quisque varius nisi sed odio scelerisque egestas. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed sit amet lacus in odio laoreet fermentum nec vel lectus. Donec id massa eget nulla egestas tristique. Proin luctus, justo non gravida gravida, metus odio efficitur augue, non varius justo magna ut nibh. Mauris a dui ut magna consequat gravida. Integer ultrices lectus magna, vitae sollicitudin orci consequat sit amet. Suspendisse potenti. In blandit metus sit amet erat ullamcorper, eget porta odio lacinia. Aenean sed dui in purus elementum ultrices at sit amet turpis. Cras non est eget arcu mattis luctus. Quisque varius nisi sed odio scelerisque egestas. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas.",
       2: "Continuation of the tale...",
       3: "Something wild happens here...",
+      // Add more as needed...
     };
+    const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "webp", "gif"];
+    const IMAGE_DIR = "Comics"; // directory containing pageXX.ext files
+    const FALLBACK_COLOR = "#bbb"; // shown if no image found
 
+    // --- Helpers ---
     function getPageFromURL() {
-      const match = window.location.search.match(/\?page=(\d+)/);
-      return match ? parseInt(match[1]) : 1;
+      const m = window.location.search.match(/[?&]page=(\d+)/);
+      return m ? parseInt(m[1], 10) : 1;
+    }
+
+    function getCurrentFileName() {
+      const base = window.location.pathname.split("/").pop();
+      return base || "comic.html";
     }
 
     function goToPage(page) {
@@ -169,66 +209,124 @@
         window.location.href = "comingsoon.html";
         return;
       }
-      // keep pathname stable in case the file is renamed
-      const base = window.location.pathname.split('/').pop();
-      const file = base || 'comic.html';
+      const file = getCurrentFileName();
       window.location.href = `${file}?page=${page}`;
+    }
+
+    function setCaption(page) {
+      const el = document.getElementById("caption");
+      if (!el) return;
+      el.textContent = captions[page] || "";
+    }
+
+    function loadPanelImage(page) {
+      const panelEl = document.getElementById("panel");
+      if (!panelEl) return;
+
+      let loaded = false;
+      const pageStr = String(page).padStart(2, "0");
+
+      IMAGE_EXTENSIONS.forEach((ext) => {
+        const img = new Image();
+        const path = `${IMAGE_DIR}/page${pageStr}.${ext}`;
+        img.onload = () => {
+          if (!loaded) {
+            loaded = true;
+            panelEl.style.backgroundImage = `url("${path}")`;
+          }
+        };
+        img.onerror = () => {
+          // no-op; we'll fallback if none load
+        };
+        img.src = path;
+      });
+
+      // Fallback if nothing loads within a short grace
+      setTimeout(() => {
+        if (!loaded) {
+          console.warn("No image found for page", page);
+          panelEl.style.backgroundImage = "none";
+          panelEl.style.backgroundColor = FALLBACK_COLOR;
+        }
+      }, 400);
+    }
+
+    function bindNavigation(page) {
+      const byId = (id) => document.getElementById(id);
+
+      const first = byId("first");
+      const prev = byId("prev");
+      const next = byId("next");
+      const latest = byId("latest");
+      const jump = byId("page-jump");
+
+      if (first) first.addEventListener("click", (e) => { e.preventDefault(); goToPage(1); });
+      if (prev) prev.addEventListener("click",  (e) => { e.preventDefault(); goToPage(page - 1); });
+      if (next) next.addEventListener("click",  (e) => { e.preventDefault(); goToPage(page + 1); });
+      if (latest) latest.addEventListener("click",(e) => { e.preventDefault(); goToPage(totalPages); });
+
+      if (jump) {
+        jump.value = page;
+        jump.addEventListener("change", (e) => {
+          const val = parseInt(e.target.value, 10);
+          if (!Number.isNaN(val)) goToPage(val);
+        });
+      }
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowRight") goToPage(page + 1);
+        if (e.key === "ArrowLeft") goToPage(page - 1);
+        if (e.key === "Home") goToPage(1);
+        if (e.key === "End") goToPage(totalPages);
+      });
+    }
+
+    function bindSaveLoad(page) {
+      const saveBtn = document.getElementById("save-btn");
+      const loadBtn = document.getElementById("load-btn");
+      if (saveBtn) saveBtn.onclick = () => {
+        try {
+          localStorage.setItem("comicSave", String(page));
+          alert("Game saved!");
+        } catch (err) {
+          console.error("Save failed:", err);
+          alert("Save failed (check browser storage settings).");
+        }
+      };
+      if (loadBtn) loadBtn.onclick = () => {
+        try {
+          const saved = parseInt(localStorage.getItem("comicSave") || "", 10);
+          if (!Number.isNaN(saved)) {
+            goToPage(saved);
+          } else {
+            alert("No saved game found.");
+          }
+        } catch (err) {
+          console.error("Load failed:", err);
+          alert("Load failed (check browser storage settings).");
+        }
+      };
     }
 
     function renderPage() {
       const currentPage = getPageFromURL();
-      const panelEl = document.getElementById("panel");
-      const extensions = ['png', 'jpg', 'jpeg', 'webp', 'gif'];
-      let found = false;
 
-      for (let ext of extensions) {
-        const img = new Image();
-        const path = `Comics/page${String(currentPage).padStart(2, '0')}.${ext}`;
-        img.src = path;
-        img.onload = () => {
-          if (!found) {
-            panelEl.style.backgroundImage = `url('${path}')`;
-            found = true;
-          }
-        };
-      }
-
-      document.getElementById("caption").textContent = captions[currentPage] || "";
-
-      // preventDefault on anchor clicks so '#' doesn't interfere
-      document.getElementById("first").addEventListener("click", (e) => { e.preventDefault(); goToPage(1); });
-      document.getElementById("prev").addEventListener("click", (e) => { e.preventDefault(); goToPage(currentPage - 1); });
-      document.getElementById("next").addEventListener("click", (e) => { e.preventDefault(); goToPage(currentPage + 1); });
-      document.getElementById("latest").addEventListener("click", (e) => { e.preventDefault(); goToPage(totalPages); });
-
-      document.getElementById("page-jump").addEventListener("change", (e) => {
-        const val = parseInt(e.target.value);
-        if (!isNaN(val)) goToPage(val);
-      });
-
-      document.getElementById("save-btn").onclick = () => {
-        localStorage.setItem("comicSave", currentPage);
-        alert("Game saved!");
-      };
-
-      document.getElementById("load-btn").onclick = () => {
-        const saved = parseInt(localStorage.getItem("comicSave"));
-        if (!isNaN(saved)) {
-          goToPage(saved);
-        } else {
-          alert("No saved game found.");
-        }
-      };
-
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowRight') goToPage(currentPage + 1);
-        if (e.key === 'ArrowLeft') goToPage(currentPage - 1);
-        if (e.key === 'Home') goToPage(1);
-        if (e.key === 'End') goToPage(totalPages);
-      });
+      // Wire up UI every time in case of soft navigations
+      setCaption(currentPage);
+      loadPanelImage(currentPage);
+      bindNavigation(currentPage);
+      bindSaveLoad(currentPage);
     }
 
-    renderPage();
+    // Ensure DOM exists; catch any unexpected runtime error so UI still binds
+    document.addEventListener("DOMContentLoaded", () => {
+      try {
+        renderPage();
+      } catch (err) {
+        console.error("Fatal script error:", err);
+        alert("A script error occurred. Open DevTools (F12) → Console for details.");
+      }
+    });
   </script>
 </body>
 </html>

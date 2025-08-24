@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>spe.ep</title>
+  <title>speep.me</title>
   <link rel="icon" type="image/png" href="screamgnome.png">
   <style>
     * {
@@ -115,7 +115,7 @@
       width: 100%;
       aspect-ratio: 1 / 1;
       border: 1px solid black;
-      margin-bottom: 20px;
+      margin-bottom: 10px; /* slightly reduced to make room for mini-caption spacing below */
       display: flex;
       align-items: center;
       justify-content: center;
@@ -130,6 +130,17 @@
       object-fit: cover;
       font-family: 'Courier New', monospace;
       cursor: pointer;
+    }
+
+    /* >>> Mini-caption just below portrait <<< */
+    .mini-caption {
+      border: 1px solid #000;
+      background-color: #f9f9f9;
+      padding: 6px 10px;
+      margin: 0 0 10px 0; /* space below caption before links */
+      font-size: 0.9rem;
+      line-height: 1.3;
+      text-align: center;
     }
 
     #explosion {
@@ -194,11 +205,17 @@
       <img src="Animations/explosion.gif" alt="Explosion" id="explosion">
       <audio id="boom" src="Animations/explosion.mp3"></audio>
     </div>
+
+    <!-- Mini-caption (editable text) -->
+    <div class="mini-caption" id="mini-caption">
+      Writer. Reader. Editor. Click the photo for more of me.
+    </div>
+
     <a href="index.html">Home</a>
     <a href="about.html">About</a>
     <a href="projects.html">Projects</a>
     <a href="contact.html">Contact</a>
-	<a href="comic.html">DNGN</a>
+    <a href="comic.html">DNGN</a>
   </div>
 
   <div class="main">
@@ -233,12 +250,12 @@
     setTimeout(() => {
       explosion.style.display = 'none';
       frame.classList.remove('screen-shake');
-let current = pic.src.split('/').pop();
-let next;
-do {
-  next = images[Math.floor(Math.random() * images.length)];
-} while (next.split('/').pop() === current);
-pic.src = next;
+      let current = pic.src.split('/').pop();
+      let next;
+      do {
+        next = images[Math.floor(Math.random() * images.length)];
+      } while (next.split('/').pop() === current);
+      pic.src = next;
     }, 400);
   });
 
