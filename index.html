@@ -173,21 +173,6 @@
     .sb-center{ justify-self: center; }
     .sb-right { justify-self: end; }
 
-    /* Wiggle hover text */
-    .shadow-text { white-space: pre-wrap; }
-    .shadow-word {
-      display: inline-block;
-      transition: text-shadow .2s ease;
-    }
-    .shadow-word:hover { animation: wiggle-shadow .4s infinite alternate; }
-    @keyframes wiggle-shadow {
-      0%   { text-shadow: 1px 1px 0 rgba(0,0,0,0.6); }
-      25%  { text-shadow: -1px 2px 1px rgba(0,0,0,0.5); }
-      50%  { text-shadow: 2px -1px 1px rgba(0,0,0,0.5); }
-      75%  { text-shadow: -2px 1px 2px rgba(0,0,0,0.6); }
-      100% { text-shadow: 1px -2px 1px rgba(0,0,0,0.4); }
-    }
-
     /* Cursor shadow */
     .cursor-shadow {
       position: fixed;
@@ -201,8 +186,8 @@
     .gnome-wrapper {
       position: fixed;
       bottom: 10px;
-      left: 0;                   /* base anchor; movement via transform */
-      pointer-events: none;      /* children manage their own events */
+      left: 0;
+      pointer-events: none;
       z-index: 9999;
       transform: translateX(-60px);
     }
@@ -236,12 +221,10 @@
       background: transparent;
     }
 
-    /* From left edge to right edge */
     @keyframes gnome-run-left {
       0%   { transform: translateX(-60px); }
       100% { transform: translateX(calc(100vw + 60px)); }
     }
-    /* From right edge to left edge */
     @keyframes gnome-run-right {
       0%   { transform: translateX(calc(100vw + 60px)); }
       100% { transform: translateX(-60px); }
@@ -304,10 +287,21 @@ My name is Ian Abercrombie.
     </main>
   </div>
 
-  <!-- MULTI-GNOMES CONTAINER (empty; JS will spawn children here) -->
   <div id="gnome-layer"></div>
 
   <script>
+    // === Speed range (seconds to cross the screen) ===
+    const SPEED_MIN = 3.5;  // faster
+    const SPEED_MAX = 9.0;  // slower
+    const BATCH_MIN = 1;
+    const BATCH_MAX = 7;
+    const BATCH_DELAY_MIN = 5000;  // 5s
+    const BATCH_DELAY_MAX = 15000; // 15s
+
+    function rand(min, max){ return min + Math.random() * (max - min); }
+    function randInt(min, max){ return Math.floor(rand(min, max + 1)); }
+    function randDuration(min = SPEED_MIN, max = SPEED_MAX){ return rand(min, max); }
+
     // ==== Portrait rotation + caption mapping ====
     const images = ["Icons/icon1.png","Icons/icon2.png","Icons/icon3.png","Icons/icon4.png"];
     const titles = {
@@ -392,7 +386,7 @@ My name is Ian Abercrombie.
       cursorShadow.style.top  = `${e.clientY + 3}px`;
     });
 
-    // ==== Global counter (CountAPI with local fallback) ====
+    // ==== Counter (CountAPI) ====
     const countEl = document.getElementById('gnome-count');
     const COUNT_NS = 'speep.me';
     const COUNT_KEY = 'gnomes_caught';
@@ -402,14 +396,14 @@ My name is Ian Abercrombie.
 
     async function initCount(){
       try {
-        const r = await fetch(`https://api.countapi.xyz/get/${encodeURIComponent(COUNT_NS)}/${encodeURIComponent(COUNT_KEY)}`);
+        const r = await fetch(`https://api.countapi.xyz/get/${COUNT_NS}/${COUNT_KEY}`);
         const d = await r.json();
         if (typeof d.value === 'number') {
           setCount(d.value);
           localStorage.setItem(LOCAL_MIRROR, String(d.value));
           return;
         }
-        throw new Error('No value from API');
+        throw new Error();
       } catch {
         const n = Number(localStorage.getItem(LOCAL_MIRROR) || 0);
         setCount(n);
@@ -418,14 +412,14 @@ My name is Ian Abercrombie.
 
     async function incrementCount(){
       try {
-        const r = await fetch(`https://api.countapi.xyz/hit/${encodeURIComponent(COUNT_NS)}/${encodeURIComponent(COUNT_KEY)}`);
+        const r = await fetch(`https://api.countapi.xyz/hit/${COUNT_NS}/${COUNT_KEY}`);
         const d = await r.json();
         if (typeof d.value === 'number') {
           setCount(d.value);
           localStorage.setItem(LOCAL_MIRROR, String(d.value));
           return;
         }
-        throw new Error('No value from API');
+        throw new Error();
       } catch {
         const n = Number(localStorage.getItem(LOCAL_MIRROR) || 0) + 1;
         localStorage.setItem(LOCAL_MIRROR, String(n));
@@ -438,7 +432,6 @@ My name is Ian Abercrombie.
     // ==== MULTI-GNOME SPAWNER ====
     const gnomeLayer = document.getElementById('gnome-layer');
 
-    // Utility: bind press to explode; block drag
     function bindExplodeTarget(el, handler){
       ['pointerdown','mousedown','touchstart'].forEach(type => {
         el.addEventListener(type, (e) => {
@@ -450,15 +443,13 @@ My name is Ian Abercrombie.
       el.addEventListener('dragstart', (e) => { e.preventDefault(); return false; });
     }
 
-    // Spawn ONE gnome; side = 'left' | 'right'
     function spawnGnome(side){
-      // wrapper
       const wrap = document.createElement('div');
       wrap.className = 'gnome-wrapper';
 
-      // hitbox, sprite, boom
       const hit = document.createElement('div');
       hit.className = 'gnome-hitbox';
+
       const img = document.createElement('img');
       img.className = 'gnome';
       img.src = 'Animations/gnome.gif';
@@ -480,7 +471,7 @@ My name is Ian Abercrombie.
         ? 'translateX(-60px)'
         : 'translateX(calc(100vw + 60px))';
 
-      // attach to DOM before measuring/animating
+      // attach to DOM
       wrap.appendChild(hit);
       wrap.appendChild(img);
       wrap.appendChild(boomImg);
@@ -493,8 +484,7 @@ My name is Ian Abercrombie.
         exploded = true;
 
         // freeze current position
-        const computed = getComputedStyle(wrap);
-        const matrix = computed.transform;
+        const matrix = getComputedStyle(wrap).transform;
         wrap.style.animation = 'none';
         wrap.style.transform = matrix !== 'none' ? matrix : wrap.style.transform;
 
@@ -504,7 +494,7 @@ My name is Ian Abercrombie.
         boomImg.setAttribute('src', `${base}?t=${Date.now()}`);
         boomImg.style.display = 'block';
 
-        // audio (clone so multiple booms can overlap)
+        // sound (independent instance so multiple booms can overlap)
         try {
           const a = new Audio(boom.src);
           a.volume = 0.5;
@@ -513,46 +503,39 @@ My name is Ian Abercrombie.
 
         incrementCount();
 
-        setTimeout(() => {
-          // clean up this gnome
-          wrap.remove();
-        }, 750);
+        setTimeout(() => wrap.remove(), 750);
       }
 
-      // bind interactions to both sprite and hitbox
       bindExplodeTarget(img, explode);
       bindExplodeTarget(hit, explode);
 
-      // kick off run (slightly randomized speed for variety)
-      const duration = 4.6 + Math.random()*0.8; // ~4.6–5.4s
+      // per-gnome speed
+      const duration = randDuration(); // seconds
+
       requestAnimationFrame(() => {
         wrap.style.animation = (side === 'left' ? 'gnome-run-left' : 'gnome-run-right') + ` ${duration}s linear forwards`;
       });
 
-      // auto remove after crossing if not exploded
-      wrap.addEventListener('animationend', () => {
-        if (!exploded) wrap.remove();
-      });
+      // remove after crossing if not exploded
+      wrap.addEventListener('animationend', () => { if (!exploded) wrap.remove(); });
     }
 
-    // Spawn a batch: 1–7 gnomes, each random side; tiny intra-batch stagger
     function spawnBatch(){
-      const n = 1 + Math.floor(Math.random() * 7);
+      const n = randInt(BATCH_MIN, BATCH_MAX);
       for (let i = 0; i < n; i++){
         const side = (Math.random() < 0.5) ? 'left' : 'right';
-        const stagger = Math.random() * 400; // up to 0.4s spacing inside batch
+        const stagger = Math.random() * 400; // up to 0.4s spacing in a batch
         setTimeout(() => spawnGnome(side), stagger);
       }
     }
 
-    // Loop: spawn batches at 5–15s random intervals
-    function spawnLoop(){
-      const delay = 5000 + Math.random() * 10000; // 5–15s
-      setTimeout(() => { spawnBatch(); spawnLoop(); }, delay);
+    function loopBatches(){
+      const delay = rand(BATCH_DELAY_MIN, BATCH_DELAY_MAX);
+      setTimeout(() => { spawnBatch(); loopBatches(); }, delay);
     }
 
-    // Start after an initial random delay (fits the 5–15s rule)
-    setTimeout(() => { spawnBatch(); spawnLoop(); }, 5000 + Math.random()*10000);
+    // Start
+    setTimeout(() => { spawnBatch(); loopBatches(); }, rand(BATCH_DELAY_MIN, BATCH_DELAY_MAX));
   </script>
 </body>
 </html>
