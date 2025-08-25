@@ -1,203 +1,289 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>speep.me</title>
-  <link rel="icon" type="image/png" href="screamgnome.png">
+  <link rel="icon" type="image/png" href="screamgnome.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
     html, body { height: 100%; width: 100%; }
 
     body {
       background: linear-gradient(to bottom, #ffffff 0%, #ffffff 95%, #000000 100%);
-      font-family: 'Courier New', monospace;
+      font-family: "Courier New", monospace;
       color: #000;
       overflow: hidden;
       position: relative;
     }
 
-    .cursor-shadow {
-      position: fixed;
-      width: 24px;
-      height: 24px;
-      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><polygon points="0,0 0,32 8,24 14,30 16,28 10,22 18,22" fill="black"/></svg>') no-repeat center center;
-      background-size: contain;
-      opacity: 0.3;
-      pointer-events: none;
-      z-index: 10000;
-    }
-
+    /* App frame */
     .site-container {
       position: absolute;
-      top: 20px;
-      left: 20px;
-      right: 20px;
-      bottom: 20px;
-      background: white;
+      inset: 20px;
+      background: #fff;
       height: calc(100% - 40px);
-      box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.2);
-      border: 1px solid black;
-      display: flex;
+      border: 1px solid #000;
+      box-shadow: 6px 6px 12px rgba(0,0,0,.2);
+      display: grid;
+      grid-template-columns: 220px 1fr;
       z-index: 2;
     }
 
+    /* ==== Sidebar ==== */
     .sidebar {
-      width: 200px;
-      background-color: #f5f5f5;
-      border-right: 1px solid black;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .sidebar a {
-      display: block;
-      padding: 12px 16px;
-      background-color: #ffffff;
-      border: 1px solid #000;
-      color: #000;
-      text-decoration: none;
-      font-size: 16px;
-      transition: transform 0.2s ease, background-color 0.2s ease;
-    }
-    .sidebar a:hover { transform: translateX(5px); background-color: #ddd; }
-
-    .main {
-      flex: 1;
-      padding: 40px;
-      overflow-y: auto;
-
-      /* Center the intro content */
-      display: flex;
-      flex-direction: column;
-      justify-content: center; /* vertical */
-      align-items: center;     /* horizontal */
-      text-align: center;
-    }
-
-    /* Keep line breaks and multiple spaces */
-    .shadow-text { white-space: pre-wrap; }
-
-    h1, p, h4 {
-      font-family: 'Courier New', monospace;
-      line-height: 1.6;
-      letter-spacing: 0.5px;
-    }
-
-    /* Word-level wiggle (not applied inside links) */
-    .shadow-word {
-      display: inline-block;
-      transition: text-shadow 0.2s ease;
-    }
-    .shadow-word:hover { animation: wiggle-shadow 0.4s infinite alternate; }
-
-    @keyframes wiggle-shadow {
-      0%   { text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.6); }
-      25%  { text-shadow: -1px 2px 1px rgba(0, 0, 0, 0.5); }
-      50%  { text-shadow: 2px -1px 1px rgba(0, 0, 0, 0.5); }
-      75%  { text-shadow: -2px 1px 2px rgba(0, 0, 0, 0.6); }
-      100% { text-shadow: 1px -2px 1px rgba(0, 0, 0, 0.4); }
+      background: #f3f3f3;
+      border-right: 1px solid #000;
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+      padding: 16px;
+      gap: 12px;
     }
 
     .photo-frame {
       width: 100%;
       aspect-ratio: 1 / 1;
-      border: 1px solid black;
-      margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background-color: #fff;
-      overflow: hidden;
+      background: #fff;
+      border: 1px solid #000;
+      box-shadow: inset -2px -2px 0 #000, inset 2px 2px 0 #fff;
       position: relative;
+      overflow: hidden;
+      display: grid;
+      place-items: center;
     }
-    .photo-frame img#profile-pic {
+    #profile-pic {
+      width: 100%; height: 100%;
+      object-fit: cover; cursor: pointer;
+      position: relative; z-index: 1;
+      display: block;
+    }
+    #explosion {
+      position: absolute; inset: 0;
       width: 100%; height: 100%;
       object-fit: cover;
+      display: none; pointer-events: none;
+      z-index: 2;
+    }
+    .screen-shake { animation: shake .25s linear 1; }
+    @keyframes shake {
+      0%,100%{ transform: translate(0,0); }
+      25%{ transform: translate(2px,-2px); }
+      50%{ transform: translate(-2px,2px); }
+      75%{ transform: translate(2px,2px); }
+    }
+
+    .mini-caption {
+      text-align: center;
+      font-size: .95rem;
+      background: #fff;
+      border: 1px solid #000;
+      box-shadow: inset -1px -1px 0 #000, inset 1px 1px 0 #fff;
+      padding: 8px 10px;
+      transition: opacity .15s ease;
+    }
+
+    .btn-95 {
+      display: block;
+      text-decoration: none;
+      color: #000;
+      background: #e9e9e9;
+      border: 1px solid #000;
+      box-shadow: inset -2px -2px 0 #fff, inset 2px 2px 0 #000;
+      padding: 10px 12px;
+      text-align: left;
+      transition: transform .05s ease;
+      user-select: none;
+    }
+    .btn-95:active {
+      transform: translate(1px,1px);
+      box-shadow: inset -2px -2px 0 #000, inset 2px 2px 0 #fff;
+      background: #dcdcdc;
+    }
+    .nav { display: grid; gap: 8px; align-content: start; }
+
+    /* ==== Main ==== */
+    .main {
+      overflow: auto;
+      padding: 24px;
+      display: grid;
+      place-items: center;
+    }
+    .win95-window {
+      width: min(760px, 100%);
+      background: #fff;
+      border: 2px solid #000;
+      box-shadow: inset -2px -2px 0 #000, inset 2px 2px 0 #fff;
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+    }
+    .titlebar {
+      background: #e0e0e0;
+      border-bottom: 1px solid #000;
+      padding: 6px 10px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .titlebar .title { font-weight: bold; }
+    .controls { display: flex; gap: 6px; }
+    .ctl {
+      width: 18px; height: 18px;
+      border: 1px solid #000;
+      background: #fff;
+      display: grid; place-items: center;
+      font-size: 12px;
+    }
+    .ctl:active { transform: translate(1px,1px); }
+
+    .menubar {
+      background: #f7f7f7;
+      border-bottom: 1px solid #000;
+      padding: 6px 10px;
+      display: flex; gap: 16px;
+    }
+
+    .window-body { padding: 16px; }
+
+    .intro {
+      border: 1px solid #000;
+      background: #fff;
+      box-shadow: inset -1px -1px 0 #000, inset 1px 1px 0 #fff;
+      padding: 14px;
+    }
+    .intro h1 { font-size: 1.35rem; margin-bottom: 8px; }
+    .intro h4 {
+      font-size: 1rem;
+      line-height: 1.6;
+      letter-spacing: .3px;
+      white-space: pre-wrap;
+    }
+    .intro a { color: blue; text-decoration: underline; }
+    .intro a:hover { color: darkred; }
+
+    /* ==== Status bar with centered counter ==== */
+    .statusbar {
+      background: #f7f7f7;
+      border-top: 1px solid #000;
+      padding: 6px 10px;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      font-size: .9rem;
+      gap: 12px;
+    }
+    .sb-left  { justify-self: start; }
+    .sb-center{ justify-self: center; }
+    .sb-right { justify-self: end; }
+
+    /* Wiggle hover text */
+    .shadow-text { white-space: pre-wrap; }
+    .shadow-word {
+      display: inline-block;
+      transition: text-shadow .2s ease;
+    }
+    .shadow-word:hover { animation: wiggle-shadow .4s infinite alternate; }
+    @keyframes wiggle-shadow {
+      0%   { text-shadow: 1px 1px 0 rgba(0,0,0,0.6); }
+      25%  { text-shadow: -1px 2px 1px rgba(0,0,0,0.5); }
+      50%  { text-shadow: 2px -1px 1px rgba(0,0,0,0.5); }
+      75%  { text-shadow: -2px 1px 2px rgba(0,0,0,0.6); }
+      100% { text-shadow: 1px -2px 1px rgba(0,0,0,0.4); }
+    }
+
+    /* Cursor shadow */
+    .cursor-shadow {
+      position: fixed;
+      width: 18px; height: 18px;
+      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><polygon points="0,0 0,32 8,24 14,30 16,28 10,22 18,22" fill="black"/></svg>') no-repeat center center;
+      background-size: contain;
+      opacity: .25; pointer-events: none; z-index: 10000;
+    }
+
+    /* ==== MULTI-GNOME RUNNERS ==== */
+    .gnome-wrapper {
+      position: fixed;
+      bottom: 10px;
+      left: 0;                   /* base anchor; movement via transform */
+      pointer-events: none;      /* children manage their own events */
+      z-index: 9999;
+      transform: translateX(-60px);
+    }
+    .gnome, .gnome-boom, .gnome-hitbox {
+      user-select: none;
+      -webkit-user-drag: none;
+      -webkit-touch-callout: none;
+    }
+    .gnome {
+      height: 68px;
+      transform: scaleX(1);
+      pointer-events: auto;
       cursor: pointer;
     }
-
-    /* Mini-caption under portrait */
-    .mini-caption {
-      border: 1px solid #000;
-      background-color: #f9f9f9;
-      padding: 6px 10px;
-      margin: 0 0 10px 0;
-      font-size: 0.9rem;
-      line-height: 1.3;
-      text-align: center;
+    .gnome-boom {
+      position: absolute;
+      left: -16px;
+      bottom: -16px;
+      width: 100px;
+      display: none;
+      pointer-events: none;
+    }
+    .gnome-hitbox {
+      position: absolute;
+      left: -10px;
+      bottom: -6px;
+      width: 88px;
+      height: 80px;
+      pointer-events: auto;
+      cursor: pointer;
+      background: transparent;
     }
 
-    /* Narrow width for readability */
-    .intro-text { max-width: 60ch; }
-
-    /* Inline link styling for intro text */
-    .intro-text a {
-      color: blue;
-      text-decoration: underline;
-      text-underline-offset: 2px;
-      transition: color 0.2s ease;
+    /* From left edge to right edge */
+    @keyframes gnome-run-left {
+      0%   { transform: translateX(-60px); }
+      100% { transform: translateX(calc(100vw + 60px)); }
     }
-    .intro-text a:hover {
-      color: darkred;
+    /* From right edge to left edge */
+    @keyframes gnome-run-right {
+      0%   { transform: translateX(calc(100vw + 60px)); }
+      100% { transform: translateX(-60px); }
     }
-
-    /* Ensure underlines render cleanly even with nested spans (we skip wrapping in anchors anyway) */
-    .intro-text a .shadow-word { text-decoration: underline; }
-
-    #explosion {
-      position: absolute; top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      width: 200%; height: 200%;
-      pointer-events: none; display: none; z-index: 10;
-    }
-
-    .screen-shake { animation: shake 0.3s linear 1; }
-    @keyframes shake {
-      0%, 100% { transform: translate(0, 0); }
-      25% { transform: translate(2px, -2px); }
-      50% { transform: translate(-2px, 2px); }
-      75% { transform: translate(2px, 2px); }
-    }
-
-    #gnome-wrapper {
-      position: fixed;
-      bottom: 10px; left: -60px;
-      z-index: 9999; pointer-events: none; opacity: 0;
-    }
-    #gnome { font-size: 28px; animation: bob 0.6s ease-in-out infinite; }
-    @keyframes bob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
-    @keyframes gnome-run-left  { 0%{transform:translateX(-60px);opacity:1} 100%{transform:translateX(110vw);opacity:0} }
-    @keyframes gnome-run-right { 0%{transform:translateX(110vw);opacity:1} 100%{transform:translateX(-60px);opacity:0} }
   </style>
 </head>
 <body>
-<div class="cursor-shadow" id="cursor-shadow"></div>
-<div class="site-container">
-  <div class="sidebar">
-    <div class="photo-frame" id="photo-frame">
-      <img src="Icons/sandhill.jpg" alt="Profile or Logo" id="profile-pic">
-      <img src="Animations/explosion.gif" alt="Explosion" id="explosion">
-      <audio id="boom" src="Animations/explosion.mp3"></audio>
-    </div>
+  <div class="cursor-shadow" id="cursor-shadow"></div>
 
-    <div class="mini-caption" id="mini-caption">
-      Writer. Reader. Editor. Click the photo for more of me.
-    </div>
+  <div class="site-container">
+    <aside class="sidebar">
+      <div class="photo-frame" id="photo-frame">
+        <img src="Icons/icon1.png" alt="Profile or Logo" id="profile-pic" />
+        <img src="Animations/explosion.gif" alt="Explosion" id="explosion" />
+        <audio id="boom" src="Animations/explosion.mp3"></audio>
+      </div>
+      <div class="mini-caption" id="mini-caption">Writer, Editor, Reader</div>
 
-    <a href="index.html">Home</a>
-    <a href="about.html">About</a>
-    <a href="projects.html">Projects</a>
-    <a href="contact.html">Contact</a>
-    <a href="comic.html">DNGN</a>
-  </div>
+      <nav class="nav">
+        <a class="btn-95" href="index.html">Home</a>
+        <a class="btn-95" href="about.html">About</a>
+        <a class="btn-95" href="projects.html">Projects</a>
+        <a class="btn-95" href="contact.html">Contact</a>
+        <a class="btn-95" href="comic.html">DNGN</a>
+      </nav>
+    </aside>
 
-  <div class="main">
-    <div class="intro-text">
-      <h1 class="shadow-text">Welcome. :^)</h1>
-      <h4 class="shadow-text">
+    <main class="main">
+      <section class="win95-window" role="group" aria-label="Welcome Window">
+        <div class="titlebar">
+          <div class="title">WELCOME.TXT</div>
+          <div class="controls">
+            <div class="ctl" title="Minimize">_</div>
+            <div class="ctl" title="Maximize">□</div>
+            <div class="ctl" title="Close">×</div>
+          </div>
+        </div>
+        <div class="menubar"><div>File</div><div>Edit</div><div>View</div><div>Help</div></div>
+        <div class="window-body">
+          <div class="intro">
+            <h1 class="shadow-text">Welcome. :^)</h1>
+            <h4 class="shadow-text">
 My name is Ian Abercrombie.
 <br><br>I am a writer, editor, and reader.
 <br><br>Originally from Florida, based in Newark, New Jersey.
@@ -206,91 +292,267 @@ My name is Ian Abercrombie.
 <br><br>To read examples of my work, visit "<a href="projects.html">Projects</a>."
 <br><br>In order to catch me, visit my "<a href="contact.html">Contact</a>" page.
 <br><br>If you instead want to catch a gnome, visit "<a href="comic.html">DNGN</a>."
-      </h4>
-    </div>
+            </h4>
+          </div>
+        </div>
+        <div class="statusbar">
+          <span class="sb-left">Ready</span>
+          <span class="sb-center"><strong>GNOMES CAUGHT:</strong> <span id="gnome-count">0</span></span>
+          <span class="sb-right">© 1998 SPEEP</span>
+        </div>
+      </section>
+    </main>
   </div>
-</div>
 
-<div id="gnome-wrapper"><div id="gnome">🧙‍♂️</div></div>
+  <!-- MULTI-GNOMES CONTAINER (empty; JS will spawn children here) -->
+  <div id="gnome-layer"></div>
 
-<script>
-  // Portrait click: explosion + random image
-  const images = [
-    "Icons/karkat.gif",
-    "Icons/sandhill.jpg",
-    "Icons/epcotball.jpg",
-    "Icons/alf.webp"
-  ];
-  const pic = document.getElementById('profile-pic');
-  const explosion = document.getElementById('explosion');
-  const boom = document.getElementById('boom');
-  const frame = document.getElementById('photo-frame');
+  <script>
+    // ==== Portrait rotation + caption mapping ====
+    const images = ["Icons/icon1.png","Icons/icon2.png","Icons/icon3.png","Icons/icon4.png"];
+    const titles = {
+      "icon1.png": "Writer, Editor, Reader",
+      "icon2.png": "Writer, Editor, Cyclops",
+      "icon3.png": "Writer, Editor, Freak of Nature",
+      "icon4.png": "Writer, Editor, Scallawag"
+    };
 
-  pic.addEventListener('click', () => {
-    explosion.style.display = 'block';
-    boom.volume = 0.4; boom.currentTime = 0; boom.play();
-    frame.classList.add('screen-shake');
-    setTimeout(() => {
-      explosion.style.display = 'none';
-      frame.classList.remove('screen-shake');
-      let current = pic.src.split('/').pop();
-      let next;
-      do { next = images[Math.floor(Math.random() * images.length)]; }
-      while (next.split('/').pop() === current);
-      pic.src = next;
-    }, 400);
-  });
+    const pic = document.getElementById('profile-pic');
+    const explosion = document.getElementById('explosion');
+    const boom = document.getElementById('boom');
+    const frame = document.getElementById('photo-frame');
+    const miniCaption = document.getElementById('mini-caption');
 
-  // === Shadow text: wrap WORDS (but SKIP inside links) to preserve wrapping and link styling ===
-  function wrapWordsPreservingHTML(el) {
-    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
-    const textNodes = [];
-    while (walker.nextNode()) textNodes.push(walker.currentNode);
+    function filenameFromSrc(src) {
+      return (src.split('/').pop() || "").split('?')[0].split('#')[0].toLowerCase();
+    }
+    function setCaptionForFilename(fileKey) {
+      const text = titles[fileKey]; if (!text) return;
+      miniCaption.style.opacity = '0';
+      setTimeout(() => {
+        miniCaption.textContent = text;
+        miniCaption.style.opacity = '1';
+      }, 80);
+    }
+    function initCaption() { setCaptionForFilename(filenameFromSrc(pic.src)); }
+    if (pic.complete) initCaption(); else pic.addEventListener('load', initCaption, { once: true });
 
-    textNodes.forEach(node => {
-      // Skip any text that is inside an <a> link
-      if (node.parentElement && node.parentElement.closest('a')) return;
+    function playExplosionOnFrame() {
+      const base = explosion.getAttribute('src').split('?')[0];
+      explosion.setAttribute('src', `${base}?t=${Date.now()}`);
+      explosion.style.display = 'block';
+    }
+    function hideExplosionOnFrame() { explosion.style.display = 'none'; }
 
-      const text = node.nodeValue;
-      const parts = text.split(/(\s+)/); // keep whitespace tokens
+    pic.addEventListener('click', () => {
+      playExplosionOnFrame();
+      try { boom.volume = 0.4; boom.currentTime = 0; boom.play(); } catch {}
+      frame.classList.add('screen-shake');
 
-      const frag = document.createDocumentFragment();
-      parts.forEach(part => {
-        if (part.trim().length === 0) {
-          frag.appendChild(document.createTextNode(part)); // preserve spaces/newlines
-        } else {
-          const span = document.createElement('span');
-          span.className = 'shadow-word';
-          span.textContent = part;
-          frag.appendChild(span);
+      setTimeout(() => {
+        hideExplosionOnFrame();
+        frame.classList.remove('screen-shake');
+        const currentKey = filenameFromSrc(pic.src);
+        let next;
+        do { next = images[Math.floor(Math.random() * images.length)]; }
+        while (filenameFromSrc(next) === currentKey);
+        setCaptionForFilename(filenameFromSrc(next));
+        pic.src = next;
+      }, 300);
+    });
+
+    // ==== Wiggle wrapper ====
+    function wrapWordsPreservingLinks(rootEl) {
+      const walker = document.createTreeWalker(rootEl, NodeFilter.SHOW_TEXT, null);
+      const nodes = [];
+      while (walker.nextNode()) nodes.push(walker.currentNode);
+
+      nodes.forEach(node => {
+        if (node.parentElement && node.parentElement.closest('a')) return;
+        const parts = node.nodeValue.split(/(\s+)/);
+        const frag = document.createDocumentFragment();
+        parts.forEach(part => {
+          if (part.trim().length === 0) frag.appendChild(document.createTextNode(part));
+          else {
+            const span = document.createElement('span');
+            span.className = 'shadow-word';
+            span.textContent = part;
+            frag.appendChild(span);
+          }
+        });
+        node.parentNode.replaceChild(frag, node);
+      });
+    }
+    document.querySelectorAll('h1.shadow-text, h4.shadow-text').forEach(wrapWordsPreservingLinks);
+
+    // ==== Cursor shadow ====
+    const cursorShadow = document.getElementById('cursor-shadow');
+    document.addEventListener('mousemove', e => {
+      cursorShadow.style.left = `${e.clientX + 3}px`;
+      cursorShadow.style.top  = `${e.clientY + 3}px`;
+    });
+
+    // ==== Global counter (CountAPI with local fallback) ====
+    const countEl = document.getElementById('gnome-count');
+    const COUNT_NS = 'speep.me';
+    const COUNT_KEY = 'gnomes_caught';
+    const LOCAL_MIRROR = 'gnomeCountMirror';
+
+    function setCount(n){ countEl.textContent = n; }
+
+    async function initCount(){
+      try {
+        const r = await fetch(`https://api.countapi.xyz/get/${encodeURIComponent(COUNT_NS)}/${encodeURIComponent(COUNT_KEY)}`);
+        const d = await r.json();
+        if (typeof d.value === 'number') {
+          setCount(d.value);
+          localStorage.setItem(LOCAL_MIRROR, String(d.value));
+          return;
         }
+        throw new Error('No value from API');
+      } catch {
+        const n = Number(localStorage.getItem(LOCAL_MIRROR) || 0);
+        setCount(n);
+      }
+    }
+
+    async function incrementCount(){
+      try {
+        const r = await fetch(`https://api.countapi.xyz/hit/${encodeURIComponent(COUNT_NS)}/${encodeURIComponent(COUNT_KEY)}`);
+        const d = await r.json();
+        if (typeof d.value === 'number') {
+          setCount(d.value);
+          localStorage.setItem(LOCAL_MIRROR, String(d.value));
+          return;
+        }
+        throw new Error('No value from API');
+      } catch {
+        const n = Number(localStorage.getItem(LOCAL_MIRROR) || 0) + 1;
+        localStorage.setItem(LOCAL_MIRROR, String(n));
+        setCount(n);
+      }
+    }
+
+    initCount();
+
+    // ==== MULTI-GNOME SPAWNER ====
+    const gnomeLayer = document.getElementById('gnome-layer');
+
+    // Utility: bind press to explode; block drag
+    function bindExplodeTarget(el, handler){
+      ['pointerdown','mousedown','touchstart'].forEach(type => {
+        el.addEventListener(type, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          handler();
+        }, { passive: false });
+      });
+      el.addEventListener('dragstart', (e) => { e.preventDefault(); return false; });
+    }
+
+    // Spawn ONE gnome; side = 'left' | 'right'
+    function spawnGnome(side){
+      // wrapper
+      const wrap = document.createElement('div');
+      wrap.className = 'gnome-wrapper';
+
+      // hitbox, sprite, boom
+      const hit = document.createElement('div');
+      hit.className = 'gnome-hitbox';
+      const img = document.createElement('img');
+      img.className = 'gnome';
+      img.src = 'Animations/gnome.gif';
+      img.alt = 'Running gnome';
+      img.setAttribute('draggable','false');
+
+      const boomImg = document.createElement('img');
+      boomImg.className = 'gnome-boom';
+      boomImg.src = 'Animations/explosion.gif';
+      boomImg.alt = 'Boom';
+      boomImg.setAttribute('draggable','false');
+
+      // orientation: flip ONLY when coming from LEFT
+      img.style.transform = (side === 'left') ? 'scaleX(-1)' : 'scaleX(1)';
+
+      // start position offscreen
+      wrap.style.animation = 'none';
+      wrap.style.transform = (side === 'left')
+        ? 'translateX(-60px)'
+        : 'translateX(calc(100vw + 60px))';
+
+      // attach to DOM before measuring/animating
+      wrap.appendChild(hit);
+      wrap.appendChild(img);
+      wrap.appendChild(boomImg);
+      gnomeLayer.appendChild(wrap);
+
+      let exploded = false;
+
+      function explode(){
+        if (exploded) return;
+        exploded = true;
+
+        // freeze current position
+        const computed = getComputedStyle(wrap);
+        const matrix = computed.transform;
+        wrap.style.animation = 'none';
+        wrap.style.transform = matrix !== 'none' ? matrix : wrap.style.transform;
+
+        // hide sprite, show explosion (cache-bust to replay)
+        img.style.visibility = 'hidden';
+        const base = boomImg.getAttribute('src').split('?')[0];
+        boomImg.setAttribute('src', `${base}?t=${Date.now()}`);
+        boomImg.style.display = 'block';
+
+        // audio (clone so multiple booms can overlap)
+        try {
+          const a = new Audio(boom.src);
+          a.volume = 0.5;
+          a.play().catch(()=>{});
+        } catch {}
+
+        incrementCount();
+
+        setTimeout(() => {
+          // clean up this gnome
+          wrap.remove();
+        }, 750);
+      }
+
+      // bind interactions to both sprite and hitbox
+      bindExplodeTarget(img, explode);
+      bindExplodeTarget(hit, explode);
+
+      // kick off run (slightly randomized speed for variety)
+      const duration = 4.6 + Math.random()*0.8; // ~4.6–5.4s
+      requestAnimationFrame(() => {
+        wrap.style.animation = (side === 'left' ? 'gnome-run-left' : 'gnome-run-right') + ` ${duration}s linear forwards`;
       });
 
-      node.parentNode.replaceChild(frag, node);
-    });
-  }
+      // auto remove after crossing if not exploded
+      wrap.addEventListener('animationend', () => {
+        if (!exploded) wrap.remove();
+      });
+    }
 
-  document.querySelectorAll('.shadow-text').forEach(wrapWordsPreservingHTML);
+    // Spawn a batch: 1–7 gnomes, each random side; tiny intra-batch stagger
+    function spawnBatch(){
+      const n = 1 + Math.floor(Math.random() * 7);
+      for (let i = 0; i < n; i++){
+        const side = (Math.random() < 0.5) ? 'left' : 'right';
+        const stagger = Math.random() * 400; // up to 0.4s spacing inside batch
+        setTimeout(() => spawnGnome(side), stagger);
+      }
+    }
 
-  // Gnome runner
-  const gnomeWrapper = document.getElementById('gnome-wrapper');
-  function runGnome() {
-    const fromLeft = Math.random() < 0.5;
-    gnomeWrapper.style.left = fromLeft ? '-60px' : '110vw';
-    gnomeWrapper.style.animation = fromLeft ? 'gnome-run-left 2s linear forwards' : 'gnome-run-right 2s linear forwards';
-    gnomeWrapper.style.opacity = 1;
-  }
-  (function randomIntervalGnome() {
-    const delay = Math.random() * 100000;
-    setTimeout(() => { runGnome(); randomIntervalGnome(); }, delay);
-  })();
+    // Loop: spawn batches at 5–15s random intervals
+    function spawnLoop(){
+      const delay = 5000 + Math.random() * 10000; // 5–15s
+      setTimeout(() => { spawnBatch(); spawnLoop(); }, delay);
+    }
 
-  // Cursor shadow follow
-  const cursorShadow = document.getElementById('cursor-shadow');
-  document.addEventListener('mousemove', e => {
-    cursorShadow.style.left = `${e.clientX + 3}px`;
-    cursorShadow.style.top  = `${e.clientY + 3}px`;
-  });
-</script>
+    // Start after an initial random delay (fits the 5–15s rule)
+    setTimeout(() => { spawnBatch(); spawnLoop(); }, 5000 + Math.random()*10000);
+  </script>
 </body>
 </html>

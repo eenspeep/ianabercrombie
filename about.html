@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>About — speep.me</title>
+  <link rel="icon" type="image/png" href="screamgnome.png" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; width: 100%; }
+    body {
+      background: linear-gradient(to bottom, #ffffff 0%, #ffffff 95%, #000000 100%);
+      font-family: "Courier New", monospace;
+      color: #000;
+      overflow: hidden;
+      position: relative;
+    }
+    .site-container {
+      position: absolute; top: 20px; left: 20px; right: 20px; bottom: 20px;
+      background: #fff; height: calc(100% - 40px);
+      box-shadow: 6px 6px 12px rgba(0,0,0,.2);
+      border: 1px solid #000; display: flex; z-index: 2;
+    }
+    .sidebar {
+      width: 200px; background: #f5f5f5; border-right: 1px solid #000;
+      padding: 20px; display: flex; flex-direction: column; gap: 10px;
+    }
+    .sidebar a {
+      display: block; padding: 12px 16px; background: #fff; border: 1px solid #000;
+      color: #000; text-decoration: none; font-size: 16px;
+      transition: transform .2s ease, background-color .2s ease;
+    }
+    .sidebar a:hover { transform: translateX(5px); background: #ddd; }
+
+    .main {
+      flex: 1; padding: 40px; overflow: auto;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* Win98 window */
+    .win98-window {
+      width: min(720px, 100%); border: 2px solid #000; background: #fff;
+      box-shadow: inset -2px -2px 0 #000, inset 2px 2px 0 #fff;
+      display: flex; flex-direction: column;
+    }
+    .win98-titlebar {
+      background: #e0e0e0; border-bottom: 1px solid #000; padding: 6px 8px;
+      display: flex; align-items: center; justify-content: space-between; user-select: none;
+    }
+    .win98-titlebar .title { font-weight: bold; letter-spacing: .5px; }
+    .win98-controls { display: flex; gap: 6px; }
+    .win98-btn {
+      width: 18px; height: 18px; border: 1px solid #000; background: #fff;
+      display: grid; place-items: center; cursor: default; font-size: 12px; line-height: 1;
+    }
+    .win98-btn:active { transform: translate(1px,1px); }
+
+    .win98-menubar {
+      display: flex; gap: 16px; padding: 6px 8px;
+      border-bottom: 1px solid #000; background: #f7f7f7; user-select: none;
+    }
+    .win98-menubar .menu-item { cursor: default; }
+    .win98-body { display: grid; grid-template-columns: 1fr; padding: 16px; gap: 16px; }
+    .hr98 { height: 1px; background: #000; opacity: .5; margin: 4px 0 0; }
+
+    .panel {
+      border: 1px solid #000; padding: 12px; background: #fff;
+      box-shadow: inset -1px -1px 0 #000, inset 1px 1px 0 #fff;
+    }
+    .panel h3 { font-size: 1rem; margin-bottom: 8px; }
+
+    .file-list {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px;
+    }
+    .file-item {
+      display: grid; grid-template-columns: 28px 1fr; gap: 8px; align-items: center;
+      padding: 8px; border: 1px solid #000; background: #fff; text-decoration: none; color: #000;
+      transition: background-color .15s ease, transform .1s ease, opacity .15s ease;
+      position: relative;
+    }
+    .file-item:hover { background: #efefef; transform: translateY(-1px); }
+
+    /* Only mark unavailable if explicitly known (404/410) */
+    .file-item.unavailable { opacity: .55; }
+    .file-item.unavailable::after {
+      content: "Coming Soon";
+      position: absolute; right: 6px; top: 6px; font-size: .7rem;
+      padding: 2px 6px; border: 1px dashed #000; background: #fff;
+    }
+
+    .file-icon {
+      width: 24px; height: 28px; border: 1px solid #000; background: linear-gradient(#fff, #f0f0f0);
+      box-shadow: inset -1px -1px 0 #000, inset 1px 1px 0 #fff; position: relative;
+    }
+    .file-icon::after {
+      content: ""; position: absolute; right: 0; top: 0; width: 10px; height: 10px;
+      border-left: 1px solid #000; border-bottom: 1px solid #000; background: #fff;
+      transform: translate(1px,1px) skew(-10deg,-10deg);
+    }
+    .file-name { font-size: .95rem; }
+
+    .notes {
+      border: 1px solid #000; padding: 12px; background: #fff; min-height: 80px;
+      box-shadow: inset -1px -1px 0 #000, inset 1px 1px 0 #fff;
+    }
+    .notes p { line-height: 1.5; }
+
+    .statusbar {
+      border-top: 1px solid #000; padding: 6px 8px; background: #f7f7f7;
+      font-size: .9rem; display: flex; justify-content: space-between; gap: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="site-container">
+    <div class="sidebar">
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+      <a href="projects.html">Projects</a>
+      <a href="contact.html">Contact</a>
+      <a href="comic.html">DNGN</a>
+    </div>
+
+    <div class="main">
+      <div class="win98-window" role="group" aria-label="About Window">
+        <div class="win98-titlebar">
+          <div class="title">ABOUT.EXE</div>
+          <div class="win98-controls">
+            <div class="win98-btn" title="Minimize">_</div>
+            <div class="win98-btn" title="Maximize">□</div>
+            <div class="win98-btn" title="Close">×</div>
+          </div>
+        </div>
+
+        <div class="win98-menubar">
+          <div class="menu-item">File</div>
+          <div class="menu-item">Edit</div>
+          <div class="menu-item">View</div>
+          <div class="menu-item">Help</div>
+        </div>
+
+        <div class="win98-body">
+          <div class="panel">
+            <h3>Documents</h3>
+            <div class="hr98"></div>
+            <div class="file-list">
+              <!-- Update hrefs to your real files (case-sensitive!) -->
+              <a class="file-item" href="Docs/Resume.pdf" target="_blank" rel="noopener">
+                <div class="file-icon"></div><div class="file-name">Resume.pdf</div>
+              </a>
+              <a class="file-item" href="Docs/CV.pdf" target="_blank" rel="noopener">
+                <div class="file-icon"></div><div class="file-name">CV.pdf</div>
+              </a>
+              <a class="file-item" href="Docs/Portfolio.pdf" target="_blank" rel="noopener">
+                <div class="file-icon"></div><div class="file-name">Portfolio.pdf</div>
+              </a>
+              <a class="file-item" href="Docs/Writing_Samples.zip" target="_blank" rel="noopener">
+                <div class="file-icon"></div><div class="file-name">Writing_Samples.zip</div>
+              </a>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h3>About Ian</h3>
+            <div class="hr98"></div>
+            <div class="notes">
+              <p>
+                Based in Newark, New Jersey. MFA in Creative Writing from UCF.
+                Writer, editor, reader. Building worlds and catching gnomes since forever.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="statusbar">
+          <span id="status-text">Ready</span>
+          <span>© 1998 SPEEP</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- File existence check + safe routing -->
+  <script>
+    (function () {
+      const STATUS = document.getElementById('status-text');
+      const links = Array.from(document.querySelectorAll('.file-item'));
+
+      // HEAD with timeout helper
+      function headWithTimeout(url, ms = 5000) {
+        const controller = new AbortController();
+        const t = setTimeout(() => controller.abort(), ms);
+        return fetch(url, { method: 'HEAD', signal: controller.signal })
+          .finally(() => clearTimeout(t));
+      }
+
+      // Resolve hrefs relative to the current page reliably
+      function resolve(url) {
+        try { return new URL(url, window.location.href).href; }
+        catch { return url; }
+      }
+
+      // Pre-check: only mark unavailable if we get explicit 404/410
+      links.forEach(link => {
+        const url = resolve(link.getAttribute('href'));
+        headWithTimeout(url, 5000).then(res => {
+          if (res.status === 404 || res.status === 410) {
+            link.classList.add('unavailable');
+            link.setAttribute('aria-disabled', 'true');
+            link.title = 'Coming Soon';
+          }
+          // Any other status (200, 302, opaque, etc.): leave as available
+        }).catch(() => {
+          // Network/CORS/timeout: DO NOT mark unavailable
+        });
+
+        // Click: decide based on explicit 404/410 only
+        link.addEventListener('click', function (e) {
+          e.preventDefault();
+          const url = resolve(this.getAttribute('href'));
+          STATUS.textContent = 'Checking file…';
+
+          headWithTimeout(url, 6000).then(res => {
+            if (res.status === 404 || res.status === 410) {
+              STATUS.textContent = 'File not found. Redirecting…';
+              window.location.href = 'comingsoon.html';
+            } else {
+              STATUS.textContent = 'Opening file…';
+              window.open(url, '_blank', 'noopener');
+            }
+          }).catch(() => {
+            // On errors, assume available and try to open (prevents false negatives)
+            STATUS.textContent = 'Opening file…';
+            window.open(url, '_blank', 'noopener');
+          });
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
