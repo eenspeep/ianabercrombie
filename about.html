@@ -27,6 +27,7 @@
       display: grid;
       grid-template-columns: 220px 1fr;
       z-index: 2;
+      min-width: 0;
     }
 
     /* ===== Sidebar: identical to index/comic ===== */
@@ -37,6 +38,7 @@
       grid-template-rows: auto auto 1fr;
       padding: 16px;
       gap: 12px;
+      min-width: 0;
     }
 
     .photo-frame {
@@ -100,17 +102,19 @@
     }
     .nav { display: grid; gap: 8px; align-content: start; }
 
-    /* ===== Main area (kept from your About page) ===== */
+    /* ===== Main area ===== */
     .main {
       overflow: auto;
       padding: 40px;
       display: flex; align-items: center; justify-content: center;
+      min-width: 0;
     }
 
     .win98-window {
       width: min(720px, 100%); border: 2px solid #000; background: #fff;
       box-shadow: inset -2px -2px 0 #000, inset 2px 2px 0 #fff;
       display: flex; flex-direction: column;
+      min-width: 0;
     }
     .win98-titlebar {
       background: #e0e0e0; border-bottom: 1px solid #000; padding: 6px 8px;
@@ -178,7 +182,7 @@
       font-size: .9rem; display: flex; justify-content: space-between; gap: 8px;
     }
 
-    /* Optional: subtle cursor shadow like index/comic (won't interfere) */
+    /* Cursor shadow */
     .cursor-shadow {
       position: fixed;
       width: 18px; height: 18px;
@@ -186,14 +190,71 @@
       background-size: contain;
       opacity: .25; pointer-events: none; z-index: 10000;
     }
+
+    /* ===== Mobile topbar (hidden on desktop) ===== */
+    .topbar-mobile { display: none; }
+    .topbar-inner {
+      background: #e0e0e0;
+      border-bottom: 1px solid #000;
+      padding: 6px 8px;
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    }
+    .brand95 { font-weight: bold; letter-spacing: .5px; }
+    .menu95 {
+      border: 1px solid #000; background: #e9e9e9;
+      box-shadow: inset -2px -2px 0 #fff, inset 2px 2px 0 #000;
+      padding: 6px 10px; user-select: none;
+    }
+    .menu95:active {
+      transform: translate(1px,1px);
+      box-shadow: inset -2px -2px 0 #000, inset 2px 2px 0 #fff;
+      background: #dcdcdc;
+    }
+    .dropdown95 {
+      position: absolute; top: 100%; right: 8px;
+      border: 1px solid #000; background: #fff; box-shadow: 3px 3px 0 #000;
+      display: none; min-width: 160px; z-index: 3;
+    }
+    .dropdown95 a {
+      display: block; padding: 8px 10px; color: #000; text-decoration: none; border-bottom: 1px solid #000;
+    }
+    .dropdown95 a:last-child { border-bottom: 0; }
+    .dropdown95 a:hover { background: #efefef; }
+
+    /* ===== Mobile rules: hide sidebar, show topbar, resize grid ===== */
+    @media (hover: none), (max-width: 640px) {
+      .sidebar { display: none !important; }
+      .site-container {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr; /* topbar + content */
+      }
+      .topbar-mobile { display: block; position: relative; z-index: 3; }
+      .main { padding: 16px; }
+      .cursor-shadow { display: none !important; } /* disable cursor shadow on mobile */
+    }
   </style>
 </head>
 <body>
-  <!-- cursor shadow (optional visual flair; remove if you don’t want it here) -->
+  <!-- cursor shadow (hidden on mobile via CSS) -->
   <div class="cursor-shadow" id="cursor-shadow"></div>
 
   <div class="site-container">
-    <!-- ===== Unified Sidebar ===== -->
+    <!-- ===== Mobile topbar (mobile only) ===== -->
+    <div class="topbar-mobile" id="topbar">
+      <div class="topbar-inner">
+        <div class="brand95">SPEEP</div>
+        <button class="menu95" id="menuBtn" type="button" aria-expanded="false" aria-controls="dropdown">Menu ▾</button>
+        <div class="dropdown95" id="dropdown" role="menu" aria-labelledby="menuBtn">
+          <a href="index.html">Home</a>
+          <a href="about.html">About</a>
+          <a href="projects.html">Projects</a>
+          <a href="contact.html">Contact</a>
+          <a href="comic.html">DNGN</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Unified Sidebar (desktop only) ===== -->
     <aside class="sidebar">
       <div class="photo-frame" id="photo-frame">
         <img src="Icons/icon1.png" alt="Profile or Logo" id="profile-pic" />
@@ -211,7 +272,7 @@
       </nav>
     </aside>
 
-    <!-- ===== Your original About main content (unchanged) ===== -->
+    <!-- ===== About main content ===== -->
     <main class="main">
       <div class="win98-window" role="group" aria-label="About Window">
         <div class="win98-titlebar">
@@ -271,9 +332,36 @@
     </main>
   </div>
 
+  <!-- ===== Mobile menu toggle ===== -->
+  <script>
+    (function() {
+      const btn = document.getElementById('menuBtn');
+      const dd  = document.getElementById('dropdown');
+      if (!btn || !dd) return;
+
+      function closeMenu() {
+        dd.style.display = 'none';
+        btn.setAttribute('aria-expanded', 'false');
+      }
+      function openMenu() {
+        dd.style.display = 'block';
+        btn.setAttribute('aria-expanded', 'true');
+      }
+      btn.addEventListener('click', (e) => {
+        const open = btn.getAttribute('aria-expanded') === 'true';
+        open ? closeMenu() : openMenu();
+        e.stopPropagation();
+      });
+      document.addEventListener('click', (e) => {
+        if (dd.style.display === 'block' && !dd.contains(e.target) && e.target !== btn) closeMenu();
+      });
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMenu(); });
+    })();
+  </script>
+
   <!-- ===== Sidebar interactivity (same logic as index/comic) ===== -->
   <script>
-    // Cursor shadow (optional)
+    // Cursor shadow (desktop; hidden via CSS on mobile)
     (function() {
       const cursorShadow = document.getElementById('cursor-shadow');
       if (!cursorShadow) return;
@@ -298,6 +386,7 @@
       const boom = document.getElementById('boom');
       const frame = document.getElementById('photo-frame');
       const miniCaption = document.getElementById('mini-caption');
+      if (!pic) return;
 
       function filenameFromSrc(src) {
         return (src.split('/').pop() || "").split('?')[0].split('#')[0].toLowerCase();
@@ -338,7 +427,7 @@
       });
     })();
 
-    // ===== File existence check + safe routing (unchanged) =====
+    // ===== File existence check + safe routing =====
     (function () {
       const STATUS = document.getElementById('status-text');
       const links = Array.from(document.querySelectorAll('.file-item'));
