@@ -9,24 +9,41 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; width: 100%; }
 
+    :root{
+      /* Scales across devices */
+      --pad: clamp(10px, 2.2vmin, 16px);
+      --gap: clamp(8px, 2vmin, 12px);
+
+      /* Win95 window chrome heights (explicit so bottom always fits) */
+      --title-h: clamp(28px, 4.2vmin, 36px);
+      --menu-h:  clamp(26px, 3.8vmin, 32px);
+      --status-h: clamp(26px, 3.8vmin, 32px);
+
+      /* Sidebar width scales down on narrow screens */
+      --sidebar-w: clamp(160px, 24vw, 220px);
+    }
+
     body {
       background: linear-gradient(to bottom, #ffffff 0%, #ffffff 95%, #000000 100%);
       font-family: "Courier New", monospace;
       color: #000;
-      overflow: hidden;
+      overflow: hidden;  /* lock outer page scrolling */
       position: relative;
+      padding-bottom: env(safe-area-inset-bottom, 0); /* avoid iOS bar overlay */
     }
 
-    /* App frame */
+    /* App frame: lock to safe viewport height on all devices */
     .site-container {
       position: absolute;
       inset: 20px;
       background: #fff;
-      height: calc(100% - 40px);
+      /* Prefer 100svh (safe), fall back to 100dvh (dynamic) */
+      height: calc((100svh - 40px));
+      height: calc((100dvh - 40px));
       border: 1px solid #000;
       box-shadow: 6px 6px 12px rgba(0,0,0,.2);
       display: grid;
-      grid-template-columns: 220px 1fr;
+      grid-template-columns: var(--sidebar-w) 1fr;
       z-index: 2;
     }
 
@@ -36,8 +53,9 @@
       border-right: 1px solid #000;
       display: grid;
       grid-template-rows: auto auto 1fr;
-      padding: 16px;
-      gap: 12px;
+      padding: var(--pad);
+      gap: var(--gap);
+      min-width: 0;
     }
 
     .photo-frame {
@@ -56,6 +74,8 @@
       object-fit: cover; cursor: pointer;
       position: relative; z-index: 1;
       display: block;
+      -webkit-user-drag: none;
+      user-select: none;
     }
     #explosion {
       position: absolute; inset: 0;
@@ -74,7 +94,7 @@
 
     .mini-caption {
       text-align: center;
-      font-size: .95rem;
+      font-size: clamp(.85rem, 1.6vmin, .95rem);
       background: #fff;
       border: 1px solid #000;
       box-shadow: inset -1px -1px 0 #000, inset 1px 1px 0 #fff;
@@ -93,6 +113,7 @@
       text-align: left;
       transition: transform .05s ease;
       user-select: none;
+      font-size: clamp(.9rem, 1.8vmin, 1rem);
     }
     .btn-95:active {
       transform: translate(1px,1px);
@@ -103,10 +124,12 @@
 
     /* ==== Main ==== */
     .main {
-      overflow: auto;
-      padding: 24px;
+      overflow: hidden; /* prevent outer scroll; inner body will scroll if needed */
+      padding: clamp(10px, 2.2vmin, 24px);
       display: grid;
       place-items: center;
+      min-width: 0;
+      min-height: 0; /* IMPORTANT to allow child 100% height */
     }
     .win95-window {
       width: min(760px, 100%);
@@ -114,13 +137,19 @@
       border: 2px solid #000;
       box-shadow: inset -2px -2px 0 #000, inset 2px 2px 0 #fff;
       display: grid;
-      grid-template-rows: auto auto 1fr auto;
+      /* Explicit row heights so bottom status bar is always visible */
+      grid-template-rows: var(--title-h) var(--menu-h) 1fr var(--status-h);
+      height: 100%;
+      max-height: 100%;
+      min-width: 0;
+      min-height: 0; /* allow 1fr (body) to shrink */
     }
     .titlebar {
       background: #e0e0e0;
       border-bottom: 1px solid #000;
-      padding: 6px 10px;
+      padding: 0 10px;
       display: flex; justify-content: space-between; align-items: center;
+      font-size: clamp(.95rem, 2vmin, 1rem);
     }
     .titlebar .title { font-weight: bold; }
     .controls { display: flex; gap: 6px; }
@@ -130,17 +159,23 @@
       background: #fff;
       display: grid; place-items: center;
       font-size: 12px;
+      line-height: 1;
     }
     .ctl:active { transform: translate(1px,1px); }
 
     .menubar {
       background: #f7f7f7;
       border-bottom: 1px solid #000;
-      padding: 6px 10px;
-      display: flex; gap: 16px;
+      padding: 0 10px;
+      display: flex; gap: 16px; align-items: center;
+      font-size: clamp(.9rem, 1.8vmin, 1rem);
     }
 
-    .window-body { padding: 16px; }
+    .window-body {
+      padding: 16px;
+      overflow: auto; /* inner scroll if content is tall */
+      min-height: 0;  /* allow 1fr to actually shrink */
+    }
 
     .intro {
       border: 1px solid #000;
@@ -148,9 +183,9 @@
       box-shadow: inset -1px -1px 0 #000, inset 1px 1px 0 #fff;
       padding: 14px;
     }
-    .intro h1 { font-size: 1.35rem; margin-bottom: 8px; }
+    .intro h1 { font-size: clamp(1.1rem, 2.6vmin, 1.35rem); margin-bottom: 8px; }
     .intro h4 {
-      font-size: 1rem;
+      font-size: clamp(.95rem, 2.2vmin, 1rem);
       line-height: 1.6;
       letter-spacing: .3px;
       white-space: pre-wrap;
@@ -162,15 +197,15 @@
     .statusbar {
       background: #f7f7f7;
       border-top: 1px solid #000;
-      padding: 6px 10px;
+      padding: 0 10px;
       display: grid;
       grid-template-columns: 1fr auto 1fr;
       align-items: center;
-      font-size: .9rem;
+      font-size: clamp(.85rem, 1.8vmin, .95rem);
       gap: 12px;
     }
     .sb-left  { justify-self: start; }
-    .sb-center{ justify-self: center; }
+    .sb-center{ justify-self: center; text-align: center; }
     .sb-right { justify-self: end; }
 
     /* Cursor shadow */
@@ -197,7 +232,7 @@
       -webkit-touch-callout: none;
     }
     .gnome {
-      height: 68px;
+      height: clamp(52px, 7.2vmin, 68px); /* scale down on short screens */
       transform: scaleX(1);
       pointer-events: auto;
       cursor: pointer;
@@ -228,6 +263,22 @@
     @keyframes gnome-run-right {
       0%   { transform: translateX(calc(100vw + 60px)); }
       100% { transform: translateX(-60px); }
+    }
+
+    /* Extra compression for very short screens so the status bar never gets clipped */
+    @media (max-height: 680px){
+      :root{
+        --title-h: 28px;
+        --menu-h:  24px;
+        --status-h: 24px;
+      }
+      .window-body{ padding: 12px; }
+      .sidebar{ padding: 12px; gap: 8px; }
+    }
+
+    /* Narrow screens: slimmer sidebar */
+    @media (max-width: 600px){
+      :root{ --sidebar-w: clamp(140px, 30vw, 180px); }
     }
   </style>
 </head>
@@ -274,7 +325,8 @@ My name is Ian Abercrombie.
 <br><br>My résumé, CV, and other employment related documents can be found on my "<a href="about.html">About</a>" page.
 <br><br>To read examples of my work, visit "<a href="projects.html">Projects</a>."
 <br><br>In order to catch me, visit my "<a href="contact.html">Contact</a>" page.
-<br><br>If you instead want to catch a gnome, visit "<a href="comic.html">DNGN</a>."
+<br><br>If, instead, you want to learn to catch a gnome, visit "<a href="comic.html">DNGN</a>."
+<br><br>Click my photo for more of me. I dare you.
             </h4>
           </div>
         </div>
