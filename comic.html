@@ -9,35 +9,53 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; width: 100%; }
 
+    :root{
+      --pad: clamp(10px, 2.2vmin, 16px);
+      --gap: clamp(8px, 2vmin, 12px);
+      --title-h: clamp(28px, 4.2vmin, 36px);
+      --menu-h:  clamp(26px, 3.8vmin, 32px);
+      --status-h: clamp(26px, 3.8vmin, 32px);
+      --sidebar-w: clamp(160px, 24vw, 220px);
+    }
+
     body {
       background: linear-gradient(to bottom, #ffffff 0%, #ffffff 95%, #000000 100%);
       font-family: "Courier New", monospace;
       color: #000;
       overflow: hidden;
       position: relative;
+      padding-bottom: env(safe-area-inset-bottom, 0);
     }
 
-    /* ===== App frame (matches index.html) ===== */
+    /* App frame sized to safe viewport height */
     .site-container {
       position: absolute;
       inset: 20px;
       background: #fff;
-      height: calc(100% - 40px);
+      height: calc(100svh - 40px);
+      height: calc(100dvh - 40px);
       border: 1px solid #000;
       box-shadow: 6px 6px 12px rgba(0,0,0,.2);
       display: grid;
-      grid-template-columns: 220px 1fr;
+      grid-template-columns: var(--sidebar-w) 1fr;
       z-index: 2;
+      transition: grid-template-columns .2s ease;
+    }
+    /* Collapsed (used on mobile or when toggled) */
+    .site-container.collapsed {
+      grid-template-columns: 0 1fr;
     }
 
-    /* ==== Sidebar (matches index.html) ==== */
+    /* ==== Sidebar (same style as index) ==== */
     .sidebar {
       background: #f3f3f3;
       border-right: 1px solid #000;
       display: grid;
       grid-template-rows: auto auto 1fr;
-      padding: 16px;
-      gap: 12px;
+      padding: var(--pad);
+      gap: var(--gap);
+      min-width: 0;
+      overflow: hidden;
     }
 
     .photo-frame {
@@ -56,6 +74,7 @@
       object-fit: cover; cursor: pointer;
       position: relative; z-index: 1;
       display: block;
+      -webkit-user-drag: none; user-select: none;
     }
     #explosion {
       position: absolute; inset: 0;
@@ -74,7 +93,7 @@
 
     .mini-caption {
       text-align: center;
-      font-size: .95rem;
+      font-size: clamp(.85rem, 1.6vmin, .95rem);
       background: #fff;
       border: 1px solid #000;
       box-shadow: inset -1px -1px 0 #000, inset 1px 1px 0 #fff;
@@ -93,6 +112,7 @@
       text-align: left;
       transition: transform .05s ease;
       user-select: none;
+      font-size: clamp(.9rem, 1.8vmin, 1rem);
     }
     .btn-95:active {
       transform: translate(1px,1px);
@@ -101,27 +121,31 @@
     }
     .nav { display: grid; gap: 8px; align-content: start; }
 
-    /* ==== Main window (matches index.html) ==== */
+    /* ==== Main window ==== */
     .main {
-      overflow: auto;
-      padding: 24px;
+      overflow: hidden;
+      padding: clamp(10px, 2.2vmin, 24px);
       display: grid;
       place-items: center;
+      min-width: 0; min-height: 0;
     }
     .win95-window {
-      width: min(960px, 100%); /* a bit wider for comic */
+      width: min(960px, 100%); /* a bit wider for comics */
       background: #fff;
       border: 2px solid #000;
       box-shadow: inset -2px -2px 0 #000, inset 2px 2px 0 #fff;
       display: grid;
-      grid-template-rows: auto auto 1fr auto;
+      grid-template-rows: var(--title-h) var(--menu-h) 1fr var(--status-h);
       height: 100%;
+      max-height: 100%;
+      min-width: 0; min-height: 0;
     }
     .titlebar {
       background: #e0e0e0;
       border-bottom: 1px solid #000;
-      padding: 6px 10px;
+      padding: 0 10px;
       display: flex; justify-content: space-between; align-items: center;
+      gap: 8px;
     }
     .titlebar .title { font-weight: bold; }
     .controls { display: flex; gap: 6px; }
@@ -130,39 +154,56 @@
       border: 1px solid #000;
       background: #fff;
       display: grid; place-items: center;
-      font-size: 12px;
+      font-size: 12px; line-height: 1;
     }
     .ctl:active { transform: translate(1px,1px); }
+
+    /* Sidebar toggle button (shows on narrow screens) */
+    .toggle-sidebar {
+      border: 1px solid #000;
+      background: #fff;
+      padding: 4px 8px;
+      font: inherit;
+      cursor: pointer;
+    }
 
     .menubar {
       background: #f7f7f7;
       border-bottom: 1px solid #000;
-      padding: 6px 10px;
-      display: flex; gap: 16px;
+      padding: 0 10px;
+      display: flex; gap: 16px; align-items: center;
     }
 
     .window-body {
       padding: 16px;
-      overflow: hidden; /* our inner scroller is the comic body */
+      overflow: hidden; /* inner scroller is comic-container */
       display: grid;
+      min-height: 0;
     }
 
     /* ==== Status bar with centered counter ==== */
     .statusbar {
       background: #f7f7f7;
       border-top: 1px solid #000;
-      padding: 6px 10px;
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
+      padding: 0 10px;
+      display: flex;
       align-items: center;
-      font-size: .9rem;
-      gap: 12px;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+      font-size: clamp(.8rem, 1.7vmin, .95rem);
+      min-height: var(--status-h);
     }
-    .sb-left  { justify-self: start; }
-    .sb-center{ justify-self: center; }
-    .sb-right { justify-self: end; }
+    .sb-left, .sb-center, .sb-right { white-space: nowrap; }
 
-    /* ==== Cursor shadow ==== */
+    /* Phone status bar: only show counter; center it */
+    @media (hover: none), (max-width: 640px) {
+      .statusbar { justify-content: center; gap: 6px; }
+      .sb-left, .sb-right { display: none !important; }
+      .sb-center { text-align: center; }
+    }
+
+    /* Cursor shadow */
     .cursor-shadow {
       position: fixed;
       width: 18px; height: 18px;
@@ -170,8 +211,12 @@
       background-size: contain;
       opacity: .25; pointer-events: none; z-index: 10000;
     }
+    /* Disable cursor shadow on touch/mobile */
+    @media (hover: none), (max-width: 640px) {
+      .cursor-shadow { display: none !important; }
+    }
 
-    /* ===== Comic interior (your original styling, adapted) ===== */
+    /* ===== Comic interior ===== */
     .comic-container {
       position: relative;
       z-index: 1;
@@ -183,19 +228,15 @@
         linear-gradient(rgba(255,255,255,0.8), rgba(255,255,255,0.8)) padding-box,
         url("bricks.png") padding-box;
       background-repeat: no-repeat, repeat;
-      background-size: auto, auto;
-      background-position: 0 0, 0 0;
-      background-origin: padding-box, padding-box;
-      background-clip: padding-box, padding-box;
 
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: flex-start;
       overflow-y: auto;
+      min-height: 0;
     }
 
-    /* Chrome/Edge/Safari thin scrollbar inside comic */
     .comic-container::-webkit-scrollbar { width: 3px; background: transparent; }
     .comic-container::-webkit-scrollbar-track { background: transparent; }
 
@@ -215,7 +256,7 @@
     .comic-text {
       position: relative;
       z-index: 1;
-      font-size: 1.1rem;
+      font-size: clamp(1rem, 2.4vmin, 1.1rem);
       line-height: 1.6;
       letter-spacing: 0.5px;
       text-align: center;
@@ -253,12 +294,9 @@
       background-color: #ddd;
       transform: translateY(-2px);
     }
-    .nav-buttons input[type="number"] {
-      width: 64px;
-      text-align: center;
-    }
+    .nav-buttons input[type="number"] { width: 64px; text-align: center; }
 
-    /* ==== Multi-gnome runner styles (same as index) ==== */
+    /* ==== Gnome runner styles ==== */
     .gnome-wrapper {
       position: fixed;
       bottom: 10px;
@@ -268,33 +306,24 @@
       transform: translateX(-60px);
     }
     .gnome, .gnome-boom, .gnome-hitbox {
-      user-select: none;
-      -webkit-user-drag: none;
-      -webkit-touch-callout: none;
+      user-select: none; -webkit-user-drag: none; -webkit-touch-callout: none;
     }
     .gnome {
-      height: 68px;
+      height: clamp(52px, 7.2vmin, 68px);
       transform: scaleX(1);
       pointer-events: auto;
       cursor: pointer;
     }
     .gnome-boom {
       position: absolute;
-      left: -16px;
-      bottom: -16px;
-      width: 100px;
-      display: none;
-      pointer-events: none;
+      left: -16px; bottom: -16px;
+      width: 100px; display: none; pointer-events: none;
     }
     .gnome-hitbox {
       position: absolute;
-      left: -10px;
-      bottom: -6px;
-      width: 88px;
-      height: 80px;
-      pointer-events: auto;
-      cursor: pointer;
-      background: transparent;
+      left: -10px; bottom: -6px;
+      width: 88px; height: 80px;
+      pointer-events: auto; cursor: pointer; background: transparent;
     }
 
     @keyframes gnome-run-left {
@@ -305,12 +334,17 @@
       0%   { transform: translateX(calc(100vw + 60px)); }
       100% { transform: translateX(-60px); }
     }
+
+    /* Responsive tweaks: narrower sidebar on small screens */
+    @media (max-width: 720px){
+      :root{ --sidebar-w: clamp(140px, 30vw, 180px); }
+    }
   </style>
 </head>
 <body>
   <div class="cursor-shadow" id="cursor-shadow"></div>
 
-  <div class="site-container">
+  <div class="site-container" id="app">
     <aside class="sidebar">
       <div class="photo-frame" id="photo-frame">
         <img src="Icons/icon1.png" alt="Profile or Logo" id="profile-pic" />
@@ -332,16 +366,18 @@
       <section class="win95-window" role="group" aria-label="DNGN Window">
         <div class="titlebar">
           <div class="title">DNGN.TXT</div>
-          <div class="controls">
-            <div class="ctl" title="Minimize">_</div>
-            <div class="ctl" title="Maximize">□</div>
-            <div class="ctl" title="Close">×</div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button class="toggle-sidebar" id="toggleSidebar" aria-expanded="true">☰ Sidebar</button>
+            <div class="controls">
+              <div class="ctl" title="Minimize">_</div>
+              <div class="ctl" title="Maximize">□</div>
+              <div class="ctl" title="Close">×</div>
+            </div>
           </div>
         </div>
         <div class="menubar"><div>File</div><div>Edit</div><div>View</div><div>Help</div></div>
 
         <div class="window-body">
-          <!-- Your comic UI lives inside the window body -->
           <div class="comic-container">
             <div class="comic-panel" id="panel"></div>
             <div class="comic-text" id="caption"></div>
@@ -376,20 +412,34 @@
   <script>
     "use strict";
 
-    /* ===== Shared settings to match index.html ===== */
-    // Speed range (seconds to cross the screen)
-    const SPEED_MIN = 3.5;
-    const SPEED_MAX = 9.0;
-    const BATCH_MIN = 1;
-    const BATCH_MAX = 7;
-    const BATCH_DELAY_MIN = 5000;  // 5s
-    const BATCH_DELAY_MAX = 15000; // 15s
+    /* ===== Sidebar toggle ===== */
+    const app = document.getElementById('app');
+    const toggleBtn = document.getElementById('toggleSidebar');
 
-    function rand(min, max){ return min + Math.random() * (max - min); }
-    function randInt(min, max){ return Math.floor(rand(min, max + 1)); }
-    function randDuration(min = SPEED_MIN, max = SPEED_MAX){ return rand(min, max); }
+    // Default to collapsed on small screens
+    const startCollapsed = window.matchMedia('(max-width: 900px)').matches;
+    if (startCollapsed) {
+      app.classList.add('collapsed');
+      toggleBtn.setAttribute('aria-expanded', 'false');
+    }
 
-    // Sidebar portrait rotation + captions (same as index)
+    toggleBtn.addEventListener('click', () => {
+      app.classList.toggle('collapsed');
+      const expanded = !app.classList.contains('collapsed');
+      toggleBtn.setAttribute('aria-expanded', String(expanded));
+    });
+
+    /* ===== Cursor shadow (desktop/touch check) ===== */
+    const isTouchLike = window.matchMedia('(hover: none)').matches || 'ontouchstart' in window;
+    const cursorShadow = document.getElementById('cursor-shadow');
+    if (!isTouchLike && cursorShadow) {
+      document.addEventListener('mousemove', e => {
+        cursorShadow.style.left = `${e.clientX + 3}px`;
+        cursorShadow.style.top  = `${e.clientY + 3}px`;
+      });
+    }
+
+    /* ===== Sidebar portrait rotation + captions ===== */
     const images = ["Icons/icon1.png","Icons/icon2.png","Icons/icon3.png","Icons/icon4.png"];
     const titles = {
       "icon1.png": "Writer, Editor, Reader",
@@ -441,13 +491,6 @@
       }, 300);
     });
 
-    // Cursor shadow
-    const cursorShadow = document.getElementById('cursor-shadow');
-    document.addEventListener('mousemove', e => {
-      cursorShadow.style.left = `${e.clientX + 3}px`;
-      cursorShadow.style.top  = `${e.clientY + 3}px`;
-    });
-
     /* ===== GNOME COUNTER (CountAPI) ===== */
     const countEl = document.getElementById('gnome-count');
     const COUNT_NS = 'speep.me';
@@ -491,8 +534,20 @@
 
     initCount();
 
-    /* ===== MULTI-GNOME SPAWNER (same as index) ===== */
+    /* ===== MULTI-GNOME SPAWNER (lower frequency here) ===== */
     const gnomeLayer = document.getElementById('gnome-layer');
+
+    // Comic page: fewer gnomes, longer gaps
+    const SPEED_MIN = 3.5;
+    const SPEED_MAX = 9.0;
+    const BATCH_MIN = 1;
+    const BATCH_MAX = 3;           // <= lower batch size
+    const BATCH_DELAY_MIN = 15000; // 15s
+    const BATCH_DELAY_MAX = 45000; // 45s
+
+    function rand(min, max){ return min + Math.random() * (max - min); }
+    function randInt(min, max){ return Math.floor(rand(min, max + 1)); }
+    function randDuration(min = SPEED_MIN, max = SPEED_MAX){ return rand(min, max); }
 
     function bindExplodeTarget(el, handler){
       ['pointerdown','mousedown','touchstart'].forEach(type => {
@@ -575,7 +630,7 @@
     }
 
     function spawnBatch(){
-      const n = randInt(1, 7);
+      const n = randInt(BATCH_MIN, BATCH_MAX);
       for (let i = 0; i < n; i++){
         const side = (Math.random() < 0.5) ? 'left' : 'right';
         const stagger = Math.random() * 400;
@@ -591,20 +646,17 @@
     // Start gnomes
     setTimeout(() => { spawnBatch(); loopBatches(); }, rand(BATCH_DELAY_MIN, BATCH_DELAY_MAX));
 
-    /* ======== COMIC PAGE LOGIC (your original functionality) ======== */
-    const totalPages = 12; // Update when adding comics
+    /* ======== COMIC PAGE LOGIC ======== */
+    const totalPages = 1; // Update when adding comics
     const captions = {
       1: "Before you stands a bridge into darkness. Across the bridge, the DNGN. Your journey begins here. Humble. Unencumbered. Fastidious. Forthright. Brave wait a second. Who is that?",
-      2: "Continuation of the tale...",
-      3: "Something wild happens here...",
-      // Add more as needed...
     };
     const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "webp", "gif"];
     const IMAGE_DIR = "Comics";
     const FALLBACK_COLOR = "#bbb";
 
     function getPageFromURL() {
-      const m = window.location.search.match(/[?&]page=(\d+)/);
+      const m = window.location.search.match(/[?&]page=(\\d+)/);
       return m ? parseInt(m[1], 10) : 1;
     }
     function getCurrentFileName() {
@@ -664,15 +716,15 @@
       const byId = (id) => document.getElementById(id);
 
       const first = byId("first");
-      const prev = byId("prev");
-      const next = byId("next");
-      const latest = byId("latest");
-      const jump = byId("page-jump");
+      const prev  = byId("prev");
+      const next  = byId("next");
+      const latest= byId("latest");
+      const jump  = byId("page-jump");
 
       if (first) first.addEventListener("click", (e) => { e.preventDefault(); goToPage(1); });
       if (prev)  prev.addEventListener("click",  (e) => { e.preventDefault(); goToPage(page - 1); });
       if (next)  next.addEventListener("click",  (e) => { e.preventDefault(); goToPage(page + 1); });
-      if (latest) latest.addEventListener("click",(e) => { e.preventDefault(); goToPage(totalPages); });
+      if (latest)latest.addEventListener("click",(e) => { e.preventDefault(); goToPage(totalPages); });
 
       if (jump) {
         jump.value = page;
@@ -724,7 +776,6 @@
       bindNavigation(currentPage);
       bindSaveLoad(currentPage);
 
-      // Status bar left text
       const sbLeft = document.querySelector('.sb-left');
       if (sbLeft) sbLeft.textContent = `Viewing page ${currentPage} of ${totalPages}`;
     }

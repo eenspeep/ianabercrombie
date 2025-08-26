@@ -198,15 +198,43 @@
       background: #f7f7f7;
       border-top: 1px solid #000;
       padding: 0 10px;
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
+      display: flex;
       align-items: center;
-      font-size: clamp(.85rem, 1.8vmin, .95rem);
-      gap: 12px;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;              /* permit a second line if needed */
+      font-size: clamp(.8rem, 1.7vmin, .95rem);
+      min-height: var(--status-h);
     }
-    .sb-left  { justify-self: start; }
-    .sb-center{ justify-self: center; text-align: center; }
-    .sb-right { justify-self: end; }
+    .statusbar .sb-left,
+    .statusbar .sb-center,
+    .statusbar .sb-right {
+      white-space: nowrap;
+    }
+
+    /* Phone layout: put the counter on its own line, center it, compress padding */
+    @media (max-width: 520px) {
+      .statusbar {
+        padding: 0 6px;
+        gap: 4px;
+      }
+      .statusbar .sb-center {
+        order: -1;                  /* move counter to first row */
+        flex: 0 0 100%;             /* full-width row */
+        text-align: center;
+      }
+      .statusbar .sb-left,
+      .statusbar .sb-right {
+        flex: 1 1 auto;             /* share the second row */
+      }
+    }
+
+    /* Very narrow phones: make text a bit smaller and shorten spacing */
+    @media (max-width: 360px) {
+      .statusbar {
+        font-size: 0.8rem;
+      }
+    }
 
     /* Cursor shadow */
     .cursor-shadow {
@@ -279,6 +307,29 @@
     /* Narrow screens: slimmer sidebar */
     @media (max-width: 600px){
       :root{ --sidebar-w: clamp(140px, 30vw, 180px); }
+    }
+
+    /* ========= Mobile/touch overrides =========
+       Hide READY and © text, center the counter, and disable cursor shadow. */
+    @media (hover: none), (max-width: 640px) {
+      .statusbar {
+        flex-wrap: nowrap;
+        justify-content: center;
+        padding: 0 8px;
+        gap: 6px;
+      }
+      .statusbar .sb-left,
+      .statusbar .sb-right {
+        display: none !important;   /* hide on mobile */
+      }
+      .statusbar .sb-center {
+        flex: 0 1 auto;
+        text-align: center;
+        white-space: nowrap;
+      }
+      .cursor-shadow {
+        display: none !important;   /* no cursor ghost on touch */
+      }
     }
   </style>
 </head>
@@ -431,17 +482,22 @@ My name is Ian Abercrombie.
     }
     document.querySelectorAll('h1.shadow-text, h4.shadow-text').forEach(wrapWordsPreservingLinks);
 
-    // ==== Cursor shadow ====
+    // ==== Cursor shadow (desktop only) ====
+    const isTouchLike = window.matchMedia('(hover: none)').matches || 'ontouchstart' in window;
     const cursorShadow = document.getElementById('cursor-shadow');
-    document.addEventListener('mousemove', e => {
-      cursorShadow.style.left = `${e.clientX + 3}px`;
-      cursorShadow.style.top  = `${e.clientY + 3}px`;
-    });
+    if (!isTouchLike && cursorShadow) {
+      document.addEventListener('mousemove', e => {
+        cursorShadow.style.left = `${e.clientX + 3}px`;
+        cursorShadow.style.top  = `${e.clientY + 3}px`;
+      });
+    }
 
     // ==== Counter (CountAPI) ====
     const countEl = document.getElementById('gnome-count');
     const COUNT_NS = 'speep.me';
     const COUNT_KEY = 'gnomes_caught';
+    the_local_mirror: {
+    }
     const LOCAL_MIRROR = 'gnomeCountMirror';
 
     function setCount(n){ countEl.textContent = n; }
