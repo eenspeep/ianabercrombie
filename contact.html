@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Contact — speep.me</title>
+  <link rel="icon" type="image/png" href="screamgnome.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; width: 100%; }
+    body {
+      background: linear-gradient(to bottom, #ffffff 0%, #ffffff 95%, #000000 100%);
+      font-family: "Courier New", monospace;
+      color: #000;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .site-container {
+      position: absolute; inset: 20px;
+      background: #fff; height: calc(100% - 40px);
+      border: 1px solid #000; box-shadow: 6px 6px 12px rgba(0,0,0,.2);
+      display: grid; grid-template-columns: 220px 1fr; z-index: 2;
+    }
+
+    /* ==== Sidebar (same as index/comic/about) ==== */
+    .sidebar {
+      background: #f3f3f3; border-right: 1px solid #000;
+      display: grid; grid-template-rows: auto auto 1fr;
+      padding: 16px; gap: 12px;
+    }
+    .photo-frame { width: 100%; aspect-ratio: 1/1; background: #fff;
+      border: 1px solid #000; box-shadow: inset -2px -2px 0 #000, inset 2px 2px 0 #fff;
+      position: relative; overflow: hidden; display: grid; place-items: center; }
+    #profile-pic { width: 100%; height: 100%; object-fit: cover; cursor: pointer;
+      position: relative; z-index: 1; display: block; }
+    #explosion { position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; display: none; pointer-events: none; z-index: 2; }
+    .mini-caption { text-align: center; font-size: .95rem; background: #fff;
+      border: 1px solid #000; box-shadow: inset -1px -1px 0 #000, inset 1px 1px 0 #fff;
+      padding: 8px 10px; transition: opacity .15s ease; }
+    .btn-95 { display: block; text-decoration: none; color: #000;
+      background: #e9e9e9; border: 1px solid #000;
+      box-shadow: inset -2px -2px 0 #fff, inset 2px 2px 0 #000;
+      padding: 10px 12px; text-align: left; transition: transform .05s ease; user-select: none; }
+    .btn-95:active { transform: translate(1px,1px);
+      box-shadow: inset -2px -2px 0 #000, inset 2px 2px 0 #fff; background: #dcdcdc; }
+    .nav { display: grid; gap: 8px; align-content: start; }
+
+    /* ==== Main window ==== */
+    .main { overflow: auto; padding: 24px; display: grid; place-items: center; }
+    .win95-window { width: min(760px, 100%); background: #fff;
+      border: 2px solid #000; box-shadow: inset -2px -2px 0 #000, inset 2px 2px 0 #fff;
+      display: grid; grid-template-rows: auto auto 1fr auto; }
+    .titlebar { background: #e0e0e0; border-bottom: 1px solid #000;
+      padding: 6px 10px; display: flex; justify-content: space-between; align-items: center; }
+    .titlebar .title { font-weight: bold; }
+    .controls { display: flex; gap: 6px; }
+    .ctl { width: 18px; height: 18px; border: 1px solid #000; background: #fff;
+      display: grid; place-items: center; font-size: 12px; }
+    .menubar { background: #f7f7f7; border-bottom: 1px solid #000;
+      padding: 6px 10px; display: flex; gap: 16px; }
+    .window-body { padding: 16px; display: grid; gap: 16px; }
+
+    .panel { border: 1px solid #000; padding: 14px; background: #fff;
+      box-shadow: inset -1px -1px 0 #000, inset 1px 1px 0 #fff; }
+    .panel h3 { font-size: 1rem; margin-bottom: 10px; }
+
+    form.contact { display: grid; gap: 12px; }
+    label { font-size: .95rem; display: block; }
+    input[type="text"], input[type="email"], textarea {
+      border: 1px solid #000; background: #fff; padding: 8px 10px;
+      font-family: "Courier New", monospace; width: 100%;
+    }
+    textarea { min-height: 120px; resize: vertical; }
+    button { padding: 10px 14px; border: 1px solid #000; background: #fff;
+      cursor: pointer; transition: background-color .15s ease, transform .05s ease;
+      box-shadow: inset -2px -2px 0 #fff, inset 2px 2px 0 #000; }
+    button:active { transform: translate(1px,1px);
+      box-shadow: inset -2px -2px 0 #000, inset 2px 2px 0 #fff; background: #dcdcdc; }
+
+    .statusbar { background: #f7f7f7; border-top: 1px solid #000;
+      padding: 6px 10px; display: flex; justify-content: space-between; font-size: .9rem; }
+
+    /* Cursor shadow */
+    .cursor-shadow { position: fixed; width: 18px; height: 18px;
+      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><polygon points="0,0 0,32 8,24 14,30 16,28 10,22 18,22" fill="black"/></svg>') no-repeat center center;
+      background-size: contain; opacity: .25; pointer-events: none; z-index: 10000; }
+  </style>
+</head>
+<body>
+  <div class="cursor-shadow" id="cursor-shadow"></div>
+
+  <div class="site-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="photo-frame" id="photo-frame">
+        <img src="Icons/icon1.png" alt="Profile or Logo" id="profile-pic" />
+        <img src="Animations/explosion.gif" alt="Explosion" id="explosion" />
+        <audio id="boom" src="Animations/explosion.mp3"></audio>
+      </div>
+      <div class="mini-caption" id="mini-caption">Writer, Editor, Reader</div>
+      <nav class="nav">
+        <a class="btn-95" href="index.html">Home</a>
+        <a class="btn-95" href="about.html">About</a>
+        <a class="btn-95" href="projects.html">Projects</a>
+        <a class="btn-95" href="contact.html">Contact</a>
+        <a class="btn-95" href="comic.html">DNGN</a>
+      </nav>
+    </aside>
+
+    <!-- Main content -->
+    <main class="main">
+      <section class="win95-window" role="group" aria-label="Contact Window">
+        <div class="titlebar">
+          <div class="title">CONTACT.EXE</div>
+          <div class="controls">
+            <div class="ctl">_</div><div class="ctl">□</div><div class="ctl">×</div>
+          </div>
+        </div>
+        <div class="menubar"><div>File</div><div>Edit</div><div>View</div><div>Help</div></div>
+        <div class="window-body">
+          <div class="panel">
+            <h3>Send a Message</h3>
+            <!-- Formspree integration -->
+            <form class="contact" action="https://formspree.io/f/xdklokqb" method="POST">
+              <label>Your Name:<br><input type="text" name="name" required></label>
+              <label>Your Email:<br><input type="email" name="email" required></label>
+              <label>Your Message:<br><textarea name="message" required></textarea></label>
+              <button type="submit">Send</button>
+            </form>
+          </div>
+          <div class="panel">
+            <h3>Other ways to reach me</h3>
+            <p class="muted">You can also email me directly at <strong>ianabercrombiemail@gmail.com</strong></p>
+          </div>
+        </div>
+        <div class="statusbar">
+          <span>Ready</span><span>© 1998 SPEEP</span>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    // Cursor shadow
+    (function(){
+      const c = document.getElementById('cursor-shadow');
+      document.addEventListener('mousemove', e=>{
+        c.style.left = (e.clientX+3)+'px';
+        c.style.top  = (e.clientY+3)+'px';
+      });
+    })();
+
+    // Sidebar portrait rotation + explosion
+    (function(){
+      const images=["Icons/icon1.png","Icons/icon2.png","Icons/icon3.png","Icons/icon4.png"];
+      const titles={"icon1.png":"Writer, Editor, Reader","icon2.png":"Writer, Editor, Cyclops","icon3.png":"Writer, Editor, Freak of Nature","icon4.png":"Writer, Editor, Scallawag"};
+      const pic=document.getElementById('profile-pic');
+      const explosion=document.getElementById('explosion');
+      const boom=document.getElementById('boom');
+      const frame=document.getElementById('photo-frame');
+      const cap=document.getElementById('mini-caption');
+      function fn(src){return (src.split('/').pop()||"").split('?')[0].split('#')[0].toLowerCase();}
+      function setCap(file){const t=titles[file]; if(t){cap.style.opacity='0'; setTimeout(()=>{cap.textContent=t; cap.style.opacity='1';},80);}}
+      if(pic.complete) setCap(fn(pic.src)); else pic.addEventListener('load',()=>setCap(fn(pic.src)),{once:true});
+      function playEx(){const base=explosion.getAttribute('src').split('?')[0]; explosion.setAttribute('src',`${base}?t=${Date.now()}`); explosion.style.display='block';}
+      function hideEx(){explosion.style.display='none';}
+      pic.addEventListener('click',()=>{
+        playEx(); try{boom.volume=0.4; boom.currentTime=0; boom.play();}catch{}
+        frame.classList.add('screen-shake');
+        setTimeout(()=>{
+          hideEx(); frame.classList.remove('screen-shake');
+          const cur=fn(pic.src); let next;
+          do{next=images[Math.floor(Math.random()*images.length)];}while(fn(next)===cur);
+          setCap(fn(next)); pic.src=next;
+        },300);
+      });
+    })();
+  </script>
+</body>
+</html>

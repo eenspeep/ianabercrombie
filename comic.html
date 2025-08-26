@@ -4,9 +4,9 @@
   <meta charset="UTF-8" />
   <title>DNGN</title>
   <link rel="icon" type="image/png" href="screamgnome.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
     html, body { height: 100%; width: 100%; }
 
     body {
@@ -17,44 +17,165 @@
       position: relative;
     }
 
-    .topbar {
-      background-color: #f5f5f5;
-      border-bottom: 1px solid black;
-      padding: 10px 20px;
-      display: flex;
-	  justify-content: center;
-      gap: 15px;
-      position: relative;
-      z-index: 10;
+    /* ===== App frame (matches index.html) ===== */
+    .site-container {
+      position: absolute;
+      inset: 20px;
+      background: #fff;
+      height: calc(100% - 40px);
+      border: 1px solid #000;
+      box-shadow: 6px 6px 12px rgba(0,0,0,.2);
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      z-index: 2;
     }
 
-    .topbar a {
-  text-decoration: none;
-  color: black;
-  font-weight: bold;
+    /* ==== Sidebar (matches index.html) ==== */
+    .sidebar {
+      background: #f3f3f3;
+      border-right: 1px solid #000;
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+      padding: 16px;
+      gap: 12px;
+    }
 
-  /* button-like style */
-  border: 1px solid black;
-  padding: 6px 12px;
-  background-color: #fff;
-  transition: background-color 0.2s ease, transform 0.1s ease;
-}
+    .photo-frame {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      background: #fff;
+      border: 1px solid #000;
+      box-shadow: inset -2px -2px 0 #000, inset 2px 2px 0 #fff;
+      position: relative;
+      overflow: hidden;
+      display: grid;
+      place-items: center;
+    }
+    #profile-pic {
+      width: 100%; height: 100%;
+      object-fit: cover; cursor: pointer;
+      position: relative; z-index: 1;
+      display: block;
+    }
+    #explosion {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: none; pointer-events: none;
+      z-index: 2;
+    }
+    .screen-shake { animation: shake .25s linear 1; }
+    @keyframes shake {
+      0%,100%{ transform: translate(0,0); }
+      25%{ transform: translate(2px,-2px); }
+      50%{ transform: translate(-2px,2px); }
+      75%{ transform: translate(2px,2px); }
+    }
 
-.topbar a:hover {
-  background-color: #ddd;
-  transform: translateY(-2px);
-}
+    .mini-caption {
+      text-align: center;
+      font-size: .95rem;
+      background: #fff;
+      border: 1px solid #000;
+      box-shadow: inset -1px -1px 0 #000, inset 1px 1px 0 #fff;
+      padding: 8px 10px;
+      transition: opacity .15s ease;
+    }
 
-    /* Layered backgrounds:
-       1) semi-opaque white overlay
-       2) brick tile (repeats)
-       Both clipped to padding-box so the border stays clean. */
+    .btn-95 {
+      display: block;
+      text-decoration: none;
+      color: #000;
+      background: #e9e9e9;
+      border: 1px solid #000;
+      box-shadow: inset -2px -2px 0 #fff, inset 2px 2px 0 #000;
+      padding: 10px 12px;
+      text-align: left;
+      transition: transform .05s ease;
+      user-select: none;
+    }
+    .btn-95:active {
+      transform: translate(1px,1px);
+      box-shadow: inset -2px -2px 0 #000, inset 2px 2px 0 #fff;
+      background: #dcdcdc;
+    }
+    .nav { display: grid; gap: 8px; align-content: start; }
+
+    /* ==== Main window (matches index.html) ==== */
+    .main {
+      overflow: auto;
+      padding: 24px;
+      display: grid;
+      place-items: center;
+    }
+    .win95-window {
+      width: min(960px, 100%); /* a bit wider for comic */
+      background: #fff;
+      border: 2px solid #000;
+      box-shadow: inset -2px -2px 0 #000, inset 2px 2px 0 #fff;
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+      height: 100%;
+    }
+    .titlebar {
+      background: #e0e0e0;
+      border-bottom: 1px solid #000;
+      padding: 6px 10px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .titlebar .title { font-weight: bold; }
+    .controls { display: flex; gap: 6px; }
+    .ctl {
+      width: 18px; height: 18px;
+      border: 1px solid #000;
+      background: #fff;
+      display: grid; place-items: center;
+      font-size: 12px;
+    }
+    .ctl:active { transform: translate(1px,1px); }
+
+    .menubar {
+      background: #f7f7f7;
+      border-bottom: 1px solid #000;
+      padding: 6px 10px;
+      display: flex; gap: 16px;
+    }
+
+    .window-body {
+      padding: 16px;
+      overflow: hidden; /* our inner scroller is the comic body */
+      display: grid;
+    }
+
+    /* ==== Status bar with centered counter ==== */
+    .statusbar {
+      background: #f7f7f7;
+      border-top: 1px solid #000;
+      padding: 6px 10px;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      font-size: .9rem;
+      gap: 12px;
+    }
+    .sb-left  { justify-self: start; }
+    .sb-center{ justify-self: center; }
+    .sb-right { justify-self: end; }
+
+    /* ==== Cursor shadow ==== */
+    .cursor-shadow {
+      position: fixed;
+      width: 18px; height: 18px;
+      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><polygon points="0,0 0,32 8,24 14,30 16,28 10,22 18,22" fill="black"/></svg>') no-repeat center center;
+      background-size: contain;
+      opacity: .25; pointer-events: none; z-index: 10000;
+    }
+
+    /* ===== Comic interior (your original styling, adapted) ===== */
     .comic-container {
       position: relative;
       z-index: 1;
-      margin: 60px 20px 20px; /* top, right, bottom, left */
-      height: calc(100% - 80px);
-      box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.2);
+      height: 100%;
       border: 1px solid black;
       padding: 20px;
 
@@ -74,25 +195,15 @@
       overflow-y: auto;
     }
 
-/* Hide or style scrollbars inside the comic container */
-
-/* Chrome, Edge, Safari */
-.comic-container::-webkit-scrollbar {
-  width: 3px;              
-  background: transparent; /* no background */
-}
-
-/* Ensure no track shows */
-.comic-container::-webkit-scrollbar-track {
-  background: transparent;
-}
-
+    /* Chrome/Edge/Safari thin scrollbar inside comic */
+    .comic-container::-webkit-scrollbar { width: 3px; background: transparent; }
+    .comic-container::-webkit-scrollbar-track { background: transparent; }
 
     .comic-panel {
       position: relative;
       z-index: 1;
-      width: 80%;
-      max-width: 600px;
+      width: 82%;
+      max-width: 720px;
       aspect-ratio: 4 / 3;
       background-color: #ccc;
       background-size: cover;
@@ -112,19 +223,19 @@
       border: 1px solid black;
       padding: 10px 15px;
       background-color: #f9f9f9;
-      max-width: 80%;
-      box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.1);
+      max-width: 82%;
+      box-shadow: 3px 3px 6px rgba(0,0,0,0.1);
       margin-bottom: 20px;
     }
 
     .nav-buttons, .save-load-buttons {
-      margin-top: 20px;
+      margin-top: 10px;
+      margin-bottom: 6px;
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
       justify-content: center;
     }
-
     .nav-buttons a,
     .nav-buttons input[type="number"],
     .save-load-buttons button {
@@ -137,89 +248,382 @@
       font-family: "Courier New", monospace;
       cursor: pointer;
     }
-
     .nav-buttons a:hover,
     .save-load-buttons button:hover {
       background-color: #ddd;
       transform: translateY(-2px);
     }
-
     .nav-buttons input[type="number"] {
-      width: 60px;
+      width: 64px;
       text-align: center;
+    }
+
+    /* ==== Multi-gnome runner styles (same as index) ==== */
+    .gnome-wrapper {
+      position: fixed;
+      bottom: 10px;
+      left: 0;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translateX(-60px);
+    }
+    .gnome, .gnome-boom, .gnome-hitbox {
+      user-select: none;
+      -webkit-user-drag: none;
+      -webkit-touch-callout: none;
+    }
+    .gnome {
+      height: 68px;
+      transform: scaleX(1);
+      pointer-events: auto;
+      cursor: pointer;
+    }
+    .gnome-boom {
+      position: absolute;
+      left: -16px;
+      bottom: -16px;
+      width: 100px;
+      display: none;
+      pointer-events: none;
+    }
+    .gnome-hitbox {
+      position: absolute;
+      left: -10px;
+      bottom: -6px;
+      width: 88px;
+      height: 80px;
+      pointer-events: auto;
+      cursor: pointer;
+      background: transparent;
+    }
+
+    @keyframes gnome-run-left {
+      0%   { transform: translateX(-60px); }
+      100% { transform: translateX(calc(100vw + 60px)); }
+    }
+    @keyframes gnome-run-right {
+      0%   { transform: translateX(calc(100vw + 60px)); }
+      100% { transform: translateX(-60px); }
     }
   </style>
 </head>
 <body>
-  <div class="topbar">
-    <a href="index.html">Home</a>
-    <a href="about.html">About</a>
-    <a href="projects.html">Projects</a>
-    <a href="contact.html">Contact</a>
-    <a href="comic.html">DNGN</a>
+  <div class="cursor-shadow" id="cursor-shadow"></div>
+
+  <div class="site-container">
+    <aside class="sidebar">
+      <div class="photo-frame" id="photo-frame">
+        <img src="Icons/icon1.png" alt="Profile or Logo" id="profile-pic" />
+        <img src="Animations/explosion.gif" alt="Explosion" id="explosion" />
+        <audio id="boom" src="Animations/explosion.mp3"></audio>
+      </div>
+      <div class="mini-caption" id="mini-caption">Writer, Editor, Reader</div>
+
+      <nav class="nav">
+        <a class="btn-95" href="index.html">Home</a>
+        <a class="btn-95" href="about.html">About</a>
+        <a class="btn-95" href="projects.html">Projects</a>
+        <a class="btn-95" href="contact.html">Contact</a>
+        <a class="btn-95" href="comic.html">DNGN</a>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <section class="win95-window" role="group" aria-label="DNGN Window">
+        <div class="titlebar">
+          <div class="title">DNGN.TXT</div>
+          <div class="controls">
+            <div class="ctl" title="Minimize">_</div>
+            <div class="ctl" title="Maximize">□</div>
+            <div class="ctl" title="Close">×</div>
+          </div>
+        </div>
+        <div class="menubar"><div>File</div><div>Edit</div><div>View</div><div>Help</div></div>
+
+        <div class="window-body">
+          <!-- Your comic UI lives inside the window body -->
+          <div class="comic-container">
+            <div class="comic-panel" id="panel"></div>
+            <div class="comic-text" id="caption"></div>
+
+            <div class="nav-buttons">
+              <a id="first" href="#">First</a>
+              <a id="prev" href="#">Previous</a>
+              <input type="number" id="page-jump" min="1" placeholder="Page #" />
+              <a id="next" href="#">Next</a>
+              <a id="latest" href="#">Latest</a>
+            </div>
+
+            <div class="save-load-buttons">
+              <button id="save-btn">Save Game</button>
+              <button id="load-btn">Load Game</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="statusbar">
+          <span class="sb-left">DNGN is loading…</span>
+          <span class="sb-center"><strong>GNOMES CAUGHT:</strong> <span id="gnome-count">0</span></span>
+          <span class="sb-right">© 1998 SPEEP</span>
+        </div>
+      </section>
+    </main>
   </div>
 
-  <div class="comic-container">
-    <div class="comic-panel" id="panel"></div>
-    <div class="comic-text" id="caption"></div>
-
-    <div class="nav-buttons">
-      <a id="first" href="#">First</a>
-      <a id="prev" href="#">Previous</a>
-      <input type="number" id="page-jump" min="1" placeholder="Page #" />
-      <a id="next" href="#">Next</a>
-      <a id="latest" href="#">Latest</a>
-    </div>
-
-    <div class="save-load-buttons">
-      <button id="save-btn">Save Game</button>
-      <button id="load-btn">Load Game</button>
-    </div>
-  </div>
+  <!-- Multi-gnomes layer -->
+  <div id="gnome-layer"></div>
 
   <script>
     "use strict";
 
-    // --- Config you can edit ---
+    /* ===== Shared settings to match index.html ===== */
+    // Speed range (seconds to cross the screen)
+    const SPEED_MIN = 3.5;
+    const SPEED_MAX = 9.0;
+    const BATCH_MIN = 1;
+    const BATCH_MAX = 7;
+    const BATCH_DELAY_MIN = 5000;  // 5s
+    const BATCH_DELAY_MAX = 15000; // 15s
+
+    function rand(min, max){ return min + Math.random() * (max - min); }
+    function randInt(min, max){ return Math.floor(rand(min, max + 1)); }
+    function randDuration(min = SPEED_MIN, max = SPEED_MAX){ return rand(min, max); }
+
+    // Sidebar portrait rotation + captions (same as index)
+    const images = ["Icons/icon1.png","Icons/icon2.png","Icons/icon3.png","Icons/icon4.png"];
+    const titles = {
+      "icon1.png": "Writer, Editor, Reader",
+      "icon2.png": "Writer, Editor, Cyclops",
+      "icon3.png": "Writer, Editor, Freak of Nature",
+      "icon4.png": "Writer, Editor, Scallawag"
+    };
+    const pic = document.getElementById('profile-pic');
+    const explosion = document.getElementById('explosion');
+    const boom = document.getElementById('boom');
+    const frame = document.getElementById('photo-frame');
+    const miniCaption = document.getElementById('mini-caption');
+
+    function filenameFromSrc(src) {
+      return (src.split('/').pop() || "").split('?')[0].split('#')[0].toLowerCase();
+    }
+    function setCaptionForFilename(fileKey) {
+      const text = titles[fileKey]; if (!text) return;
+      miniCaption.style.opacity = '0';
+      setTimeout(() => {
+        miniCaption.textContent = text;
+        miniCaption.style.opacity = '1';
+      }, 80);
+    }
+    function initCaption() { setCaptionForFilename(filenameFromSrc(pic.src)); }
+    if (pic.complete) initCaption(); else pic.addEventListener('load', initCaption, { once: true });
+
+    function playExplosionOnFrame() {
+      const base = explosion.getAttribute('src').split('?')[0];
+      explosion.setAttribute('src', `${base}?t=${Date.now()}`);
+      explosion.style.display = 'block';
+    }
+    function hideExplosionOnFrame() { explosion.style.display = 'none'; }
+
+    pic.addEventListener('click', () => {
+      playExplosionOnFrame();
+      try { boom.volume = 0.4; boom.currentTime = 0; boom.play(); } catch {}
+      frame.classList.add('screen-shake');
+
+      setTimeout(() => {
+        hideExplosionOnFrame();
+        frame.classList.remove('screen-shake');
+        const currentKey = filenameFromSrc(pic.src);
+        let next;
+        do { next = images[Math.floor(Math.random() * images.length)]; }
+        while (filenameFromSrc(next) === currentKey);
+        setCaptionForFilename(filenameFromSrc(next));
+        pic.src = next;
+      }, 300);
+    });
+
+    // Cursor shadow
+    const cursorShadow = document.getElementById('cursor-shadow');
+    document.addEventListener('mousemove', e => {
+      cursorShadow.style.left = `${e.clientX + 3}px`;
+      cursorShadow.style.top  = `${e.clientY + 3}px`;
+    });
+
+    /* ===== GNOME COUNTER (CountAPI) ===== */
+    const countEl = document.getElementById('gnome-count');
+    const COUNT_NS = 'speep.me';
+    const COUNT_KEY = 'gnomes_caught';
+    const LOCAL_MIRROR = 'gnomeCountMirror';
+
+    function setCount(n){ countEl.textContent = n; }
+
+    async function initCount(){
+      try {
+        const r = await fetch(`https://api.countapi.xyz/get/${COUNT_NS}/${COUNT_KEY}`);
+        const d = await r.json();
+        if (typeof d.value === 'number') {
+          setCount(d.value);
+          localStorage.setItem(LOCAL_MIRROR, String(d.value));
+          return;
+        }
+        throw new Error();
+      } catch {
+        const n = Number(localStorage.getItem(LOCAL_MIRROR) || 0);
+        setCount(n);
+      }
+    }
+
+    async function incrementCount(){
+      try {
+        const r = await fetch(`https://api.countapi.xyz/hit/${COUNT_NS}/${COUNT_KEY}`);
+        const d = await r.json();
+        if (typeof d.value === 'number') {
+          setCount(d.value);
+          localStorage.setItem(LOCAL_MIRROR, String(d.value));
+          return;
+        }
+        throw new Error();
+      } catch {
+        const n = Number(localStorage.getItem(LOCAL_MIRROR) || 0) + 1;
+        localStorage.setItem(LOCAL_MIRROR, String(n));
+        setCount(n);
+      }
+    }
+
+    initCount();
+
+    /* ===== MULTI-GNOME SPAWNER (same as index) ===== */
+    const gnomeLayer = document.getElementById('gnome-layer');
+
+    function bindExplodeTarget(el, handler){
+      ['pointerdown','mousedown','touchstart'].forEach(type => {
+        el.addEventListener(type, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          handler();
+        }, { passive: false });
+      });
+      el.addEventListener('dragstart', (e) => { e.preventDefault(); return false; });
+    }
+
+    function spawnGnome(side){
+      const wrap = document.createElement('div');
+      wrap.className = 'gnome-wrapper';
+
+      const hit = document.createElement('div');
+      hit.className = 'gnome-hitbox';
+
+      const img = document.createElement('img');
+      img.className = 'gnome';
+      img.src = 'Animations/gnome.gif';
+      img.alt = 'Running gnome';
+      img.setAttribute('draggable','false');
+
+      const boomImg = document.createElement('img');
+      boomImg.className = 'gnome-boom';
+      boomImg.src = 'Animations/explosion.gif';
+      boomImg.alt = 'Boom';
+      boomImg.setAttribute('draggable','false');
+
+      // flip ONLY when starting from LEFT
+      img.style.transform = (side === 'left') ? 'scaleX(-1)' : 'scaleX(1)';
+
+      // start offscreen
+      wrap.style.animation = 'none';
+      wrap.style.transform = (side === 'left')
+        ? 'translateX(-60px)'
+        : 'translateX(calc(100vw + 60px))';
+
+      wrap.appendChild(hit);
+      wrap.appendChild(img);
+      wrap.appendChild(boomImg);
+      gnomeLayer.appendChild(wrap);
+
+      let exploded = false;
+
+      function explode(){
+        if (exploded) return;
+        exploded = true;
+
+        const matrix = getComputedStyle(wrap).transform;
+        wrap.style.animation = 'none';
+        wrap.style.transform = matrix !== 'none' ? matrix : wrap.style.transform;
+
+        img.style.visibility = 'hidden';
+        const base = boomImg.getAttribute('src').split('?')[0];
+        boomImg.setAttribute('src', `${base}?t=${Date.now()}`);
+        boomImg.style.display = 'block';
+
+        try {
+          const a = new Audio(boom.src);
+          a.volume = 0.5;
+          a.play().catch(()=>{});
+        } catch {}
+
+        incrementCount();
+        setTimeout(() => wrap.remove(), 750);
+      }
+
+      bindExplodeTarget(img, explode);
+      bindExplodeTarget(hit, explode);
+
+      const duration = randDuration(); // seconds
+      requestAnimationFrame(() => {
+        wrap.style.animation = (side === 'left' ? 'gnome-run-left' : 'gnome-run-right') + ` ${duration}s linear forwards`;
+      });
+
+      wrap.addEventListener('animationend', () => { if (!exploded) wrap.remove(); });
+    }
+
+    function spawnBatch(){
+      const n = randInt(1, 7);
+      for (let i = 0; i < n; i++){
+        const side = (Math.random() < 0.5) ? 'left' : 'right';
+        const stagger = Math.random() * 400;
+        setTimeout(() => spawnGnome(side), stagger);
+      }
+    }
+
+    function loopBatches(){
+      const delay = rand(BATCH_DELAY_MIN, BATCH_DELAY_MAX);
+      setTimeout(() => { spawnBatch(); loopBatches(); }, delay);
+    }
+
+    // Start gnomes
+    setTimeout(() => { spawnBatch(); loopBatches(); }, rand(BATCH_DELAY_MIN, BATCH_DELAY_MAX));
+
+    /* ======== COMIC PAGE LOGIC (your original functionality) ======== */
     const totalPages = 12; // Update when adding comics
     const captions = {
-      1: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed sit amet lacus in odio laoreet fermentum nec vel lectus. Donec id massa eget nulla egestas tristique. Proin luctus, justo non gravida gravida, metus odio efficitur augue, non varius justo magna ut nibh. Mauris a dui ut magna consequat gravida. Integer ultrices lectus magna, vitae sollicitudin orci consequat sit amet. Suspendisse potenti. In blandit metus sit amet erat ullamcorper, eget porta odio lacinia. Aenean sed dui in purus elementum ultrices at sit amet turpis. Cras non est eget arcu mattis luctus. Quisque varius nisi sed odio scelerisque egestas. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed sit amet lacus in odio laoreet fermentum nec vel lectus. Donec id massa eget nulla egestas tristique. Proin luctus, justo non gravida gravida, metus odio efficitur augue, non varius justo magna ut nibh. Mauris a dui ut magna consequat gravida. Integer ultrices lectus magna, vitae sollicitudin orci consequat sit amet. Suspendisse potenti. In blandit metus sit amet erat ullamcorper, eget porta odio lacinia. Aenean sed dui in purus elementum ultrices at sit amet turpis. Cras non est eget arcu mattis luctus. Quisque varius nisi sed odio scelerisque egestas. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed sit amet lacus in odio laoreet fermentum nec vel lectus. Donec id massa eget nulla egestas tristique. Proin luctus, justo non gravida gravida, metus odio efficitur augue, non varius justo magna ut nibh. Mauris a dui ut magna consequat gravida. Integer ultrices lectus magna, vitae sollicitudin orci consequat sit amet. Suspendisse potenti. In blandit metus sit amet erat ullamcorper, eget porta odio lacinia. Aenean sed dui in purus elementum ultrices at sit amet turpis. Cras non est eget arcu mattis luctus. Quisque varius nisi sed odio scelerisque egestas. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas.",
+      1: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed sit amet lacus in odio laoreet fermentum nec vel lectus. Donec id massa eget nulla egestas tristique. Proin luctus, justo non gravida gravida, metus odio efficitur augue, non varius justo magna ut nibh. Mauris a dui ut magna consequat gravida. Integer ultrices lectus magna, vitae sollicitudin orci consequat sit amet. Suspendisse potenti. In blandit metus sit amet erat ullamcorper, eget porta odio lacinia. Aenean sed dui in purus elementum ultrices at sit amet turpis. Cras non est eget arcu mattis luctus. Quisque varius nisi sed odio scelerisque egestas. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed sit amet lacus in odio laoreet fermentum nec vel lectus. Donec id massa eget nulla egestas tristique. Proin luctus, justo non gravida gravida, metus odio efficitur augue, non varius justo magna ut nibh. Mauris a dui ut magna consequat gravida. Integer ultrices lectus magna, vitae sollicitudin orci consequat sit amet. Suspendisse potenti. In blandit metus sit amet erat ullamcorper, eget porta odio lacinia. Aenean sed dui in purus elementum ultrices at sit amet turpis. Cras non est eget arcu mattis luctus. Quisque varius nisi sed odio scelerisque egestas. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed sit amet lacus in odio laoreet fermentum nec vel lectus. Donec id massa eget nulla egestas tristique. Proin luctus, justo non gravida gravida, metus odio efficitur augue, non varius justo magna ut nibh. Mauris a dui ut magna consequat gravida. Integer ultrices lectus magna, vitae sollicitudin orci consequat sit amet. Suspendisse potenti. In blandit metus sit amet erat ullamcorper, eget porta odio lacinia. Aenean sed dui in purus elementum ultrices at sit amet turpis. Cras non est eget arcu mattis luctus. Quisque varius nisi sed odio scelerisque egestas.",
       2: "Continuation of the tale...",
       3: "Something wild happens here...",
       // Add more as needed...
     };
     const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "webp", "gif"];
-    const IMAGE_DIR = "Comics"; // directory containing pageXX.ext files
-    const FALLBACK_COLOR = "#bbb"; // shown if no image found
+    const IMAGE_DIR = "Comics";
+    const FALLBACK_COLOR = "#bbb";
 
-    // --- Helpers ---
     function getPageFromURL() {
       const m = window.location.search.match(/[?&]page=(\d+)/);
       return m ? parseInt(m[1], 10) : 1;
     }
-
     function getCurrentFileName() {
       const base = window.location.pathname.split("/").pop();
       return base || "comic.html";
     }
-
     function goToPage(page) {
-  if (page < 1) page = 1;
-  if (page > totalPages) {
-    window.location.href = "comingsoon.html";
-    return;
-  }
-
-  const file = getCurrentFileName();
-
-  // If page 1, go to plain comic.html
-  if (page === 1) {
-    window.location.href = file; 
-  } else {
-    window.location.href = `${file}?page=${page}`;
-  }
-}
-
+      if (page < 1) page = 1;
+      if (page > totalPages) {
+        window.location.href = "comingsoon.html";
+        return;
+      }
+      const file = getCurrentFileName();
+      if (page === 1) {
+        window.location.href = file;
+      } else {
+        window.location.href = `${file}?page=${page}`;
+      }
+    }
 
     function setCaption(page) {
       const el = document.getElementById("caption");
@@ -243,13 +647,10 @@
             panelEl.style.backgroundImage = `url("${path}")`;
           }
         };
-        img.onerror = () => {
-          // no-op; we'll fallback if none load
-        };
+        img.onerror = () => {};
         img.src = path;
       });
 
-      // Fallback if nothing loads within a short grace
       setTimeout(() => {
         if (!loaded) {
           console.warn("No image found for page", page);
@@ -269,8 +670,8 @@
       const jump = byId("page-jump");
 
       if (first) first.addEventListener("click", (e) => { e.preventDefault(); goToPage(1); });
-      if (prev) prev.addEventListener("click",  (e) => { e.preventDefault(); goToPage(page - 1); });
-      if (next) next.addEventListener("click",  (e) => { e.preventDefault(); goToPage(page + 1); });
+      if (prev)  prev.addEventListener("click",  (e) => { e.preventDefault(); goToPage(page - 1); });
+      if (next)  next.addEventListener("click",  (e) => { e.preventDefault(); goToPage(page + 1); });
       if (latest) latest.addEventListener("click",(e) => { e.preventDefault(); goToPage(totalPages); });
 
       if (jump) {
@@ -283,9 +684,9 @@
 
       document.addEventListener("keydown", (e) => {
         if (e.key === "ArrowRight") goToPage(page + 1);
-        if (e.key === "ArrowLeft") goToPage(page - 1);
-        if (e.key === "Home") goToPage(1);
-        if (e.key === "End") goToPage(totalPages);
+        if (e.key === "ArrowLeft")  goToPage(page - 1);
+        if (e.key === "Home")       goToPage(1);
+        if (e.key === "End")        goToPage(totalPages);
       });
     }
 
@@ -318,15 +719,16 @@
 
     function renderPage() {
       const currentPage = getPageFromURL();
-
-      // Wire up UI every time in case of soft navigations
       setCaption(currentPage);
       loadPanelImage(currentPage);
       bindNavigation(currentPage);
       bindSaveLoad(currentPage);
+
+      // Status bar left text
+      const sbLeft = document.querySelector('.sb-left');
+      if (sbLeft) sbLeft.textContent = `Viewing page ${currentPage} of ${totalPages}`;
     }
 
-    // Ensure DOM exists; catch any unexpected runtime error so UI still binds
     document.addEventListener("DOMContentLoaded", () => {
       try {
         renderPage();
