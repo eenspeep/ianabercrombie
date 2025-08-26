@@ -27,7 +27,7 @@
       padding-bottom: env(safe-area-inset-bottom, 0);
     }
 
-    /* App frame sized to safe viewport height */
+    /* ===== App frame sized to safe viewport height ===== */
     .site-container {
       position: absolute;
       inset: 20px;
@@ -39,13 +39,11 @@
       display: grid;
       grid-template-columns: var(--sidebar-w) 1fr;
       z-index: 2;
-      transition: grid-template-columns .2s ease;
       min-width: 0;
+      min-height: 0;
     }
-    /* Collapsed (used by the desktop toggle button) */
-    .site-container.collapsed { grid-template-columns: 0 1fr; }
 
-    /* ==== Sidebar ==== */
+    /* ===== Sidebar ===== */
     .sidebar {
       background: #f3f3f3;
       border-right: 1px solid #000;
@@ -54,6 +52,7 @@
       padding: var(--pad);
       gap: var(--gap);
       min-width: 0;
+      min-height: 0;
       overflow: hidden;
     }
 
@@ -82,14 +81,6 @@
       display: none; pointer-events: none;
       z-index: 2;
     }
-    .screen-shake { animation: shake .25s linear 1; }
-    @keyframes shake {
-      0%,100%{ transform: translate(0,0); }
-      25%{ transform: translate(2px,-2px); }
-      50%{ transform: translate(-2px,2px); }
-      75%{ transform: translate(2px,2px); }
-    }
-
     .mini-caption {
       text-align: center;
       font-size: clamp(.85rem, 1.6vmin, .95rem);
@@ -120,12 +111,30 @@
     }
     .nav { display: grid; gap: 8px; align-content: start; }
 
-    /* ==== Main window ==== */
+    /* ===== Mobile topbar ===== */
+    .topbar-mobile { display: none; }
+    .topbar-inner {
+      background: #e0e0e0; border-bottom: 1px solid #000;
+      padding: 6px 8px; display: flex; justify-content: space-between; align-items: center;
+    }
+    .brand95 { font-weight: bold; }
+    .menu95 { border: 1px solid #000; background: #e9e9e9; padding: 6px 10px; }
+    .menu95:active { transform: translate(1px,1px); background: #dcdcdc; }
+    .dropdown95 {
+      position: absolute; top: 100%; right: 8px;
+      border: 1px solid #000; background: #fff;
+      display: none; min-width: 160px;
+      z-index: 10;  /* only high when open */
+    }
+    .dropdown95 a { display: block; padding: 8px 10px; color: #000; text-decoration: none; border-bottom: 1px solid #000; }
+    .dropdown95 a:last-child { border-bottom: none; }
+    .dropdown95 a:hover { background: #efefef; }
+
+    /* ===== Main window ===== */
     .main {
       overflow: hidden;
       padding: clamp(10px, 2.2vmin, 24px);
-      display: grid;
-      place-items: center;
+      display: grid; place-items: center;
       min-width: 0; min-height: 0;
     }
     .win95-window {
@@ -135,8 +144,7 @@
       box-shadow: inset -2px -2px 0 #000, inset 2px 2px 0 #fff;
       display: grid;
       grid-template-rows: var(--title-h) var(--menu-h) 1fr var(--status-h);
-      height: 100%;
-      max-height: 100%;
+      height: 100%; max-height: 100%;
       min-width: 0; min-height: 0;
     }
     .titlebar {
@@ -150,21 +158,10 @@
     .controls { display: flex; gap: 6px; }
     .ctl {
       width: 18px; height: 18px;
-      border: 1px solid #000;
-      background: #fff;
-      display: grid; place-items: center;
-      font-size: 12px; line-height: 1;
+      border: 1px solid #000; background: #fff;
+      display: grid; place-items: center; font-size: 12px; line-height: 1;
     }
     .ctl:active { transform: translate(1px,1px); }
-
-    /* Sidebar toggle button (desktop utility; hidden on mobile) */
-    .toggle-sidebar {
-      border: 1px solid #000;
-      background: #fff;
-      padding: 4px 8px;
-      font: inherit;
-      cursor: pointer;
-    }
 
     .menubar {
       background: #f7f7f7;
@@ -175,12 +172,75 @@
 
     .window-body {
       padding: 16px;
-      overflow: hidden; /* inner scroller is comic-container */
+      overflow: hidden;       /* inner scroller lives inside */
       display: grid;
-      min-height: 0;
+      min-height: 0;          /* CRUCIAL: lets 1fr shrink */
     }
 
-    /* ==== Status bar with centered counter ==== */
+    /* ===== Comic interior (with bricks background) ===== */
+    .comic-container {
+      position: relative;
+      z-index: 1;
+      height: 100%;
+      border: 1px solid black;
+      padding: 20px;
+
+      background:
+        linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)) padding-box,
+        url("bricks.png") padding-box;
+      background-repeat: no-repeat, repeat;
+      background-position: 0 0, 0 0;
+      background-origin: padding-box, padding-box;
+      background-clip: padding-box, padding-box;
+
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      overflow-y: auto;       /* inner scroll here */
+      min-height: 0;          /* needed for flex child scroller */
+      gap: 20px;
+    }
+    .comic-container::-webkit-scrollbar { width: 3px; background: transparent; }
+    .comic-container::-webkit-scrollbar-track { background: transparent; }
+
+    .comic-panel {
+      position: relative; z-index: 1;
+      width: 82%; max-width: 720px;
+      aspect-ratio: 4 / 3;
+      background-color: #ccc; background-size: cover; background-position: center;
+      border: 1px solid black;
+    }
+    .comic-text {
+      position: relative; z-index: 1;
+      font-size: clamp(1rem, 2.4vmin, 1.1rem);
+      line-height: 1.6; letter-spacing: 0.5px;
+      text-align: center; white-space: pre-wrap;
+      border: 1px solid black; padding: 10px 15px; background: #f9f9f9;
+      max-width: 82%;
+      box-shadow: 3px 3px 6px rgba(0,0,0,0.1);
+    }
+
+    .nav-buttons, .save-load-buttons {
+      display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+    }
+    .nav-buttons a,
+    .nav-buttons input[type="number"],
+    .save-load-buttons button {
+      padding: 10px 14px;
+      border: 1px solid black;
+      text-decoration: none;
+      color: black; background-color: #fff;
+      transition: background-color 0.2s ease, transform 0.2s ease;
+      font-family: "Courier New", monospace;
+      cursor: pointer;
+    }
+    .nav-buttons a:hover, .save-load-buttons button:hover {
+      background-color: #ddd; transform: translateY(-2px);
+    }
+    .nav-buttons input[type="number"] { width: 64px; text-align: center; }
+
+    /* ===== Status bar with centered counter ===== */
     .statusbar {
       background: #f7f7f7;
       border-top: 1px solid #000;
@@ -195,185 +255,27 @@
     }
     .sb-left, .sb-center, .sb-right { white-space: nowrap; }
 
-    /* ===== Mobile topbar (hidden on desktop) ===== */
-    .topbar-mobile { display: none; }
-    .topbar-inner {
-      background: #e0e0e0;
-      border-bottom: 1px solid #000;
-      padding: 6px 8px;
-      display: flex; align-items: center; justify-content: space-between; gap: 8px;
-    }
-    .brand95 { font-weight: bold; letter-spacing: .5px; }
-    .menu95 {
-      border: 1px solid #000; background: #e9e9e9;
-      box-shadow: inset -2px -2px 0 #fff, inset 2px 2px 0 #000;
-      padding: 6px 10px; user-select: none;
-    }
-    .menu95:active {
-      transform: translate(1px,1px);
-      box-shadow: inset -2px -2px 0 #000, inset 2px 2px 0 #fff;
-      background: #dcdcdc;
-    }
-    .dropdown95 {
-      position: absolute; top: 100%; right: 8px;
-      border: 1px solid #000; background: #fff; box-shadow: 3px 3px 0 #000;
-      display: none; min-width: 160px; z-index: 3;
-    }
-    .dropdown95 a {
-      display: block; padding: 8px 10px; color: #000; text-decoration: none; border-bottom: 1px solid #000;
-    }
-    .dropdown95 a:last-child { border-bottom: 0; }
-    .dropdown95 a:hover { background: #efefef; }
-
-    /* ===== Mobile rules: hide sidebar, show topbar; keep window height-safe ===== */
+    /* Phone: hide sidebar & show topbar; center just the counter */
     @media (hover: none), (max-width: 640px) {
       .sidebar { display: none !important; }
-      .site-container {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto 1fr; /* topbar + rest */
-      }
+      .site-container { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
       .topbar-mobile { display: block; position: relative; z-index: 3; }
-      .main { padding: 12px; }
-      .toggle-sidebar { display: none; } /* hide desktop toggle on phones */
 
-      /* Status: only centered counter */
-      .statusbar { justify-content: center; gap: 6px; }
+      .statusbar { justify-content: center; }
       .sb-left, .sb-right { display: none !important; }
       .sb-center { text-align: center; }
-
-      /* Disable cursor shadow on touch/mobile */
-      .cursor-shadow { display: none !important; }
     }
 
-    /* Cursor shadow (desktop only by media rule above) */
+    /* Cursor shadow */
     .cursor-shadow {
       position: fixed;
       width: 18px; height: 18px;
-      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><polygon points="0,0 0,32 8,24 14,30 16,28 10,22 18,22" fill="black"/></svg>') no-repeat center center;
-      background-size: contain;
+      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><polygon points="0,0 0,32 8,24 14,30 16,28 10,22 18,22" fill="black"/></svg>') no-repeat center center/contain;
       opacity: .25; pointer-events: none; z-index: 10000;
     }
+    @media (hover: none), (max-width: 640px) { .cursor-shadow { display: none !important; } }
 
-    /* ===== Comic interior ===== */
-    .comic-container {
-      position: relative;
-      z-index: 1;
-      height: 100%;
-      border: 1px solid black;
-      padding: 20px;
-
-      background:
-        linear-gradient(rgba(255,255,255,0.8), rgba(255,255,255,0.8)) padding-box,
-        url("bricks.png") padding-box;
-      background-repeat: no-repeat, repeat;
-
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      overflow-y: auto;
-      min-height: 0;
-    }
-
-    .comic-container::-webkit-scrollbar { width: 3px; background: transparent; }
-    .comic-container::-webkit-scrollbar-track { background: transparent; }
-
-    .comic-panel {
-      position: relative;
-      z-index: 1;
-      width: 82%;
-      max-width: 720px;
-      aspect-ratio: 4 / 3;
-      background-color: #ccc;
-      background-size: cover;
-      background-position: center;
-      border: 1px solid black;
-      margin-bottom: 20px;
-    }
-
-    .comic-text {
-      position: relative;
-      z-index: 1;
-      font-size: clamp(1rem, 2.4vmin, 1.1rem);
-      line-height: 1.6;
-      letter-spacing: 0.5px;
-      text-align: center;
-      white-space: pre-wrap;
-      border: 1px solid black;
-      padding: 10px 15px;
-      background-color: #f9f9f9;
-      max-width: 82%;
-      box-shadow: 3px 3px 6px rgba(0,0,0,0.1);
-      margin-bottom: 20px;
-    }
-
-    .nav-buttons, .save-load-buttons {
-      margin-top: 10px;
-      margin-bottom: 6px;
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-    .nav-buttons a,
-    .nav-buttons input[type="number"],
-    .save-load-buttons button {
-      padding: 10px 14px;
-      border: 1px solid black;
-      text-decoration: none;
-      color: black;
-      background-color: #fff;
-      transition: background-color 0.2s ease, transform 0.2s ease;
-      font-family: "Courier New", monospace;
-      cursor: pointer;
-    }
-    .nav-buttons a:hover,
-    .save-load-buttons button:hover {
-      background-color: #ddd;
-      transform: translateY(-2px);
-    }
-    .nav-buttons input[type="number"] { width: 64px; text-align: center; }
-
-    /* ==== Gnome runner styles ==== */
-    .gnome-wrapper {
-      position: fixed;
-      bottom: 10px;
-      left: 0;
-      pointer-events: none;
-      z-index: 9999;
-      transform: translateX(-60px);
-    }
-    .gnome, .gnome-boom, .gnome-hitbox {
-      user-select: none; -webkit-user-drag: none; -webkit-touch-callout: none;
-    }
-    .gnome {
-      height: clamp(52px, 7.2vmin, 68px);
-      transform: scaleX(1);
-      pointer-events: auto;
-      cursor: pointer;
-    }
-    .gnome-boom {
-      position: absolute;
-      left: -16px; bottom: -16px;
-      width: 100px; display: none; pointer-events: none;
-    }
-    .gnome-hitbox {
-      position: absolute;
-      left: -10px; bottom: -6px;
-      width: 88px; height: 80px;
-      pointer-events: auto; cursor: pointer; background: transparent;
-    }
-
-    @keyframes gnome-run-left {
-      0%   { transform: translateX(-60px); }
-      100% { transform: translateX(calc(100vw + 60px)); }
-    }
-    @keyframes gnome-run-right {
-      0%   { transform: translateX(calc(100vw + 60px)); }
-      100% { transform: translateX(-60px); }
-    }
-
-    /* Responsive tweak: narrower sidebar on small-but-not-mobile screens */
+    /* Responsive: slimmer sidebar on narrower screens */
     @media (max-width: 720px){
       :root{ --sidebar-w: clamp(140px, 30vw, 180px); }
     }
@@ -382,13 +284,13 @@
 <body>
   <div class="cursor-shadow" id="cursor-shadow"></div>
 
-  <div class="site-container" id="app">
-    <!-- ===== Mobile topbar (mobile only via CSS) ===== -->
-    <div class="topbar-mobile" id="topbar">
+  <div class="site-container">
+    <!-- Mobile topbar -->
+    <div class="topbar-mobile">
       <div class="topbar-inner">
         <div class="brand95">SPEEP</div>
-        <button class="menu95" id="menuBtn" type="button" aria-expanded="false" aria-controls="dropdown">Menu ▾</button>
-        <div class="dropdown95" id="dropdown" role="menu" aria-labelledby="menuBtn">
+        <button class="menu95" id="menuBtn" type="button" aria-expanded="false">Menu ▾</button>
+        <div class="dropdown95" id="dropdown">
           <a href="index.html">Home</a>
           <a href="about.html">About</a>
           <a href="projects.html">Projects</a>
@@ -398,6 +300,7 @@
       </div>
     </div>
 
+    <!-- Sidebar (desktop) -->
     <aside class="sidebar">
       <div class="photo-frame" id="photo-frame">
         <img src="Icons/icon1.png" alt="Profile or Logo" id="profile-pic" />
@@ -415,17 +318,15 @@
       </nav>
     </aside>
 
+    <!-- Main -->
     <main class="main">
       <section class="win95-window" role="group" aria-label="DNGN Window">
         <div class="titlebar">
           <div class="title">DNGN.TXT</div>
-          <div style="display:flex;gap:8px;align-items:center;">
-            <button class="toggle-sidebar" id="toggleSidebar" aria-expanded="true">☰ Sidebar</button>
-            <div class="controls">
-              <div class="ctl" title="Minimize">_</div>
-              <div class="ctl" title="Maximize">□</div>
-              <div class="ctl" title="Close">×</div>
-            </div>
+          <div class="controls">
+            <div class="ctl" title="Minimize">_</div>
+            <div class="ctl" title="Maximize">□</div>
+            <div class="ctl" title="Close">×</div>
           </div>
         </div>
         <div class="menubar"><div>File</div><div>Edit</div><div>View</div><div>Help</div></div>
@@ -465,93 +366,69 @@
   <script>
     "use strict";
 
-    /* ===== Mobile menu toggle (topbar) ===== */
-    (function() {
+    /* ===== Mobile dropdown ===== */
+    (function(){
       const btn = document.getElementById('menuBtn');
       const dd  = document.getElementById('dropdown');
       if (!btn || !dd) return;
 
-      function closeMenu() {
-        dd.style.display = 'none';
-        btn.setAttribute('aria-expanded', 'false');
-      }
-      function openMenu() {
-        dd.style.display = 'block';
-        btn.setAttribute('aria-expanded', 'true');
-      }
-      btn.addEventListener('click', (e) => {
-        const open = btn.getAttribute('aria-expanded') === 'true';
-        open ? closeMenu() : openMenu();
+      btn.addEventListener('click', e=>{
+        const open = dd.style.display==='block';
+        dd.style.display = open ? 'none' : 'block';
+        btn.setAttribute('aria-expanded', String(!open));
         e.stopPropagation();
       });
-      document.addEventListener('click', (e) => {
-        if (dd.style.display === 'block' && !dd.contains(e.target) && e.target !== btn) closeMenu();
-      });
-      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMenu(); });
+      document.addEventListener('click', ()=>{ dd.style.display='none'; btn.setAttribute('aria-expanded','false'); });
     })();
 
-    /* ===== Sidebar toggle (desktop only) ===== */
-    const app = document.getElementById('app');
-    const toggleBtn = document.getElementById('toggleSidebar');
-    if (toggleBtn) {
-      const startCollapsed = window.matchMedia('(max-width: 900px)').matches;
-      if (startCollapsed) {
-        app.classList.add('collapsed');
-        toggleBtn.setAttribute('aria-expanded', 'false');
+    /* ===== Cursor shadow (desktop only) ===== */
+    (function(){
+      const isTouchLike = window.matchMedia('(hover: none)').matches || 'ontouchstart' in window;
+      const cursorShadow = document.getElementById('cursor-shadow');
+      if (!isTouchLike && cursorShadow) {
+        document.addEventListener('mousemove', e => {
+          cursorShadow.style.left = `${e.clientX + 3}px`;
+          cursorShadow.style.top  = `${e.clientY + 3}px`;
+        });
       }
-      toggleBtn.addEventListener('click', () => {
-        app.classList.toggle('collapsed');
-        const expanded = !app.classList.contains('collapsed');
-        toggleBtn.setAttribute('aria-expanded', String(expanded));
-      });
-    }
-
-    /* ===== Cursor shadow (desktop; disabled on mobile via CSS) ===== */
-    const isTouchLike = window.matchMedia('(hover: none)').matches || 'ontouchstart' in window;
-    const cursorShadow = document.getElementById('cursor-shadow');
-    if (!isTouchLike && cursorShadow) {
-      document.addEventListener('mousemove', e => {
-        cursorShadow.style.left = `${e.clientX + 3}px`;
-        cursorShadow.style.top  = `${e.clientY + 3}px`;
-      });
-    }
+    })();
 
     /* ===== Sidebar portrait rotation + captions ===== */
-    const images = ["Icons/icon1.png","Icons/icon2.png","Icons/icon3.png","Icons/icon4.png"];
-    const titles = {
-      "icon1.png": "Writer, Editor, Reader",
-      "icon2.png": "Writer, Editor, Cyclops",
-      "icon3.png": "Writer, Editor, Freak of Nature",
-      "icon4.png": "Writer, Editor, Scallawag"
-    };
-    const pic = document.getElementById('profile-pic');
-    const explosion = document.getElementById('explosion');
-    const boom = document.getElementById('boom');
-    const frame = document.getElementById('photo-frame');
-    const miniCaption = document.getElementById('mini-caption');
+    (function(){
+      const images = ["Icons/icon1.png","Icons/icon2.png","Icons/icon3.png","Icons/icon4.png"];
+      const titles = {
+        "icon1.png": "Writer, Editor, Reader",
+        "icon2.png": "Writer, Editor, Cyclops",
+        "icon3.png": "Writer, Editor, Freak of Nature",
+        "icon4.png": "Writer, Editor, Scallawag"
+      };
+      const pic = document.getElementById('profile-pic');
+      const explosion = document.getElementById('explosion');
+      const boom = document.getElementById('boom');
+      const frame = document.getElementById('photo-frame');
+      const miniCaption = document.getElementById('mini-caption');
 
-    function filenameFromSrc(src) {
-      return (src.split('/').pop() || "").split('?')[0].split('#')[0].toLowerCase();
-    }
-    function setCaptionForFilename(fileKey) {
-      const text = titles[fileKey]; if (!text) return;
-      miniCaption.style.opacity = '0';
-      setTimeout(() => {
-        miniCaption.textContent = text;
-        miniCaption.style.opacity = '1';
-      }, 80);
-    }
-    function initCaption() { setCaptionForFilename(filenameFromSrc(pic.src)); }
-    if (pic && (pic.complete)) initCaption(); else if (pic) pic.addEventListener('load', initCaption, { once: true });
+      function filenameFromSrc(src) {
+        return (src.split('/').pop() || "").split('?')[0].split('#')[0].toLowerCase();
+      }
+      function setCaptionForFilename(fileKey) {
+        const text = titles[fileKey]; if (!text) return;
+        miniCaption.style.opacity = '0';
+        setTimeout(() => {
+          miniCaption.textContent = text;
+          miniCaption.style.opacity = '1';
+        }, 80);
+      }
+      function initCaption() { setCaptionForFilename(filenameFromSrc(pic.src)); }
+      if (pic.complete) initCaption(); else pic.addEventListener('load', initCaption, { once: true });
 
-    function playExplosionOnFrame() {
-      const base = explosion.getAttribute('src').split('?')[0];
-      explosion.setAttribute('src', `${base}?t=${Date.now()}`);
-      explosion.style.display = 'block';
-    }
-    function hideExplosionOnFrame() { explosion.style.display = 'none'; }
+      function playExplosionOnFrame() {
+        const base = explosion.getAttribute('src').split('?')[0];
+        explosion.setAttribute('src', `${base}?t=${Date.now()}`);
+        explosion.style.display = 'block';
+      }
+      function hideExplosionOnFrame() { explosion.style.display = 'none'; }
 
-    if (pic) {
       pic.addEventListener('click', () => {
         playExplosionOnFrame();
         try { boom.volume = 0.4; boom.currentTime = 0; boom.play(); } catch {}
@@ -568,301 +445,339 @@
           pic.src = next;
         }, 300);
       });
-    }
+    })();
 
     /* ===== GNOME COUNTER (CountAPI) ===== */
-    const countEl = document.getElementById('gnome-count');
-    const COUNT_NS = 'speep.me';
-    const COUNT_KEY = 'gnomes_caught';
-    const LOCAL_MIRROR = 'gnomeCountMirror';
+    (function(){
+      const countEl = document.getElementById('gnome-count');
+      const COUNT_NS = 'speep.me';
+      const COUNT_KEY = 'gnomes_caught';
+      const LOCAL_MIRROR = 'gnomeCountMirror';
 
-    function setCount(n){ if (countEl) countEl.textContent = n; }
+      function setCount(n){ countEl.textContent = n; }
 
-    async function initCount(){
-      try {
-        const r = await fetch(`https://api.countapi.xyz/get/${COUNT_NS}/${COUNT_KEY}`);
-        const d = await r.json();
-        if (typeof d.value === 'number') {
-          setCount(d.value);
-          localStorage.setItem(LOCAL_MIRROR, String(d.value));
-          return;
+      async function initCount(){
+        try {
+          const r = await fetch(`https://api.countapi.xyz/get/${COUNT_NS}/${COUNT_KEY}`);
+          const d = await r.json();
+          if (typeof d.value === 'number') {
+            setCount(d.value);
+            localStorage.setItem(LOCAL_MIRROR, String(d.value));
+            return;
+          }
+          throw new Error();
+        } catch {
+          const n = Number(localStorage.getItem(LOCAL_MIRROR) || 0);
+          setCount(n);
         }
-        throw new Error();
-      } catch {
-        const n = Number(localStorage.getItem(LOCAL_MIRROR) || 0);
-        setCount(n);
       }
-    }
-    initCount();
+      initCount();
 
-    async function incrementCount(){
-      try {
-        const r = await fetch(`https://api.countapi.xyz/hit/${COUNT_NS}/${COUNT_KEY}`);
-        const d = await r.json();
-        if (typeof d.value === 'number') {
-          setCount(d.value);
-          localStorage.setItem(LOCAL_MIRROR, String(d.value));
-          return;
+      // Expose increment for gnomes:
+      window.__incrementGnomeCount = async function(){
+        try {
+          const r = await fetch(`https://api.countapi.xyz/hit/${COUNT_NS}/${COUNT_KEY}`);
+          const d = await r.json();
+          if (typeof d.value === 'number') {
+            setCount(d.value);
+            localStorage.setItem(LOCAL_MIRROR, String(d.value));
+            return;
+          }
+          throw new Error();
+        } catch {
+          const n = Number(localStorage.getItem(LOCAL_MIRROR) || 0) + 1;
+          localStorage.setItem(LOCAL_MIRROR, String(n));
+          setCount(n);
         }
-        throw new Error();
-      } catch {
-        const n = Number(localStorage.getItem(LOCAL_MIRROR) || 0) + 1;
-        localStorage.setItem(LOCAL_MIRROR, String(n));
-        setCount(n);
-      }
-    }
+      };
+    })();
 
     /* ===== MULTI-GNOME SPAWNER (lower frequency here) ===== */
-    const gnomeLayer = document.getElementById('gnome-layer');
+    (function(){
+      const gnomeLayer = document.getElementById('gnome-layer');
 
-    const SPEED_MIN = 3.5;
-    const SPEED_MAX = 9.0;
-    const BATCH_MIN = 1;
-    const BATCH_MAX = 3;           // fewer per batch
-    const BATCH_DELAY_MIN = 15000; // 15s
-    const BATCH_DELAY_MAX = 45000; // 45s
+      const SPEED_MIN = 3.5;
+      const SPEED_MAX = 9.0;
+      const BATCH_MIN = 1;
+      const BATCH_MAX = 3;           // fewer per batch
+      const BATCH_DELAY_MIN = 15000; // 15s
+      const BATCH_DELAY_MAX = 45000; // 45s
 
-    function rand(min, max){ return min + Math.random() * (max - min); }
-    function randInt(min, max){ return Math.floor(rand(min, max + 1)); }
-    function randDuration(min = SPEED_MIN, max = SPEED_MAX){ return rand(min, max); }
+      function rand(min, max){ return min + Math.random() * (max - min); }
+      function randInt(min, max){ return Math.floor(rand(min, max + 1)); }
+      function randDuration(min = SPEED_MIN, max = SPEED_MAX){ return rand(min, max); }
 
-    function bindExplodeTarget(el, handler){
-      ['pointerdown','mousedown','touchstart'].forEach(type => {
-        el.addEventListener(type, (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          handler();
-        }, { passive: false });
-      });
-      el.addEventListener('dragstart', (e) => { e.preventDefault(); return false; });
-    }
+      function bindExplodeTarget(el, handler){
+        ['pointerdown','mousedown','touchstart'].forEach(type => {
+          el.addEventListener(type, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            handler();
+          }, { passive: false });
+        });
+        el.addEventListener('dragstart', (e) => { e.preventDefault(); return false; });
+      }
 
-    function spawnGnome(side){
-      const wrap = document.createElement('div');
-      wrap.className = 'gnome-wrapper';
+      function spawnGnome(side){
+        const wrap = document.createElement('div');
+        wrap.className = 'gnome-wrapper';
 
-      const hit = document.createElement('div');
-      hit.className = 'gnome-hitbox';
+        const hit = document.createElement('div');
+        hit.className = 'gnome-hitbox';
 
-      const img = document.createElement('img');
-      img.className = 'gnome';
-      img.src = 'Animations/gnome.gif';
-      img.alt = 'Running gnome';
-      img.setAttribute('draggable','false');
+        const img = document.createElement('img');
+        img.className = 'gnome';
+        img.src = 'Animations/gnome.gif';
+        img.alt = 'Running gnome';
+        img.setAttribute('draggable','false');
 
-      const boomImg = document.createElement('img');
-      boomImg.className = 'gnome-boom';
-      boomImg.src = 'Animations/explosion.gif';
-      boomImg.alt = 'Boom';
-      boomImg.setAttribute('draggable','false');
+        const boomImg = document.createElement('img');
+        boomImg.className = 'gnome-boom';
+        boomImg.src = 'Animations/explosion.gif';
+        boomImg.alt = 'Boom';
+        boomImg.setAttribute('draggable','false');
 
-      img.style.transform = (side === 'left') ? 'scaleX(-1)' : 'scaleX(1)';
+        img.style.transform = (side === 'left') ? 'scaleX(-1)' : 'scaleX(1)';
 
-      wrap.style.animation = 'none';
-      wrap.style.transform = (side === 'left')
-        ? 'translateX(-60px)'
-        : 'translateX(calc(100vw + 60px))';
-
-      wrap.appendChild(hit);
-      wrap.appendChild(img);
-      wrap.appendChild(boomImg);
-      gnomeLayer.appendChild(wrap);
-
-      let exploded = false;
-
-      function explode(){
-        if (exploded) return;
-        exploded = true;
-
-        const matrix = getComputedStyle(wrap).transform;
         wrap.style.animation = 'none';
-        wrap.style.transform = matrix !== 'none' ? matrix : wrap.style.transform;
+        wrap.style.transform = (side === 'left')
+          ? 'translateX(-60px)'
+          : 'translateX(calc(100vw + 60px))';
 
-        img.style.visibility = 'hidden';
-        const base = boomImg.getAttribute('src').split('?')[0];
-        boomImg.setAttribute('src', `${base}?t=${Date.now()}`);
-        boomImg.style.display = 'block';
+        wrap.appendChild(hit);
+        wrap.appendChild(img);
+        wrap.appendChild(boomImg);
+        gnomeLayer.appendChild(wrap);
 
-        try {
-          const a = new Audio(boom.src);
-          a.volume = 0.5;
-          a.play().catch(()=>{});
-        } catch {}
+        let exploded = false;
 
-        incrementCount();
-        setTimeout(() => wrap.remove(), 750);
+        function explode(){
+          if (exploded) return;
+          exploded = true;
+
+          const matrix = getComputedStyle(wrap).transform;
+          wrap.style.animation = 'none';
+          wrap.style.transform = matrix !== 'none' ? matrix : wrap.style.transform;
+
+          img.style.visibility = 'hidden';
+          const base = boomImg.getAttribute('src').split('?')[0];
+          boomImg.setAttribute('src', `${base}?t=${Date.now()}`);
+          boomImg.style.display = 'block';
+
+          try {
+            const a = new Audio(document.getElementById('boom').src);
+            a.volume = 0.5;
+            a.play().catch(()=>{});
+          } catch {}
+
+          window.__incrementGnomeCount && window.__incrementGnomeCount();
+          setTimeout(() => wrap.remove(), 750);
+        }
+
+        bindExplodeTarget(img, explode);
+        bindExplodeTarget(hit, explode);
+
+        const duration = randDuration(); // seconds
+        requestAnimationFrame(() => {
+          wrap.style.animation = (side === 'left' ? 'gnome-run-left' : 'gnome-run-right') + ` ${duration}s linear forwards`;
+        });
+
+        wrap.addEventListener('animationend', () => { if (!exploded) wrap.remove(); });
       }
 
-      bindExplodeTarget(img, explode);
-      bindExplodeTarget(hit, explode);
-
-      const duration = randDuration(); // seconds
-      requestAnimationFrame(() => {
-        wrap.style.animation = (side === 'left' ? 'gnome-run-left' : 'gnome-run-right') + ` ${duration}s linear forwards`;
-      });
-
-      wrap.addEventListener('animationend', () => { if (!exploded) wrap.remove(); });
-    }
-
-    function spawnBatch(){
-      const n = randInt(BATCH_MIN, BATCH_MAX);
-      for (let i = 0; i < n; i++){
-        const side = (Math.random() < 0.5) ? 'left' : 'right';
-        const stagger = Math.random() * 400;
-        setTimeout(() => spawnGnome(side), stagger);
+      function spawnBatch(){
+        const n = randInt(BATCH_MIN, BATCH_MAX);
+        for (let i = 0; i < n; i++){
+          const side = (Math.random() < 0.5) ? 'left' : 'right';
+          const stagger = Math.random() * 400;
+          setTimeout(() => spawnGnome(side), stagger);
+        }
       }
-    }
 
-    function loopBatches(){
-      const delay = rand(BATCH_DELAY_MIN, BATCH_DELAY_MAX);
-      setTimeout(() => { spawnBatch(); loopBatches(); }, delay);
-    }
+      function loopBatches(){
+        const delay = rand(BATCH_DELAY_MIN, BATCH_DELAY_MAX);
+        setTimeout(() => { spawnBatch(); loopBatches(); }, delay);
+      }
 
-    // Start gnomes
-    setTimeout(() => { spawnBatch(); loopBatches(); }, rand(BATCH_DELAY_MIN, BATCH_DELAY_MAX));
+      setTimeout(() => { spawnBatch(); loopBatches(); }, rand(BATCH_DELAY_MIN, BATCH_DELAY_MAX));
+    })();
 
     /* ======== COMIC PAGE LOGIC ======== */
-    const totalPages = 1; // Update when adding comics
-    const captions = {
-      1: "Before you stands a bridge into darkness. Across the bridge, the DNGN. Your journey begins here. Humble. Unencumbered. Fastidious. Forthright. Brave wait a second. Who is that?",
-    };
-    const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "webp", "gif"];
-    const IMAGE_DIR = "Comics";
-    const FALLBACK_COLOR = "#bbb";
+    (function(){
+      const totalPages = 1; // Update when adding comics
+      const captions = {
+        1: "Before you stands a bridge into darkness. Across the bridge, the DNGN. Your journey begins here. Humble. Unencumbered. Fastidious. Forthright? Brave... wait a second. Who is that?",
+      };
+      const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "webp", "gif"];
+      const IMAGE_DIR = "Comics";
+      const FALLBACK_COLOR = "#bbb";
 
-    function getPageFromURL() {
-      const m = window.location.search.match(/[?&]page=(\d+)/);
-      return m ? parseInt(m[1], 10) : 1;
-    }
-    function getCurrentFileName() {
-      const base = window.location.pathname.split("/").pop();
-      return base || "comic.html";
-    }
-    function goToPage(page) {
-      if (page < 1) page = 1;
-      if (page > totalPages) {
-        window.location.href = "comingsoon.html";
-        return;
+      function getPageFromURL() {
+        const m = window.location.search.match(/[?&]page=(\d+)/);
+        return m ? parseInt(m[1], 10) : 1;
       }
-      const file = getCurrentFileName();
-      if (page === 1) {
-        window.location.href = file;
-      } else {
-        window.location.href = `${file}?page=${page}`;
+      function getCurrentFileName() {
+        const base = window.location.pathname.split("/").pop();
+        return base || "comic.html";
       }
-    }
-
-    function setCaption(page) {
-      const el = document.getElementById("caption");
-      if (!el) return;
-      el.textContent = captions[page] || "";
-    }
-
-    function loadPanelImage(page) {
-      const panelEl = document.getElementById("panel");
-      if (!panelEl) return;
-
-      let loaded = false;
-      const pageStr = String(page).padStart(2, "0");
-
-      IMAGE_EXTENSIONS.forEach((ext) => {
-        const img = new Image();
-        const path = `${IMAGE_DIR}/page${pageStr}.${ext}`;
-        img.onload = () => {
-          if (!loaded) {
-            loaded = true;
-            panelEl.style.backgroundImage = `url("${path}")`;
-          }
-        };
-        img.onerror = () => {};
-        img.src = path;
-      });
-
-      setTimeout(() => {
-        if (!loaded) {
-          console.warn("No image found for page", page);
-          panelEl.style.backgroundImage = "none";
-          panelEl.style.backgroundColor = FALLBACK_COLOR;
+      function goToPage(page) {
+        if (page < 1) page = 1;
+        if (page > totalPages) {
+          window.location.href = "comingsoon.html";
+          return;
         }
-      }, 400);
-    }
+        const file = getCurrentFileName();
+        if (page === 1) {
+          window.location.href = file;
+        } else {
+          window.location.href = `${file}?page=${page}`;
+        }
+      }
 
-    function bindNavigation(page) {
-      const byId = (id) => document.getElementById(id);
+      function setCaption(page) {
+        const el = document.getElementById("caption");
+        if (!el) return;
+        el.textContent = captions[page] || "";
+      }
 
-      const first  = byId("first");
-      const prev   = byId("prev");
-      const next   = byId("next");
-      const latest = byId("latest");
-      const jump   = byId("page-jump");
+      function loadPanelImage(page) {
+        const panelEl = document.getElementById("panel");
+        if (!panelEl) return;
 
-      if (first)  first.addEventListener("click", (e) => { e.preventDefault(); goToPage(1); });
-      if (prev)   prev.addEventListener("click",  (e) => { e.preventDefault(); goToPage(page - 1); });
-      if (next)   next.addEventListener("click",  (e) => { e.preventDefault(); goToPage(page + 1); });
-      if (latest) latest.addEventListener("click",(e) => { e.preventDefault(); goToPage(totalPages); });
+        let loaded = false;
+        const pageStr = String(page).padStart(2, "0");
 
-      if (jump) {
-        jump.value = page;
-        jump.addEventListener("change", (e) => {
-          const val = parseInt(e.target.value, 10);
-          if (!Number.isNaN(val)) goToPage(val);
+        IMAGE_EXTENSIONS.forEach((ext) => {
+          const img = new Image();
+          const path = `${IMAGE_DIR}/page${pageStr}.${ext}`;
+          img.onload = () => {
+            if (!loaded) {
+              loaded = true;
+              panelEl.style.backgroundImage = `url("${path}")`;
+            }
+          };
+          img.onerror = () => {};
+          img.src = path;
+        });
+
+        setTimeout(() => {
+          if (!loaded) {
+            console.warn("No image found for page", page);
+            panelEl.style.backgroundImage = "none";
+            panelEl.style.backgroundColor = FALLBACK_COLOR;
+          }
+        }, 400);
+      }
+
+      function bindNavigation(page) {
+        const byId = (id) => document.getElementById(id);
+
+        const first = byId("first");
+        const prev  = byId("prev");
+        const next  = byId("next");
+        const latest= byId("latest");
+        const jump  = byId("page-jump");
+
+        if (first) first.addEventListener("click", (e) => { e.preventDefault(); goToPage(1); });
+        if (prev)  prev.addEventListener("click",  (e) => { e.preventDefault(); goToPage(page - 1); });
+        if (next)  next.addEventListener("click",  (e) => { e.preventDefault(); goToPage(page + 1); });
+        if (latest)latest.addEventListener("click",(e) => { e.preventDefault(); goToPage(totalPages); });
+
+        if (jump) {
+          jump.value = page;
+          jump.addEventListener("change", (e) => {
+            const val = parseInt(e.target.value, 10);
+            if (!Number.isNaN(val)) goToPage(val);
+          });
+        }
+
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "ArrowRight") goToPage(page + 1);
+          if (e.key === "ArrowLeft")  goToPage(page - 1);
+          if (e.key === "Home")       goToPage(1);
+          if (e.key === "End")        goToPage(totalPages);
         });
       }
 
-      document.addEventListener("keydown", (e) => {
-        if (e.key === "ArrowRight") goToPage(page + 1);
-        if (e.key === "ArrowLeft")  goToPage(page - 1);
-        if (e.key === "Home")       goToPage(1);
-        if (e.key === "End")        goToPage(totalPages);
-      });
-    }
-
-    function bindSaveLoad(page) {
-      const saveBtn = document.getElementById("save-btn");
-      const loadBtn = document.getElementById("load-btn");
-      if (saveBtn) saveBtn.onclick = () => {
-        try {
-          localStorage.setItem("comicSave", String(page));
-          alert("Game saved!");
-        } catch (err) {
-          console.error("Save failed:", err);
-          alert("Save failed (check browser storage settings).");
-        }
-      };
-      if (loadBtn) loadBtn.onclick = () => {
-        try {
-          const saved = parseInt(localStorage.getItem("comicSave") || "", 10);
-          if (!Number.isNaN(saved)) {
-            goToPage(saved);
-          } else {
-            alert("No saved game found.");
+      function bindSaveLoad(page) {
+        const saveBtn = document.getElementById("save-btn");
+        const loadBtn = document.getElementById("load-btn");
+        if (saveBtn) saveBtn.onclick = () => {
+          try {
+            localStorage.setItem("comicSave", String(page));
+            alert("Game saved!");
+          } catch (err) {
+            console.error("Save failed:", err);
+            alert("Save failed (check browser storage settings).");
           }
-        } catch (err) {
-          console.error("Load failed:", err);
-          alert("Load failed (check browser storage settings).");
-        }
-      };
-    }
-
-    function renderPage() {
-      const currentPage = getPageFromURL();
-      setCaption(currentPage);
-      loadPanelImage(currentPage);
-      bindNavigation(currentPage);
-      bindSaveLoad(currentPage);
-
-      const sbLeft = document.querySelector('.sb-left');
-      if (sbLeft) sbLeft.textContent = `Viewing page ${currentPage} of ${totalPages}`;
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-      try {
-        renderPage();
-      } catch (err) {
-        console.error("Fatal script error:", err);
-        alert("A script error occurred. Open DevTools (F12) → Console for details.");
+        };
+        if (loadBtn) loadBtn.onclick = () => {
+          try {
+            const saved = parseInt(localStorage.getItem("comicSave") || "", 10);
+            if (!Number.isNaN(saved)) {
+              goToPage(saved);
+            } else {
+              alert("No saved game found.");
+            }
+          } catch (err) {
+            console.error("Load failed:", err);
+            alert("Load failed (check browser storage settings).");
+          }
+        };
       }
-    });
+
+      function renderPage() {
+        const currentPage = getPageFromURL();
+        setCaption(currentPage);
+        loadPanelImage(currentPage);
+        bindNavigation(currentPage);
+        bindSaveLoad(currentPage);
+
+        const sbLeft = document.querySelector('.sb-left');
+        if (sbLeft) sbLeft.textContent = `Viewing page ${currentPage} of ${totalPages}`;
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        try {
+          renderPage();
+        } catch (err) {
+          console.error("Fatal script error:", err);
+          alert("A script error occurred. Open DevTools (F12) → Console for details.");
+        }
+      });
+    })();
   </script>
+
+  <style>
+    /* Gnome CSS kept here to avoid breaking stacking */
+    .gnome-wrapper {
+      position: fixed;
+      bottom: 10px;
+      left: 0;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translateX(-60px);
+    }
+    .gnome, .gnome-boom, .gnome-hitbox {
+      user-select: none; -webkit-user-drag: none; -webkit-touch-callout: none;
+    }
+    .gnome {
+      height: clamp(52px, 7.2vmin, 68px);
+      transform: scaleX(1);
+      pointer-events: auto;
+      cursor: pointer;
+    }
+    .gnome-boom { position: absolute; left: -16px; bottom: -16px; width: 100px; display: none; pointer-events: none; }
+    .gnome-hitbox { position: absolute; left: -10px; bottom: -6px; width: 88px; height: 80px; pointer-events: auto; cursor: pointer; background: transparent; }
+
+    @keyframes gnome-run-left {
+      0%   { transform: translateX(-60px); }
+      100% { transform: translateX(calc(100vw + 60px)); }
+    }
+    @keyframes gnome-run-right {
+      0%   { transform: translateX(calc(100vw + 60px)); }
+      100% { transform: translateX(-60px); }
+    }
+  </style>
 </body>
 </html>
