@@ -1,110 +1,338 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Coming Soon...</title>
+  <meta charset="UTF-8" />
+  <title>Coming Soon…</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    html, body {
-      width: 100%;
-      height: 100%;
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; }
+    body {
       background: linear-gradient(to bottom, #ffffff 0%, #ffffff 95%, #000000 100%);
-      font-family: 'Courier New', monospace;
+      font-family: "Courier New", monospace;
+      color: #000;
       overflow: hidden;
       position: relative;
+      padding-bottom: env(safe-area-inset-bottom, 0);
     }
 
-    .gnome {
-      position: absolute;
-      font-size: 28px;
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    .gnome.flip {
-      transform: scaleX(-1);
-    }
-
-    @keyframes run-left {
-      0% { left: -60px; opacity: 1; }
-      100% { left: 110vw; opacity: 0; }
-    }
-
-    @keyframes run-right {
-      0% { left: 110vw; opacity: 1; }
-      100% { left: -60px; opacity: 0; }
-    }
-
+    /* App frame sized to safe viewport height (matches other pages) */
     .site-container {
       position: absolute;
-      top: 80px;
-      left: 80px;
-      right: 80px;
-      bottom: 80px;
-      background: white;
-      box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.2);
-      border: 1px solid black;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: 'Courier New', monospace;
-      z-index: 1;
+      inset: 20px;
+      background: #fff;
+      height: calc(100svh - 40px);
+      height: calc(100dvh - 40px);
+      border: 1px solid #000;
+      box-shadow: 6px 6px 12px rgba(0,0,0,.2);
+      display: grid;
+      place-items: center;
+      z-index: 2;
+      min-width: 0;
+      min-height: 0;
     }
 
-    .message {
-      font-size: 2rem;
-      text-align: center;
+    /* Win95 window */
+    .win95-window {
+      width: min(560px, 100%);
+      background: #fff;
+      border: 2px solid #000;
+      box-shadow: inset -2px -2px 0 #000, inset 2px 2px 0 #fff;
+      display: grid;
+      grid-template-rows: 34px 28px 1fr 28px; /* title, menubar, body, status */
+      max-height: 100%;
+      min-width: 0; min-height: 0;
+    }
+    .titlebar {
+      background: #e0e0e0; border-bottom: 1px solid #000;
+      padding: 0 10px; display: flex; align-items: center; justify-content: space-between;
+    }
+    .titlebar .title { font-weight: bold; }
+    .controls { display: flex; gap: 6px; }
+    .ctl {
+      width: 18px; height: 18px; border: 1px solid #000; background: #fff;
+      display: grid; place-items: center; font-size: 12px; line-height: 1;
+    }
+    .ctl:active { transform: translate(1px,1px); }
+
+    .menubar {
+      background: #f7f7f7; border-bottom: 1px solid #000;
+      padding: 0 10px; display: flex; align-items: center; gap: 16px;
+    }
+
+    .window-body {
+      padding: 16px; display: grid; place-items: center; text-align: center;
+      overflow: auto; min-height: 0;
+    }
+
+    .statusbar {
+      background: #f7f7f7; border-top: 1px solid #000;
+      padding: 0 10px; display: flex; align-items: center; justify-content: center;
+      gap: 8px; font-size: .95rem; min-height: 28px;
+    }
+
+    .message { font-size: clamp(1.2rem, 3.2vmin, 1.6rem); line-height: 1.5; }
+
+    /* Win95 button */
+    .btn-95 {
+      display: inline-block; margin-top: 16px;
+      text-decoration: none; color: #000;
+      background: #e9e9e9; border: 1px solid #000;
+      box-shadow: inset -2px -2px 0 #fff, inset 2px 2px 0 #000;
+      padding: 10px 14px; user-select: none;
+    }
+    .btn-95:active {
+      transform: translate(1px,1px);
+      box-shadow: inset -2px -2px 0 #000, inset 2px 2px 0 #fff;
+      background: #dcdcdc;
+    }
+
+    /* ==== GNOME RUNNERS (same look/feel as other pages) ==== */
+    .gnome-wrapper {
+      position: fixed;
+      bottom: 10px;
+      left: 0;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translateX(-60px);
+    }
+    .gnome, .gnome-boom, .gnome-hitbox {
+      user-select: none; -webkit-user-drag: none; -webkit-touch-callout: none;
+    }
+    .gnome {
+      height: clamp(52px, 7.2vmin, 68px);
+      transform: scaleX(1);
+      pointer-events: auto;
+      cursor: pointer;
+    }
+    .gnome-boom {
+      position: absolute; left: -16px; bottom: -16px;
+      width: 100px; display: none; pointer-events: none;
+    }
+    .gnome-hitbox {
+      position: absolute; left: -10px; bottom: -6px;
+      width: 88px; height: 80px; pointer-events: auto; cursor: pointer; background: transparent;
+    }
+
+    @keyframes gnome-run-left {
+      0%   { transform: translateX(-60px); }
+      100% { transform: translateX(calc(100vw + 60px)); }
+    }
+    @keyframes gnome-run-right {
+      0%   { transform: translateX(calc(100vw + 60px)); }
+      100% { transform: translateX(-60px); }
+    }
+
+    /* Phone: compress bars a bit */
+    @media (max-height: 680px){
+      .win95-window { grid-template-rows: 28px 24px 1fr 24px; }
+    }
+    @media (hover: none), (max-width: 640px){
+      .statusbar { font-size: .85rem; }
     }
   </style>
 </head>
 <body>
 
   <div class="site-container">
-    <div class="message">Coming soon... <br>
-	the gnomes are hard at work.</div>
+    <section class="win95-window" role="group" aria-label="Coming Soon Window">
+      <div class="titlebar">
+        <div class="title">COMINGSOON.TXT</div>
+        <div class="controls">
+          <div class="ctl" title="Minimize">_</div>
+          <div class="ctl" title="Maximize">□</div>
+          <div class="ctl" title="Close">×</div>
+        </div>
+      </div>
+
+      <div class="menubar"><div>File</div><div>Edit</div><div>View</div><div>Help</div></div>
+
+      <div class="window-body">
+        <div>
+          <div class="message">
+            Coming soon…<br>
+            the gnomes are hard at work.
+          </div>
+          <a class="btn-95" href="javascript:history.back()">← Go Back</a>
+        </div>
+      </div>
+
+      <div class="statusbar">
+        <span><strong>GNOMES CAUGHT:</strong> <span id="gnome-count">0</span></span>
+      </div>
+    </section>
   </div>
 
+  <!-- Audio used for gnome pops (same file path as your other pages) -->
+  <audio id="boom" src="Animations/explosion.mp3" preload="auto"></audio>
+
+  <!-- Multi-gnomes layer -->
+  <div id="gnome-layer"></div>
+
   <script>
-    function spawnGnome(y, direction) {
-      const gnome = document.createElement('div');
-      gnome.className = 'gnome';
-      gnome.textContent = '🧙‍♂️';
-      gnome.style.top = `${y}px`;
+    "use strict";
 
-      const duration = (Math.random() * 2 + 3).toFixed(2); // 3–5s
-      gnome.style.animationDuration = `${duration}s`;
-      gnome.style.animationTimingFunction = 'linear';
-      gnome.style.animationFillMode = 'forwards';
+    /* ===== GNOME COUNTER (CountAPI) ===== */
+    (function(){
+      const countEl = document.getElementById('gnome-count');
+      const COUNT_NS = 'speep.me';
+      const COUNT_KEY = 'gnomes_caught';
+      const LOCAL_MIRROR = 'gnomeCountMirror';
 
-      if (direction === 'left') {
-        gnome.style.left = '-60px';
-        gnome.style.animationName = 'run-left';
-      } else {
-        gnome.style.left = '110vw';
-        gnome.classList.add('flip');
-        gnome.style.animationName = 'run-right';
+      function setCount(n){ countEl.textContent = n; }
+
+      async function initCount(){
+        try {
+          const r = await fetch(`https://api.countapi.xyz/get/${COUNT_NS}/${COUNT_KEY}`);
+          const d = await r.json();
+          if (typeof d.value === 'number') {
+            setCount(d.value);
+            localStorage.setItem(LOCAL_MIRROR, String(d.value));
+            return;
+          }
+          throw new Error();
+        } catch {
+          const n = Number(localStorage.getItem(LOCAL_MIRROR) || 0);
+          setCount(n);
+        }
+      }
+      initCount();
+
+      // expose for gnome pops
+      window.__incrementGnomeCount = async function(){
+        try {
+          const r = await fetch(`https://api.countapi.xyz/hit/${COUNT_NS}/${COUNT_KEY}`);
+          const d = await r.json();
+          if (typeof d.value === 'number') {
+            setCount(d.value);
+            localStorage.setItem(LOCAL_MIRROR, String(d.value));
+            return;
+          }
+          throw new Error();
+        } catch {
+          const n = Number(localStorage.getItem(LOCAL_MIRROR) || 0) + 1;
+          localStorage.setItem(LOCAL_MIRROR, String(n));
+          setCount(n);
+        }
+      };
+    })();
+
+    /* ===== MULTI-GNOME SPAWNER (matching other pages) ===== */
+    (function(){
+      const gnomeLayer = document.getElementById('gnome-layer');
+      const boom = document.getElementById('boom');
+
+      // Slightly calmer on this page
+      const SPEED_MIN = 3.5;
+      const SPEED_MAX = 9.0;
+      const BATCH_MIN = 1;
+      const BATCH_MAX = 3;
+      const BATCH_DELAY_MIN = 12000; // 12s
+      const BATCH_DELAY_MAX = 30000; // 30s
+
+      function rand(min, max){ return min + Math.random() * (max - min); }
+      function randInt(min, max){ return Math.floor(rand(min, max + 1)); }
+      function randDuration(min = SPEED_MIN, max = SPEED_MAX){ return rand(min, max); }
+
+      function bindExplodeTarget(el, handler){
+        ['pointerdown','mousedown','touchstart'].forEach(type => {
+          el.addEventListener(type, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            handler();
+          }, { passive: false });
+        });
+        el.addEventListener('dragstart', (e) => { e.preventDefault(); return false; });
       }
 
-      document.body.appendChild(gnome);
+      function spawnGnome(side){
+        const wrap = document.createElement('div');
+        wrap.className = 'gnome-wrapper';
 
-      gnome.addEventListener('animationend', () => gnome.remove());
-    }
+        const hit = document.createElement('div');
+        hit.className = 'gnome-hitbox';
 
-    function startGnomeParade() {
-      setInterval(() => {
-        spawnGnome(20, 'left');
-        spawnGnome(20, 'right');
-        spawnGnome(window.innerHeight - 40, 'left');
-        spawnGnome(window.innerHeight - 40, 'right');
-      }, 500);
-    }
+        const img = document.createElement('img');
+        img.className = 'gnome';
+        img.src = 'Animations/gnome.gif';
+        img.alt = 'Running gnome';
+        img.setAttribute('draggable','false');
 
-    startGnomeParade();
+        const boomImg = document.createElement('img');
+        boomImg.className = 'gnome-boom';
+        boomImg.src = 'Animations/explosion.gif';
+        boomImg.alt = 'Boom';
+        boomImg.setAttribute('draggable','false');
+
+        // Flip sprite when coming from left
+        img.style.transform = (side === 'left') ? 'scaleX(-1)' : 'scaleX(1)';
+
+        // Start offscreen
+        wrap.style.animation = 'none';
+        wrap.style.transform = (side === 'left')
+          ? 'translateX(-60px)'
+          : 'translateX(calc(100vw + 60px))';
+
+        wrap.appendChild(hit);
+        wrap.appendChild(img);
+        wrap.appendChild(boomImg);
+        gnomeLayer.appendChild(wrap);
+
+        let exploded = false;
+
+        function explode(){
+          if (exploded) return;
+          exploded = true;
+
+          // Freeze current position
+          const matrix = getComputedStyle(wrap).transform;
+          wrap.style.animation = 'none';
+          wrap.style.transform = matrix !== 'none' ? matrix : wrap.style.transform;
+
+          // Swap to explosion
+          img.style.visibility = 'hidden';
+          const base = boomImg.getAttribute('src').split('?')[0];
+          boomImg.setAttribute('src', `${base}?t=${Date.now()}`);
+          boomImg.style.display = 'block';
+
+          try {
+            const a = new Audio(boom.src);
+            a.volume = 0.5;
+            a.play().catch(()=>{});
+          } catch {}
+
+          window.__incrementGnomeCount && window.__incrementGnomeCount();
+          setTimeout(() => wrap.remove(), 750);
+        }
+
+        bindExplodeTarget(img, explode);
+        bindExplodeTarget(hit, explode);
+
+        // Run across the screen
+        const duration = randDuration(); // seconds
+        requestAnimationFrame(() => {
+          wrap.style.animation = (side === 'left' ? 'gnome-run-left' : 'gnome-run-right') + ` ${duration}s linear forwards`;
+        });
+
+        wrap.addEventListener('animationend', () => { if (!exploded) wrap.remove(); });
+      }
+
+      function spawnBatch(){
+        const n = randInt(BATCH_MIN, BATCH_MAX);
+        for (let i = 0; i < n; i++){
+          const side = (Math.random() < 0.5) ? 'left' : 'right';
+          const stagger = Math.random() * 400;
+          setTimeout(() => spawnGnome(side), stagger);
+        }
+      }
+
+      function loopBatches(){
+        const delay = rand(BATCH_DELAY_MIN, BATCH_DELAY_MAX);
+        setTimeout(() => { spawnBatch(); loopBatches(); }, delay);
+      }
+
+      setTimeout(() => { spawnBatch(); loopBatches(); }, rand(BATCH_DELAY_MIN, BATCH_DELAY_MAX));
+    })();
   </script>
 </body>
 </html>
