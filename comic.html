@@ -17,6 +17,49 @@
       --status-h: clamp(26px, 3.8vmin, 32px);
       --sidebar-w: clamp(160px, 24vw, 220px);
     }
+	
+	/* ========== Wiggle (already added before) ========== */
+@keyframes wiggle {
+  0%   { transform: rotate(0deg) translateY(0); }
+  25%  { transform: rotate(-4deg) translateY(-1px); }
+  50%  { transform: rotate(0deg) translateY(0); }
+  75%  { transform: rotate(4deg) translateY(-1px); }
+  100% { transform: rotate(0deg) translateY(0); }
+}
+.wiggle { display:inline-block; transform-origin:50% 75%; animation: wiggle .6s ease-in-out infinite; }
+
+/* ========== Wavy ========== */
+@keyframes wave {
+  0%   { transform: translateY(0); }
+  50%  { transform: translateY(-0.25em); }
+  100% { transform: translateY(0); }
+}
+.wavy { display:inline-block; white-space: pre-wrap; }
+.wavy .wchar { display:inline-block; animation: wave 1.8s ease-in-out infinite; animation-delay: calc(var(--i) * 0.06s); }
+
+/* ========== Shiny sweep ========== */
+@keyframes shine {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.shiny {
+  display:inline-block;
+  color: transparent;                 /* reveal gradient only */
+  background: linear-gradient(90deg, currentColor 0 30%, #ffffff 50%, currentColor 70% 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: shine 2.2s linear infinite;
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .wiggle { animation: none !important; }
+  .wavy .wchar { animation: none !important; }
+  .shiny { animation: none !important; background: none; color: inherit; }
+}
+
+
 
     body {
       background: linear-gradient(to bottom, #ffffff 0%, #ffffff 95%, #000000 100%);
@@ -124,7 +167,7 @@
       position: absolute; top: 100%; right: 8px;
       border: 1px solid #000; background: #fff;
       display: none; min-width: 160px;
-      z-index: 10;  /* only high when open */
+      z-index: 10;
     }
     .dropdown95 a { display: block; padding: 8px 10px; color: #000; text-decoration: none; border-bottom: 1px solid #000; }
     .dropdown95 a:last-child { border-bottom: none; }
@@ -266,13 +309,13 @@
       .sb-center { text-align: center; }
     }
 	
-	.btn-95.small {
-  display: inline-block;
-  padding: 4px 8px;
-  font-size: 0.8rem;
-  margin-left: 8px;
-  vertical-align: middle;
-}
+    .btn-95.small {
+      display: inline-block;
+      padding: 4px 8px;
+      font-size: 0.8rem;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
 
     /* Cursor shadow */
     .cursor-shadow {
@@ -287,10 +330,64 @@
     @media (max-width: 720px){
       :root{ --sidebar-w: clamp(140px, 30vw, 180px); }
     }
+
+    /* ===== Flashing Images Gate ===== */
+    .gate-overlay{
+      position: fixed; inset: 0;
+      background: rgba(255,255,255,.92);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 100000;
+      padding: 16px;
+    }
+    .gate-window{
+      width: min(420px, 100%);
+      background: #fff;
+      border: 2px solid #000;
+      box-shadow: inset -2px -2px 0 #000, inset 2px 2px 0 #fff, 6px 6px 12px rgba(0,0,0,.2);
+      display: grid; grid-template-rows: auto 1fr auto auto; gap: 10px;
+    }
+    .gate-window .titlebar{
+      background: #e0e0e0; border-bottom: 1px solid #000;
+      padding: 6px 8px; display: flex; justify-content: space-between; align-items: center;
+    }
+    .gate-window .titlebar .title{ font-weight: bold; }
+    .gate-body{
+      padding: 12px 14px;
+      border-bottom: 1px solid #000;
+      line-height: 1.5;
+    }
+    .gate-actions{
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+      padding: 0 14px 4px;
+    }
+    .gate-actions .btn-95{ text-align: center; }
+    .gate-remember{ display: block; padding: 0 14px 14px; font-size: .95rem; }
+    @media (max-width: 480px){ .gate-actions{ grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
   <div class="cursor-shadow" id="cursor-shadow"></div>
+
+  <!-- Flashing Images Gate -->
+  <div id="epilepsy-gate" class="gate-overlay" role="dialog" aria-modal="true" aria-labelledby="gate-title">
+    <div class="gate-window">
+      <div class="titlebar">
+        <div class="title" id="gate-title">WARNING.EXE</div>
+      </div>
+      <div class="gate-body">
+        This comic may contain <b>flashing images</b> that could trigger seizures for people with photosensitive epilepsy.
+        Proceed with caution.
+      </div>
+      <div class="gate-actions">
+        <button id="gate-enter" class="btn-95">ENTER DNGN</button>
+        <a id="gate-back" class="btn-95" href="index.html" role="button">GO BACK</a>
+      </div>
+      <label class="gate-remember">
+        <input type="checkbox" id="gate-remember">
+        Don’t show again
+      </label>
+    </div>
+  </div>
 
   <div class="site-container">
     <!-- Mobile topbar -->
@@ -361,7 +458,7 @@
           <span class="sb-left">DNGN is loading…</span>
           <span class="sb-center"><strong>GNOMES CAUGHT:</strong> <span id="gnome-count">0</span></span>
           <span class="sb-right">© 1998 SPEEP</span>
-		  <a href="https://ko-fi.com/speep" target="_blank" class="btn-95 small">SUPPORT DNGN</a>
+          <a href="https://ko-fi.com/speep" target="_blank" class="btn-95 small">SUPPORT DNGN</a>
         </div>
       </section>
     </main>
@@ -372,6 +469,43 @@
 
   <script>
     "use strict";
+
+    /* ===== Flashing Images Gate logic ===== */
+    (function(){
+      const gate = document.getElementById('epilepsy-gate');
+      if (!gate) return;
+      const enter = document.getElementById('gate-enter');
+      const remember = document.getElementById('gate-remember');
+      const KEY = 'dngn_epilepsy_ok';
+
+      try {
+        if (localStorage.getItem(KEY) === '1') {
+          gate.style.display = 'none';
+        }
+      } catch {}
+
+      function accept(){
+        if (remember && remember.checked) {
+          try { localStorage.setItem(KEY, '1'); } catch {}
+        }
+        gate.style.display = 'none';
+      }
+      enter.addEventListener('click', accept);
+
+      // Simple focus trap
+      gate.addEventListener('keydown', (e) => {
+        if (e.key !== 'Tab') return;
+        const f = gate.querySelectorAll('button, [href], input');
+        if (!f.length) return;
+        const first = f[0], last = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === first) { last.focus(); e.preventDefault(); }
+        else if (!e.shiftKey && document.activeElement === last) { first.focus(); e.preventDefault(); }
+      });
+
+      if (gate.style.display !== 'none') {
+        setTimeout(() => enter.focus(), 0);
+      }
+    })();
 
     /* ===== Mobile dropdown ===== */
     (function(){
@@ -506,9 +640,9 @@
       const SPEED_MIN = 3.5;
       const SPEED_MAX = 9.0;
       const BATCH_MIN = 1;
-      const BATCH_MAX = 3;           // fewer per batch
-      const BATCH_DELAY_MIN = 15000; // 15s
-      const BATCH_DELAY_MAX = 45000; // 45s
+      const BATCH_MAX = 3;
+      const BATCH_DELAY_MIN = 15000;
+      const BATCH_DELAY_MAX = 45000;
 
       function rand(min, max){ return min + Math.random() * (max - min); }
       function randInt(min, max){ return Math.floor(rand(min, max + 1)); }
@@ -610,8 +744,8 @@
     })();
 
     /* ======== COMIC PAGE LOGIC ======== */
-    (function(){
-      const totalPages = 11; // Update when adding comics
+     (function(){
+      const totalPages = 13; // Update when adding comics
       const captions = {
         1: "Before you stands a bridge into darkness. Across the bridge, the DNGN. Your journey begins here. Humble. Unencumbered. Fastidious. Forthright? Brave... wait a second. Who is that?",
 		2: "Hold on. Why don't we move some things out of the way?",
@@ -623,7 +757,9 @@
 		8: "It looks like <b>FTR</b>'s level is populating now. One must wonder how many points he has to allocate!",
 		9: "Oh.",
 		10: "That's not great. <b>FTR</b> was supposed to start with a level, and points to allocate. Something must have gone wrong with your installation of DNGN.",
-		11: "Oh, but wait! What divine intelligence, perchance, might such a ghastly, gorgeous, gleaming glow expose?"
+		11: "Oh, but wait! What divine intelligence, perchance, might such a ghastly, gorgeous, gleaming glow expose?",
+		12: "<b>FTR</b> looks upon his saving grace with oppressive awe.",
+		13: "A ~Will-O'-The-Wisp~ has arrived! <b>FTR</b> can consume its essence for experience points to allocate."
       };
       const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "webp", "gif"];
       const IMAGE_DIR = "Comics";
@@ -651,11 +787,66 @@
         }
       }
 
-      function setCaption(page) {
-        const el = document.getElementById("caption");
-        if (!el) return;
-        el.innerHTML = captions[page] || "";
+     function setCaption(page) {
+  const el = document.getElementById("caption");
+  if (!el) return;
+  const raw = captions[page] || "";
+
+  // Markup:
+  // ~text~   -> wiggle
+  // ^text^   -> wavy
+  // {text}   -> shiny
+  let html = raw
+    .replace(/~(.*?)~/g, '<span class="wiggle">$1</span>')
+    .replace(/\^(.*?)\^/g, '<span class="wavy">$1</span>')
+    .replace(/\{(.*?)\}/g, '<span class="shiny">$1</span>');
+
+  el.innerHTML = html;
+
+  // After inserting, wrap each character in .wavy spans so we can stagger delays
+  prepareWavySpans(el);
+}
+
+function prepareWavySpans(root) {
+  const targets = root.querySelectorAll('.wavy');
+  targets.forEach(node => {
+    // Skip if already processed
+    if (node.dataset.waveReady === '1') return;
+
+    const text = node.innerHTML;
+    // Convert the node's HTML text content into individual spans
+    // Preserve existing HTML tags inside by only splitting plain text nodes
+    const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT, null);
+    const toReplace = [];
+
+    while (walker.nextNode()) {
+      const t = walker.currentNode;
+      if (t.nodeValue.trim() !== '') toReplace.push(t);
+    }
+
+    toReplace.forEach(textNode => {
+      const frag = document.createDocumentFragment();
+      const s = textNode.nodeValue;
+      for (let i = 0; i < s.length; i++) {
+        const ch = s[i];
+        // Keep spaces as normal spaces so words don't collapse
+        if (ch === ' ') {
+          frag.appendChild(document.createTextNode(' '));
+        } else {
+          const span = document.createElement('span');
+          span.className = 'wchar';
+          span.style.setProperty('--i', i.toString());
+          span.textContent = ch;
+          frag.appendChild(span);
+        }
       }
+      textNode.parentNode.replaceChild(frag, textNode);
+    });
+
+    node.dataset.waveReady = '1';
+  });
+}
+
 
       function loadPanelImage(page) {
         const panelEl = document.getElementById("panel");
