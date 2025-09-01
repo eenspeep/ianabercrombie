@@ -59,8 +59,6 @@
   .shiny { animation: none !important; background: none; color: inherit; }
 }
 
-
-
     body {
       background: linear-gradient(to bottom, #ffffff 0%, #ffffff 95%, #000000 100%);
       font-family: "Courier New", monospace;
@@ -363,6 +361,57 @@
     .gate-actions .btn-95{ text-align: center; }
     .gate-remember{ display: block; padding: 0 14px 14px; font-size: .95rem; }
     @media (max-width: 480px){ .gate-actions{ grid-template-columns: 1fr; } }
+
+    /* ===== Chatlog (pesterlog-style) ===== */
+    .chatlog {
+      border: 1px solid #000;
+      background: #fff;
+      box-shadow: inset -2px -2px 0 #000, inset 2px 2px 0 #fff, 3px 3px 6px rgba(0,0,0,.08);
+      margin: 10px auto;
+      max-width: 82%;
+      text-align: left; /* chat reads better left-aligned */
+    }
+    .chatlog-header {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 8px;
+      background: #e0e0e0;
+      border-bottom: 1px solid #000;
+      padding: 6px 8px;
+      font-weight: bold;
+      font-size: clamp(.95rem, 2vmin, 1rem);
+    }
+    .chatlog-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .chatlog-toggle {
+      border: 1px solid #000;
+      background: #fff;
+      box-shadow: inset -2px -2px 0 #fff, inset 2px 2px 0 #000;
+      padding: 2px 8px;
+      line-height: 1;
+      cursor: pointer;
+      user-select: none;
+    }
+    .chatlog-toggle:active {
+      transform: translate(1px,1px);
+      box-shadow: inset -2px -2px 0 #000, inset 2px 2px 0 #fff;
+      background: #dcdcdc;
+    }
+    .chatlog.minimized .chatlog-body { display: none; }
+    .chatlog-body {
+      max-height: 40vh; overflow: auto; padding: 10px 12px;
+      line-height: 1.5;
+    }
+    .chatline { margin: 2px 0; }
+    .chat-name { font-weight: bold; }
+    .chat-msg  { white-space: pre-wrap; }
+
+    /* character colors */
+    .chat-FTR .chat-name { color: #b71c1c; }
+    .chat-WZD .chat-name { color: #1565c0; }
+    .chat-THF .chat-name { color: #2e7d32; }
+
+    @media (max-width: 640px){
+      .chatlog-body { max-height: 50vh; }
+    }
   </style>
 </head>
 <body>
@@ -789,38 +838,108 @@
         }
       }
 
+      /* ========= Chatlog parser + toggles ========= */
+      function parseChatBlocks(raw) {
+        // [chat title="..." min] ...lines... [/chat]
+        const CHAT_RE = /\[chat([^\]]*)\]([\s\S]*?)\[\/chat\]/gi;
+
+        function parseAttrs(attrStr) {
+          const out = { title: 'LOG', min: false };
+          const titleMatch = attrStr && attrStr.match(/title\s*=\s*"([^"]*)"/i);
+          if (titleMatch) out.title = (titleMatch[1] || '').trim() || 'LOG';
+          if (attrStr && /\bmin\b/i.test(attrStr)) out.min = true;
+          return out;
+        }
+
+        function lineToHTML(line) {
+          const m = line.match(/^\s*([A-Za-z0-9_]+)\s*:\s*([\s\S]*)$/);
+          if (!m) return '';
+          const who = m[1].toUpperCase();
+          let msg  = m[2];
+
+          // inline effects inside chat messages
+          msg = msg
+            .replace(/~(.*?)~/g, '<span class="wiggle">$1</span>')
+            .replace(/\^(.*?)\^/g, '<span class="wavy">$1</span>')
+            .replace(/\{(.*?)\}/g, '<span class="shiny">$1</span>');
+
+          const whoClass = ['FTR','WZD','THF'].includes(who) ? `chat-${who}` : '';
+          return `<div class="chatline ${whoClass}">
+            <span class="chat-name">${who}:</span>
+            <span class="chat-msg"> ${msg}</span>
+          </div>`;
+        }
+
+        return raw.replace(CHAT_RE, (_, attrStr, body) => {
+          const attrs = parseAttrs(attrStr || '');
+          const minimized = attrs.min ? ' minimized' : '';
+          const lines = (body || '').split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+          const items = lines.map(lineToHTML).join('');
+          const id = 'chat-' + Math.random().toString(36).slice(2, 8);
+          return `
+            <div class="chatlog${minimized}" data-chat-id="${id}">
+              <div class="chatlog-header">
+                <div class="chatlog-title">${attrs.title}</div>
+                <button class="chatlog-toggle" aria-expanded="${attrs.min ? 'false' : 'true'}" aria-controls="${id}">
+                  ${attrs.min ? 'Expand' : 'Minimize'}
+                </button>
+              </div>
+              <div class="chatlog-body" id="${id}">
+                ${items}
+              </div>
+            </div>
+          `;
+        });
+      }
+
+      function wireChatlogToggles(captionRoot){
+        captionRoot.addEventListener('click', (e) => {
+          const btn = e.target.closest('.chatlog-toggle');
+          if (!btn) return;
+          const box = btn.closest('.chatlog');
+          const expanded = btn.getAttribute('aria-expanded') === 'true';
+          if (expanded) {
+            box.classList.add('minimized');
+            btn.setAttribute('aria-expanded', 'false');
+            btn.textContent = 'Expand';
+          } else {
+            box.classList.remove('minimized');
+            btn.setAttribute('aria-expanded', 'true');
+            btn.textContent = 'Minimize';
+          }
+        });
+      }
+
      function setCaption(page) {
-  const el = document.getElementById("caption");
-  if (!el) return;
-  const raw = captions[page] || "";
+        const el = document.getElementById("caption");
+        if (!el) return;
+        const raw = captions[page] || "";
 
-  // Markup:
-  // ~text~   -> wiggle
-  // ^text^   -> wavy
-  // {text}   -> shiny
-  let html = raw
-    .replace(/~(.*?)~/g, '<span class="wiggle">$1</span>')
-    .replace(/\^(.*?)\^/g, '<span class="wavy">$1</span>')
-    .replace(/\{(.*?)\}/g, '<span class="shiny">$1</span>');
+        // 1) Build chatlogs (if any) from [chat] blocks
+        let html = parseChatBlocks(raw);
 
-  el.innerHTML = html;
+        // 2) Apply inline effects outside chatlogs too
+        html = html
+          .replace(/~(.*?)~/g, '<span class="wiggle">$1</span>')
+          .replace(/\^(.*?)\^/g, '<span class="wavy">$1</span>')
+          .replace(/\{(.*?)\}/g, '<span class="shiny">$1</span>');
 
-  // After inserting, wrap each character in .wavy spans so we can stagger delays
-  prepareWavySpans(el);
-}
+        el.innerHTML = html;
+
+        // 3) Prepare wavy char spans everywhere (inside/outside chat)
+        prepareWavySpans(el);
+
+        // 4) Enable minimize/expand handlers
+        wireChatlogToggles(el);
+      }
 
 function prepareWavySpans(root) {
   const targets = root.querySelectorAll('.wavy');
   targets.forEach(node => {
-    // Skip if already processed
     if (node.dataset.waveReady === '1') return;
 
-    const text = node.innerHTML;
-    // Convert the node's HTML text content into individual spans
-    // Preserve existing HTML tags inside by only splitting plain text nodes
     const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT, null);
     const toReplace = [];
-
     while (walker.nextNode()) {
       const t = walker.currentNode;
       if (t.nodeValue.trim() !== '') toReplace.push(t);
@@ -831,7 +950,6 @@ function prepareWavySpans(root) {
       const s = textNode.nodeValue;
       for (let i = 0; i < s.length; i++) {
         const ch = s[i];
-        // Keep spaces as normal spaces so words don't collapse
         if (ch === ' ') {
           frag.appendChild(document.createTextNode(' '));
         } else {
@@ -848,7 +966,6 @@ function prepareWavySpans(root) {
     node.dataset.waveReady = '1';
   });
 }
-
 
       function loadPanelImage(page) {
         const panelEl = document.getElementById("panel");
