@@ -17,47 +17,44 @@
       --status-h: clamp(26px, 3.8vmin, 32px);
       --sidebar-w: clamp(160px, 24vw, 220px);
     }
-	
-	/* ========== Wiggle (already added before) ========== */
-@keyframes wiggle {
-  0%   { transform: rotate(0deg) translateY(0); }
-  25%  { transform: rotate(-4deg) translateY(-1px); }
-  50%  { transform: rotate(0deg) translateY(0); }
-  75%  { transform: rotate(4deg) translateY(-1px); }
-  100% { transform: rotate(0deg) translateY(0); }
-}
-.wiggle { display:inline-block; transform-origin:50% 75%; animation: wiggle .6s ease-in-out infinite; }
 
-/* ========== Wavy ========== */
-@keyframes wave {
-  0%   { transform: translateY(0); }
-  50%  { transform: translateY(-0.25em); }
-  100% { transform: translateY(0); }
-}
-.wavy { display:inline-block; white-space: pre-wrap; }
-.wavy .wchar { display:inline-block; animation: wave 1.8s ease-in-out infinite; animation-delay: calc(var(--i) * 0.06s); }
+    /* ========== Wiggle / Wavy / Shiny ========== */
+    @keyframes wiggle {
+      0%   { transform: rotate(0deg) translateY(0); }
+      25%  { transform: rotate(-4deg) translateY(-1px); }
+      50%  { transform: rotate(0deg) translateY(0); }
+      75%  { transform: rotate(4deg) translateY(-1px); }
+      100% { transform: rotate(0deg) translateY(0); }
+    }
+    .wiggle { display:inline-block; transform-origin:50% 75%; animation: wiggle .6s ease-in-out infinite; }
 
-/* ========== Shiny sweep ========== */
-@keyframes shine {
-  0%   { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-.shiny {
-  display:inline-block;
-  color: transparent;                 /* reveal gradient only */
-  background: linear-gradient(90deg, currentColor 0 30%, #ffffff 50%, currentColor 70% 100%);
-  background-size: 200% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  animation: shine 2.2s linear infinite;
-}
+    @keyframes wave {
+      0%   { transform: translateY(0); }
+      50%  { transform: translateY(-0.25em); }
+      100% { transform: translateY(0); }
+    }
+    .wavy { display:inline-block; white-space: pre-wrap; }
+    .wavy .wchar { display:inline-block; animation: wave 1.8s ease-in-out infinite; animation-delay: calc(var(--i) * 0.06s); }
 
-/* Respect reduced motion */
-@media (prefers-reduced-motion: reduce) {
-  .wiggle { animation: none !important; }
-  .wavy .wchar { animation: none !important; }
-  .shiny { animation: none !important; background: none; color: inherit; }
-}
+    @keyframes shine {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    .shiny {
+      display:inline-block;
+      color: transparent;
+      background: linear-gradient(90deg, currentColor 0 30%, #ffffff 50%, currentColor 70% 100%);
+      background-size: 200% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      animation: shine 2.2s linear infinite;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .wiggle { animation: none !important; }
+      .wavy .wchar { animation: none !important; }
+      .shiny { animation: none !important; background: none; color: inherit; }
+    }
 
     body {
       background: linear-gradient(to bottom, #ffffff 0%, #ffffff 95%, #000000 100%);
@@ -213,12 +210,12 @@
 
     .window-body {
       padding: 16px;
-      overflow: hidden;       /* inner scroller lives inside */
+      overflow: hidden;
       display: grid;
-      min-height: 0;          /* CRUCIAL: lets 1fr shrink */
+      min-height: 0;
     }
 
-    /* ===== Comic interior (with bricks background) ===== */
+    /* ===== Comic interior ===== */
     .comic-container {
       position: relative;
       z-index: 1;
@@ -238,12 +235,36 @@
       flex-direction: column;
       align-items: center;
       justify-content: flex-start;
-      overflow-y: auto;       /* inner scroll here */
-      min-height: 0;          /* needed for flex child scroller */
+      overflow-y: auto;
+      min-height: 0;
       gap: 20px;
     }
     .comic-container::-webkit-scrollbar { width: 3px; background: transparent; }
     .comic-container::-webkit-scrollbar-track { background: transparent; }
+
+    /* Optional typed title above the panel */
+    .comic-title {
+      font-size: clamp(1.1rem, 2.6vmin, 1.3rem);
+      font-weight: bold;
+      font-family: "Courier New", monospace;
+      color: #000;
+      white-space: pre;
+      text-align: center;
+      margin-bottom: 8px;
+      min-height: 1.5em;
+      max-width: 82%;
+    }
+    .comic-title .cursor {
+      display: inline-block;
+      width: 10px;
+      background: currentColor;
+      animation: blink 1s steps(2, start) infinite;
+      vertical-align: bottom;
+    }
+    @keyframes blink {
+      0%, 50% { opacity: 1; }
+      50.01%, 100% { opacity: 0; }
+    }
 
     .comic-panel {
       position: relative; z-index: 1;
@@ -281,7 +302,7 @@
     }
     .nav-buttons input[type="number"] { width: 64px; text-align: center; }
 
-    /* ===== Status bar with centered counter ===== */
+    /* ===== Status bar ===== */
     .statusbar {
       background: #f7f7f7;
       border-top: 1px solid #000;
@@ -296,7 +317,7 @@
     }
     .sb-left, .sb-center, .sb-right { white-space: nowrap; }
 
-    /* Phone: hide sidebar & show topbar; center just the counter */
+    /* Phone */
     @media (hover: none), (max-width: 640px) {
       .sidebar { display: none !important; }
       .site-container { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
@@ -306,7 +327,7 @@
       .sb-left, .sb-right { display: none !important; }
       .sb-center { text-align: center; }
     }
-	
+
     .btn-95.small {
       display: inline-block;
       padding: 4px 8px;
@@ -324,7 +345,7 @@
     }
     @media (hover: none), (max-width: 640px) { .cursor-shadow { display: none !important; } }
 
-    /* Responsive: slimmer sidebar on narrower screens */
+    /* Responsive: slimmer sidebar */
     @media (max-width: 720px){
       :root{ --sidebar-w: clamp(140px, 30vw, 180px); }
     }
@@ -369,7 +390,7 @@
       box-shadow: inset -2px -2px 0 #000, inset 2px 2px 0 #fff, 3px 3px 6px rgba(0,0,0,.08);
       margin: 10px auto;
       max-width: 82%;
-      text-align: left; /* chat reads better left-aligned */
+      text-align: left;
     }
     .chatlog-header {
       display: flex; align-items: center; justify-content: space-between;
@@ -485,6 +506,7 @@
 
         <div class="window-body">
           <div class="comic-container">
+            <div class="comic-title" id="command-title"></div>
             <div class="comic-panel" id="panel"></div>
             <div class="comic-text" id="caption"></div>
 
@@ -682,7 +704,7 @@
       };
     })();
 
-    /* ===== MULTI-GNOME SPAWNER (lower frequency here) ===== */
+    /* ===== MULTI-GNOME SPAWNER ===== */
     (function(){
       const gnomeLayer = document.getElementById('gnome-layer');
 
@@ -793,27 +815,30 @@
     })();
 
     /* ======== COMIC PAGE LOGIC ======== */
-     (function(){
-      const totalPages = 17; // Update when adding comics
+    (function(){
+      const totalPages = 18; // Update when adding comics
       const captions = {
-        1: "Before you stands a bridge into darkness. Across the bridge, the DNGN. Your journey begins here. Humble. Unencumbered. Fastidious. Forthright? Brave... wait a second. Who is that?",
-		2: "Hold on. Why don't we move some things out of the way?",
-		3: "Let's get this fellow situated, why don't we?",
-		4: "I'm sorry. It seems I was woefully unprepared for guests. Especially humble, unencumbered, fastidious, forthright, brave guests. Guests such as yourself. Allow me to put things in their places for this fellow's introduction.",
-		5: "This is <b>FTR.</b> <br> <b>FTR</b> has six <b>CORE STATISTICS</b>.",
-		6: "Let's see some more information about <b>FTR</b> before we place his <b>CORE STATISTICS</b>.",
-		7: "If you just. Yeah. Just. Right there. That's better. Much better.",
-		8: "It looks like <b>FTR</b>'s level is populating now. One must wonder how many points he has to allocate!",
-		9: "Oh.",
-		10: "That's not great. <b>FTR</b> was supposed to start with a level, and points to allocate. Something must have gone wrong with your installation of DNGN.",
-		11: "Oh, but wait! What divine intelligence, perchance, might such a ghastly, gorgeous, gleaming glow expose?",
-		12: "<b>FTR</b> looks upon his saving grace with oppressive awe.",
-		13: "A ~Will-O'-The-Wisp~ has arrived! <b>FTR</b> can consume its essence for experience points to allocate.",
-		14: "<b>FTR</b>! Hop to, lad! You must defeat that fell spirit and claim your reward! Lest ye be ~powerless~!",
-		15: "Atta boy! Give 'em what-for!",
-		16: "Come on, <b>FTR</b>. You're going to have to try harder than this.",
-		17: "It looks like <b>FTR</b> doesn't know what to do. Why don't you <a href=\"submit.html\">help him out?</a>"
+        1: { text: `Before you stands a bridge into darkness. Across the bridge, the DNGN. Your journey begins here. Humble. Unencumbered. Fastidious. Forthright? Brave... wait a second. Who is that?` },
+        2: { text: `Hold on. Why don't we move some things out of the way?` },
+        3: { text: `Let's get this fellow situated, why don't we?` },
+        4: { text: `I'm sorry. It seems I was woefully unprepared for guests. Especially humble, unencumbered, fastidious, forthright, brave guests. Guests such as yourself. Allow me to put things in their places for this fellow's introduction.` },
+        5: { text: `This is <b>FTR.</b> <br> <b>FTR</b> has six <b>CORE STATISTICS</b>.` },
+        6: { text: `Let's see some more information about <b>FTR</b> before we place his <b>CORE STATISTICS</b>.` },
+        7: { text: `If you just. Yeah. Just. Right there. That's better. Much better.` },
+        8: { text: `It looks like <b>FTR</b>'s level is populating now. One must wonder how many points he has to allocate!` },
+        9: { text: `Oh.` },
+        10:{ text: `That's not great. <b>FTR</b> was supposed to start with a level, and points to allocate. Something must have gone wrong with your installation of DNGN.` },
+        11:{ text: `Oh, but wait! What divine intelligence, perchance, might such a ghastly, gorgeous, gleaming glow expose?` },
+        12:{ text: `<b>FTR</b> looks upon his saving grace with oppressive awe.` },
+        13:{ text: `A ~Will-O'-The-Wisp~ has arrived! <b>FTR</b> can consume its essence for experience points to allocate.` },
+        14:{ text: `<b>FTR</b>! Hop to, lad! You must defeat that fell spirit and claim your reward! Lest ye be ~powerless~!` },
+        15:{ text: `Atta boy! Give 'em what-for!` },
+        16:{ text: `Come on, <b>FTR</b>. You're going to have to try harder than this.` },
+        17:{ text: `It looks like <b>FTR</b> doesn't know what to do. Why don't you <a href="submit.html">help him out?</a>` },
+		18:{ text: `Yeah. I don't know if that will work. Could you be more specific? Help our lad out.`, title: `>FTR: DO SOMETHING ELSE` }
+        // For future pages, you can add: 18: { text: `...`, title: `==> EXAMINE ROOM` }
       };
+
       const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "webp", "gif"];
       const IMAGE_DIR = "Comics";
       const FALLBACK_COLOR = "#bbb";
@@ -912,10 +937,45 @@
         });
       }
 
-     function setCaption(page) {
+      function prepareWavySpans(root) {
+        const targets = root.querySelectorAll('.wavy');
+        targets.forEach(node => {
+          if (node.dataset.waveReady === '1') return;
+
+          const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT, null);
+          const toReplace = [];
+          while (walker.nextNode()) {
+            const t = walker.currentNode;
+            if (t.nodeValue.trim() !== '') toReplace.push(t);
+          }
+
+          toReplace.forEach(textNode => {
+            const frag = document.createDocumentFragment();
+            const s = textNode.nodeValue;
+            for (let i = 0; i < s.length; i++) {
+              const ch = s[i];
+              if (ch === ' ') {
+                frag.appendChild(document.createTextNode(' '));
+              } else {
+                const span = document.createElement('span');
+                span.className = 'wchar';
+                span.style.setProperty('--i', i.toString());
+                span.textContent = ch;
+                frag.appendChild(span);
+              }
+            }
+            textNode.parentNode.replaceChild(frag, textNode);
+          });
+
+          node.dataset.waveReady = '1';
+        });
+      }
+
+      function setCaption(page) {
         const el = document.getElementById("caption");
         if (!el) return;
-        const raw = captions[page] || "";
+        const data = captions[page] || { text: "" };
+        const raw = data.text || "";
 
         // 1) Build chatlogs (if any) from [chat] blocks
         let html = parseChatBlocks(raw);
@@ -935,39 +995,32 @@
         wireChatlogToggles(el);
       }
 
-function prepareWavySpans(root) {
-  const targets = root.querySelectorAll('.wavy');
-  targets.forEach(node => {
-    if (node.dataset.waveReady === '1') return;
+      /* ===== Typed command title (optional) ===== */
+      let titleTimer = null;
+      function setCommandTitle(page) {
+        const titleEl = document.getElementById("command-title");
+        if (!titleEl) return;
+        // clear any previous timers/typing
+        if (titleTimer) { clearTimeout(titleTimer); titleTimer = null; }
 
-    const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT, null);
-    const toReplace = [];
-    while (walker.nextNode()) {
-      const t = walker.currentNode;
-      if (t.nodeValue.trim() !== '') toReplace.push(t);
-    }
+        titleEl.textContent = ""; // reset
+        const data = captions[page];
+        if (!data || !data.title) return; // only show when a title exists
 
-    toReplace.forEach(textNode => {
-      const frag = document.createDocumentFragment();
-      const s = textNode.nodeValue;
-      for (let i = 0; i < s.length; i++) {
-        const ch = s[i];
-        if (ch === ' ') {
-          frag.appendChild(document.createTextNode(' '));
-        } else {
-          const span = document.createElement('span');
-          span.className = 'wchar';
-          span.style.setProperty('--i', i.toString());
-          span.textContent = ch;
-          frag.appendChild(span);
-        }
+        const text = String(data.title);
+        let i = 0;
+
+        const step = () => {
+          if (i <= text.length) {
+            titleEl.innerHTML = text.substring(0, i) + '<span class="cursor"></span>';
+            i++;
+            titleTimer = setTimeout(step, 50); // typing speed
+          } else {
+            titleEl.innerHTML = text + '<span class="cursor"></span>';
+          }
+        };
+        step();
       }
-      textNode.parentNode.replaceChild(frag, textNode);
-    });
-
-    node.dataset.waveReady = '1';
-  });
-}
 
       function loadPanelImage(page) {
         const panelEl = document.getElementById("panel");
@@ -1057,6 +1110,7 @@ function prepareWavySpans(root) {
 
       function renderPage() {
         const currentPage = getPageFromURL();
+        setCommandTitle(currentPage);
         setCaption(currentPage);
         loadPanelImage(currentPage);
         bindNavigation(currentPage);
