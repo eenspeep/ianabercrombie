@@ -816,7 +816,7 @@
 
     /* ======== COMIC PAGE LOGIC ======== */
     (function(){
-      const totalPages = 25; // Update when adding comics
+      const totalPages = 28; // Update when adding comics
       const captions = {
         1: { text: `Before you stands a bridge into darkness. Across the bridge, the DNGN. Your journey begins here. Humble. Unencumbered. Fastidious. Forthright? Brave... wait a second. Who is that?` },
         2: { text: `Hold on. Why don't we move some things out of the way?` },
@@ -834,15 +834,18 @@
         14:{ text: `<b>FTR</b>! Hop to, lad! You must defeat that fell spirit and claim your reward! Lest ye be ~powerless~!` },
         15:{ text: `Atta boy! Give 'em what-for!` },
         16:{ text: `Come on, <b>FTR</b>. You're going to have to try harder than this.` },
-        17:{ text: `It looks like <b>FTR</b> doesn't know what to do. Why don't you <a href="submit.html">help him out?</a>` },
+        17:{ text: `It looks like <b>FTR</b> doesn't know what to do. Why don't you <a href="submit.html">help him out?</a>` },b
 		18:{ text: `Yeah. I don't know if that will work. Could you be more specific? Help our lad out.`, title: `>FTR: DO SOMETHING ELSE` },
-		19:{ text: `It looks like <b>FTR</b> has, like, a million weapons! Who would have thought!`, title: `>FTR: USE YOUR INVENTORY` },
+		19:{ text: `Apparently <b>FTR</b> has, like, a million weapons! Who would have thought!`, title: `>FTR: USE YOUR INVENTORY` },
 		20:{ text: `Jesus christ that's a lot of weapons. Why don't you sort by <i>LEVEL-APPROPRIATE</i> instead.` },
 		21:{ text: `Okay. A little disappointing, but I'm sure <b>FTR</b> will make do.` },
 		22:{ text: `Excellently done! Now, <b>FTR</b>, do your worst!`, title: `>FTR: SELECT RUSTY SWORD` },
 		23:{ text: `See, that's not typically what you do with these sorts of items. But, okay, I guess.`, title: `>FTR: KICK`},
 		24:{ text: `Look at that sucker go.`},
-		25:{ text: `That was close! Phew.`} 
+		25:{ text: `That was close! Phew.`},
+		26:{ text: `<b>FTR</b> is now scrounging around for bugs and worms and shit. Great.`, title: `>FTR: EAT`},
+		27:{ text: `<b>FTR</b> doesn't have access to any firearms, so instead, he dreams beautiful, violent dreams. Gosh, all <b>FTR</b>s seem to really love weapons.`, title: `>FTR: SHOOT HIM WITH GUN`},
+		28:{ text: `~AAAAAAAH!~ Oh, <b>FTR</b>, you even scared me!`, title: `>FTR: SCREAM`}
       };
 
       const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "webp", "gif"];
