@@ -543,6 +543,7 @@
           <span class="sb-left">DNGN is loading…</span>
           <span class="sb-center"><strong>GNOMES CAUGHT:</strong> <span id="gnome-count">0</span></span>
           <span class="sb-right">© 1998 SPEEP</span>
+		  <a id="submit-link" href="submit.html" class="btn-95 small">SUBMIT</a>
           <a href="https://ko-fi.com/speep" target="_blank" class="btn-95 small">SUPPORT DNGN</a>
 		  <a href="https://discord.gg/UvgGEp2pFq" target="_blank" class="btn-95 small">JOIN DISCORD</a>
         </div>
@@ -849,7 +850,7 @@
         14:{ text: `<b>FTR</b>! Hop to, lad! You must defeat that fell spirit and claim your reward! Lest ye be ~powerless~!` },
         15:{ text: `Atta boy! Give 'em what-for!` },
         16:{ text: `Come on, <b>FTR</b>. You're going to have to try harder than this.` },
-        17:{ text: `It looks like <b>FTR</b> doesn't know what to do. Why don't you <a href="submit.html">help him out?</a>` },
+        17:{ text: `It looks like <b>FTR</b> doesn't know what to do. Why don't you <a href="submit.html?page=17">help him out?</a>` },
 		18:{ text: `Yeah. I don't know if that will work. Could you be more specific? Help our lad out.`, title: `>FTR: DO SOMETHING ELSE` },
 		19:{ text: `Apparently <b>FTR</b> has, like, a million weapons! Who would have thought!`, title: `>FTR: USE YOUR INVENTORY` },
 		20:{ text: `Jesus christ that's a lot of weapons. Why don't you sort by <i>LEVEL-APPROPRIATE</i> instead.` },
@@ -861,7 +862,7 @@
 		26:{ text: `<b>FTR</b> is now scrounging around for bugs and worms and shit. Great.`, title: `>FTR: EAT`},
 		27:{ text: `<b>FTR</b> doesn't have access to any firearms, so instead, he dreams beautiful, violent dreams. Gosh, all <b>FTR</b>s seem to really love weapons.`, title: `>FTR: SHOOT HIM WITH GUN`},
 		28:{ text: `~AAAAAAAH!~ Oh, <b>FTR</b>, you even scared me!`, title: `>FTR: SCREAM`},
-		29:{ text: `The ~Will-O'-The-Wisp~ screams back! It had no effect! <b>FTR</b>, do something!`}
+		29:{ text: `The ~Will-O'-The-Wisp~ screams back! It had no effect! <b>FTR</b>, do something! (Remember, you can always hit the SUBMIT button below to help <b>FTR</b> out!)`}
       };
 
       const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "webp", "gif"];
@@ -1138,17 +1139,24 @@
       }
 
       function renderPage() {
-        const currentPage = getPageFromURL();
-        setCommandTitle(currentPage);
-        setCaption(currentPage);
-        loadPanelImage(currentPage);
-        bindNavigation(currentPage);
-        bindSaveLoad(currentPage);
+  const currentPage = getPageFromURL();
+  setCommandTitle(currentPage);
+  setCaption(currentPage);
+  loadPanelImage(currentPage);
+  bindNavigation(currentPage);
+  bindSaveLoad(currentPage);
 
-        const sbLeft = document.querySelector('.sb-left');
-        if (sbLeft) sbLeft.textContent = `Viewing page ${currentPage} of ${totalPages}`;
-      }
+  const sbLeft = document.querySelector('.sb-left');
+  if (sbLeft) sbLeft.textContent = `Viewing page ${currentPage} of ${totalPages}`;
 
+  // ✅ Update the SUBMIT button dynamically
+  const submitLink = document.getElementById("submit-link");
+  if (submitLink) {
+    submitLink.href = `submit.html?page=${currentPage}`;
+  }
+}
+
+		
       document.addEventListener("DOMContentLoaded", () => {
         try {
           renderPage();

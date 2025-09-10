@@ -157,10 +157,14 @@
           <p>Enter your command below to suggest what happens next in <b>DNGN</b>:</p>
           <div class="submission-box">
             <form action="https://formspree.io/f/xdklokqb" method="POST">
-              <label for="command">&gt; ENTER COMMAND</label>
-              <input type="text" id="command" name="command" required placeholder="FTR: FLAIL AROUND">
-              <button type="submit">SUBMIT</button>
-            </form>
+			<label for="command">&gt; ENTER COMMAND</label>
+			<input type="text" id="command" name="command" required placeholder="FTR: FLAIL AROUND">
+
+	<!-- hidden field for the comic page -->
+			<input type="hidden" id="page" name="page" value="">
+			<button type="submit">SUBMIT</button>
+			</form>
+
           </div>
           <br>
           <a href="comic.html" class="btn-95">⬅ BACK TO COMIC</a>
@@ -173,5 +177,15 @@
       </section>
     </main>
   </div>
+  
+  <script>
+  // Look for ?page= in the URL
+  const params = new URLSearchParams(window.location.search);
+  const page = params.get("page");
+  if (page) {
+    document.getElementById("page").value = page;
+  }
+</script>
+  
 </body>
 </html>
