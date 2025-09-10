@@ -286,6 +286,29 @@
       max-width: 82%;
       box-shadow: 3px 3px 6px rgba(0,0,0,0.1);
     }
+	
+		/* Win95-ish badge chip for title flair */
+		.badge {
+		  display: inline-block;
+		  padding: 2px 6px;
+		  margin-left: 8px;
+		  font-size: .85em;
+		  line-height: 1.2;
+		  border: 1px solid #000;
+		  background: #e9e9e9;
+		  box-shadow: inset -2px -2px 0 #fff, inset 2px 2px 0 #000;
+		  vertical-align: middle;
+		  user-select: none;
+		}
+		.badge-user {
+		  /* optional subtle color hint while keeping Win95 look */
+		  background: #ffffff;
+		  box-shadow: inset -2px -2px 0 #fff, inset 2px 2px 0 #000;
+		}
+		.badge-author {
+		  background: #f3f3f3;
+		}
+
 
    .button-bar {
   display: flex;
@@ -851,19 +874,19 @@
         15:{ text: `Atta boy! Give 'em what-for!` },
         16:{ text: `Come on, <b>FTR</b>. You're going to have to try harder than this.` },
         17:{ text: `It looks like <b>FTR</b> doesn't know what to do. Why don't you <a href="submit.html?page=17">help him out?</a>` },
-		18:{ text: `Yeah. I don't know if that will work. Could you be more specific? Help our lad out.`, title: `>FTR: DO SOMETHING ELSE` },
+		18:{ text: `Yeah. I don't know if that will work. Could you be more specific? Help our lad out.`, title: `>FTR: DO SOMETHING ELSE`, source: `user`},
 		19:{ text: `Apparently <b>FTR</b> has, like, a million weapons! Who would have thought!`, title: `>FTR: USE YOUR INVENTORY` },
 		20:{ text: `Jesus christ that's a lot of weapons. Why don't you sort by <i>LEVEL-APPROPRIATE</i> instead.` },
 		21:{ text: `Okay. A little disappointing, but I'm sure <b>FTR</b> will make do.` },
 		22:{ text: `Excellently done! Now, <b>FTR</b>, do your worst!`, title: `>FTR: SELECT RUSTY SWORD` },
-		23:{ text: `See, that's not typically what you do with these sorts of items. But, okay, I guess.`, title: `>FTR: KICK`},
+		23:{ text: `See, that's not typically what you do with these sorts of items. But, okay, I guess.`, title: `>FTR: KICK`, source: `user`},
 		24:{ text: `Look at that sucker go.`},
 		25:{ text: `That was close! Phew.`},
-		26:{ text: `<b>FTR</b> is now scrounging around for bugs and worms and shit. Great.`, title: `>FTR: EAT`},
-		27:{ text: `<b>FTR</b> doesn't have access to any firearms, so instead, he dreams beautiful, violent dreams. Gosh, all <b>FTR</b>s seem to really love weapons.`, title: `>FTR: SHOOT HIM WITH GUN`},
-		28:{ text: `~AAAAAAAH!~ Oh, <b>FTR</b>, you even scared me!`, title: `>FTR: SCREAM`},
+		26:{ text: `<b>FTR</b> is now scrounging around for bugs and worms and shit. Great.`, title: `>FTR: EAT`, source: `user`},
+		27:{ text: `<b>FTR</b> doesn't have access to any firearms, so instead, he dreams beautiful, violent dreams. Gosh, all <b>FTR</b>s seem to really love weapons.`, title: `>FTR: SHOOT HIM WITH GUN`, source: `user`},
+		28:{ text: `~AAAAAAAH!~ Oh, <b>FTR</b>, you even scared me!`, title: `>FTR: SCREAM`, source: `user`},
 		29:{ text: `The ~Will-O'-The-Wisp~ screams back! It had no effect! <b>FTR</b>, do something! (Remember, you can always hit the SUBMIT button below to help <b>FTR</b> out!)`},
-		30:{ text: `<b>FTR</b> dies. And that worm from before is <i>so</i> sad.`, title: `>FTR: DIE`}
+		30:{ text: `<b>FTR</b> dies. And that worm from before is <i>so</i> sad.`, title: `>FTR: DIE`, source: `user`}
       };
 
       const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "webp", "gif"];
@@ -1022,36 +1045,50 @@
         wireChatlogToggles(el);
       }
 
-      /* ===== Typed command title (optional) ===== */
-      let titleTimer = null;
-    function setCommandTitle(page) {
-  const titleEl = document.getElementById("command-title");
-  if (!titleEl) return;
+			  /* ===== Typed command title with optional flair badge ===== */
+		let titleTimer = null;
+		function setCommandTitle(page) {
+		  const titleEl = document.getElementById("command-title");
+		  if (!titleEl) return;
 
-  // clear any previous typing
-  if (titleTimer) { clearTimeout(titleTimer); titleTimer = null; }
-  titleEl.innerHTML = "";
-  titleEl.style.display = "none"; // reset hidden
+		  // clear previous typing
+		  if (titleTimer) { clearTimeout(titleTimer); titleTimer = null; }
+		  titleEl.innerHTML = "";
+		  titleEl.style.display = "none"; // hidden until we know there's a title
 
-  const data = captions[page];
-  if (!data || !data.title) return; // nothing to show
+		  const data = captions[page];
+		  if (!data || !data.title) return; // no title => keep hidden
 
-  // reveal box
-  titleEl.style.display = "block";
-  const text = String(data.title);
-  let i = 0;
+		  // Reveal the white box
+		  titleEl.style.display = "block";
 
-  const step = () => {
-    if (i <= text.length) {
-      titleEl.innerHTML = text.substring(0, i) + '<span class="cursor"></span>';
-      i++;
-      titleTimer = setTimeout(step, 50); // typing speed
-    } else {
-      titleEl.innerHTML = text + '<span class="cursor"></span>';
-    }
-  };
-  step();
+		  const text = String(data.title);
+		  let i = 0;
+
+		  // Build the badge markup based on your flag
+		  // Supports either data.source === 'user' or data.user === true
+		  let badgeHTML = "";
+		  if (data.source === "user" || data.user === true) {
+			badgeHTML = `<span class="badge badge-user" title="Submitted by a reader">USER SUBMISSION</span>`;
+		  } else if (data.source === "author") {
+			// Optional: show your own flair; or leave empty to show nothing
+			// badgeHTML = `<span class="badge badge-author" title="Authored by SPEEP">AUTHOR</span>`;
+		  }
+
+		  const step = () => {
+			if (i <= text.length) {
+			  // type the title with a cursor
+			  titleEl.innerHTML = text.substring(0, i) + '<span class="cursor"></span>' + (badgeHTML ? " " + badgeHTML : "");
+			  i++;
+			  titleTimer = setTimeout(step, 50); // typing speed
+			} else {
+			  // finished typing, keep the badge
+			  titleEl.innerHTML = text + '<span class="cursor"></span>' + (badgeHTML ? " " + badgeHTML : "");
+			}
+		  };
+		  step();
 }
+
 
       function loadPanelImage(page) {
         const panelEl = document.getElementById("panel");
