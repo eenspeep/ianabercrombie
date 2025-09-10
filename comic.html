@@ -802,28 +802,30 @@
 
         let exploded = false;
 
-        function explode(){
-          if (exploded) return;
-          exploded = true;
+		  function explode(){
+	  if (exploded) return;    // still remove each gnome after 1 boom
+	  exploded = true;
 
-          const matrix = getComputedStyle(wrap).transform;
-          wrap.style.animation = 'none';
-          wrap.style.transform = matrix !== 'none' ? matrix : wrap.style.transform;
+	  const matrix = getComputedStyle(wrap).transform;
+	  wrap.style.animation = 'none';
+	  wrap.style.transform = matrix !== 'none' ? matrix : wrap.style.transform;
 
-          img.style.visibility = 'hidden';
-          const base = boomImg.getAttribute('src').split('?')[0];
-          boomImg.setAttribute('src', `${base}?t=${Date.now()}`);
-          boomImg.style.display = 'block';
+	  img.style.visibility = 'hidden';
+	  const base = boomImg.getAttribute('src').split('?')[0];
+	  boomImg.setAttribute('src', `${base}?uid=${crypto.randomUUID()}`); // 👈 unique id each time
+	  boomImg.style.display = 'block';
 
-          try {
-            const a = new Audio(document.getElementById('boom').src);
-            a.volume = 0.5;
-            a.play().catch(()=>{});
-          } catch {}
+	  try {
+		const a = new Audio(document.getElementById('boom').src);
+		a.volume = 0.5;
+		a.play().catch(()=>{});
+	  } catch {}
 
-          window.__incrementGnomeCount && window.__incrementGnomeCount();
-          setTimeout(() => wrap.remove(), 750);
-        }
+	  window.__incrementGnomeCount && window.__incrementGnomeCount();
+
+	  setTimeout(() => wrap.remove(), 750);
+	}
+
 
         bindExplodeTarget(img, explode);
         bindExplodeTarget(hit, explode);
@@ -1208,14 +1210,12 @@
 
   <style>
     /* Gnome CSS kept here to avoid breaking stacking */
-    .gnome-wrapper {
-      position: fixed;
-      bottom: 10px;
-      left: 0;
-      pointer-events: none;
-      z-index: 9999;
-      transform: translateX(-60px);
-    }
+	   .gnome-wrapper {
+	  position: fixed;
+	  bottom: 10px;
+	  pointer-events: none;
+	  z-index: 9999;
+	}
     .gnome, .gnome-boom, .gnome-hitbox {
       user-select: none; -webkit-user-drag: none; -webkit-touch-callout: none;
     }
