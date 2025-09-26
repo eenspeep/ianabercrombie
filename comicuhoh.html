@@ -249,7 +249,7 @@
   font-weight: bold;
   font-family: "Courier New", monospace;
   color: #000;
-  white-space: normal; overflow-wrap: anywhere; word-break: break-word; overflow: break-word;
+  white-space: pre;
   text-align: center;
   margin-bottom: 6px;
   max-width: 82%;
@@ -277,29 +277,6 @@
       background-color: #ccc; background-size: cover; background-position: center;
       border: 1px solid black;
     }
-/* Multi-panel container (keeps default look) */
-.panel-area{
-  width: 100%;
-  display: grid;
-  grid-auto-rows: auto;
-  gap: 16px;
-  place-items: center;
-}
-
-/* Optional taller panel modifiers */
-.comic-panel.tall-45{ aspect-ratio: 4 / 5; }
-.comic-panel.tall-23{ aspect-ratio: 2 / 3; }
-
-/* Multi-column layouts */
-.panel-area.columns-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.panel-area.columns-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-
-.panel-area.columns-2 .comic-panel,
-.panel-area.columns-3 .comic-panel{
-  width: 100%;
-  max-width: 720px;
-}
-
     .comic-text {
       position: relative; z-index: 1;
       font-size: clamp(1rem, 2.4vmin, 1.1rem);
@@ -308,11 +285,7 @@
       border: 1px solid black; padding: 10px 15px; background: #f9f9f9;
       max-width: 82%;
       box-shadow: 3px 3px 6px rgba(0,0,0,0.1);
-    
-  overflow-wrap: anywhere;
-  word-break: break-word;
-  overflow: break-word;
-  }
+    }
 	
 		/* Win95-ish badge chip for title flair */
 		.badge {
@@ -574,7 +547,7 @@
         <div class="window-body">
           <div class="comic-container">
             <div class="comic-title" id="command-title"></div>
-            <div id="panel-area" class="panel-area"><div class="comic-panel" id="panel"></div></div>
+            <div class="comic-panel" id="panel"></div>
             <div class="comic-text" id="caption"></div>
 
         <div class="button-bar">
@@ -884,7 +857,7 @@
 
     /* ======== COMIC PAGE LOGIC ======== */
     (function(){
-      const totalPages = 38; // Update when adding comics
+      const totalPages = 37; // Update when adding comics
       const captions = {
         1: { text: `Before you stands a bridge into darkness. Across the bridge, the DNGN. Your journey begins here. Humble. Unencumbered. Fastidious. Forthright? Brave... wait a second. Who is that?` },
         2: { text: `Hold on. Why don't we move some things out of the way?` },
@@ -922,65 +895,12 @@
 		34:{ text: `Well, to each their own I suppose. <b>FTR</b> looks very beautiful skanking out for us, or whatever it is that you asked him to do. Good for him. The only thing I am judgmental of is your inability to focus on the task at hand!`, title: `>FTR: SLUT OUT`, source: `user`},
 		35:{ text: `<i>Finally.</i>`, title: `>FTR: FOCUS ON THE TASK AT HAND`},
 		36:{ text: `<b>FTR</b> is trying to pull the RUSTY SWORD out, but it's stuck!`},
-		37:{ text: `<b>FTR</b> is probably saying, like, "hrrggghhhhhhhffffffffffffffrrrrrrffgggggggggfhhhh" oh look he got it!`},
-		38:{ text: `A confrontation begins. This time, <b>FTR</b> came prepared.`}
+		37:{ text: `<b>FTR</b> is probably saying, like, "hrrggghhhhhhhffffffffffffffrrrrrrffgggggggggfhhhh" oh look he got it!`}
       };
 
       const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "webp", "gif"];
       const IMAGE_DIR = "Comics";
       const FALLBACK_COLOR = "#fff";
-			/* ===== Page layout config =====
-			   Define per-page panel layout. Pages not listed use one default 4:3 panel.
-			   Examples:
-			   // 12: { columns: 2, panels: [{ suffix: 'a' }, { suffix: 'b' }] },
-			   // 18: { columns: 1, panels: [{ tall: '45' }] },
-			*/
-			const pageLayout = {
-			  38: { columns: 1, panels: [{ tall: '23' }] } 
-			};
-
-function renderPanels(page){
-  const area = document.getElementById('panel-area');
-  if (!area) return;
-  // Clear and rebuild each time for simplicity
-  area.innerHTML = '';
-
-  const cfg = pageLayout[page] || { columns: 1, panels: [{}] };
-  const cols = Math.max(1, Number(cfg.columns || 1));
-  area.classList.toggle('columns-2', cols === 2);
-  area.classList.toggle('columns-3', cols === 3);
-
-  const panels = Array.isArray(cfg.panels) && cfg.panels.length ? cfg.panels : [{}];
-
-  panels.forEach((p, idx) => {
-    const el = document.createElement('div');
-    el.className = 'comic-panel';
-    if (p.tall === '45') el.classList.add('tall-45');
-    if (p.tall === '23') el.classList.add('tall-23');
-
-    const pageStr = String(page).padStart(2, '0');
-    const suffix = p.suffix ? String(p.suffix) : '';
-    let loaded = false;
-
-    IMAGE_EXTENSIONS.forEach((ext) => {
-      const img = new Image();
-      const path = `${IMAGE_DIR}/page${pageStr}${suffix}.${ext}`;
-      img.onload = () => { if (!loaded){ loaded = true; el.style.backgroundImage = `url("${path}")`; }};
-      img.src = path;
-    });
-
-    setTimeout(() => {
-      if (!loaded) {
-        console.warn('No image found for page', page, 'panel', suffix || '(default)');
-        el.style.backgroundImage = 'none';
-        el.style.backgroundColor = FALLBACK_COLOR;
-      }
-    }, 400);
-
-    area.appendChild(el);
-  });
-}
-
 
       function getPageFromURL() {
         const m = window.location.search.match(/[?&]page=(\d+)/);
@@ -1269,7 +1189,7 @@ function renderPanels(page){
   const currentPage = getPageFromURL();
   setCommandTitle(currentPage);
   setCaption(currentPage);
-  renderPanels(currentPage);
+  loadPanelImage(currentPage);
   bindNavigation(currentPage);
   bindSaveLoad(currentPage);
 
