@@ -884,7 +884,7 @@
 
     /* ======== COMIC PAGE LOGIC ======== */
     (function(){
-      const totalPages = 57; // Update when adding comics
+      const totalPages = 59; // Update when adding comics
       const captions = {
         1: { text: `Before you stands a bridge into darkness. Across the bridge, the DNGN. Your journey begins here. Humble. Unencumbered. Fastidious. Forthright? Brave... wait a second. Who is that?` },
         2: { text: `Hold on. Why don't we move some things out of the way?` },
@@ -902,8 +902,8 @@
         14:{ text: `<b>FTR</b>! Hop to, lad! You must defeat that fell spirit and claim your reward! Lest ye be ~powerless~!` },
         15:{ text: `Atta boy! Give 'em what-for!` },
         16:{ text: `Come on, <b>FTR</b>. You're going to have to try harder than this.` },
-        17:{ text: `It looks like <b>FTR</b> doesn't know what to do. Why don't you <a href="submit.html?page=17">help him out?</a>` },
-		18:{ text: `Yeah. I don't know if that will work. Could you be more specific? Help our lad out.`, title: `>FTR: DO SOMETHING ELSE`, source: `user`},
+        17:{ text: `It looks like <b>FTR</b> doesn't know what to do. Why don't <u>you</u> <a href="submit.html?page=17">help him out?</a>` },
+		18:{ text: `Yeah. I don't know if that will work. Could <u>you</u> be more specific? Help our lad out.`, title: `>FTR: DO SOMETHING ELSE`, source: `user`},
 		19:{ text: `Apparently <b>FTR</b> has, like, a million weapons! Who would have thought!`, title: `>FTR: USE YOUR INVENTORY` },
 		20:{ text: `Jesus christ that's a lot of weapons. Why don't you sort by <i>LEVEL-APPROPRIATE</i> instead.` },
 		21:{ text: `Okay. A little disappointing, but I'm sure <b>FTR</b> will make do.` },
@@ -914,9 +914,9 @@
 		26:{ text: `<b>FTR</b> is now scrounging around for bugs and worms and shit. Great.`, title: `>FTR: EAT`, source: `user`},
 		27:{ text: `<b>FTR</b> doesn't have access to any firearms, so instead, he dreams beautiful, violent dreams. Gosh, all <b>FTR</b>s seem to really love weapons.`, title: `>FTR: SHOOT HIM WITH GUN`, source: `user`},
 		28:{ text: `~AAAAAAAH!~ Oh, <b>FTR</b>, you even scared me!`, title: `>FTR: SCREAM`, source: `user`},
-		29:{ text: `The ~Will-O'-The-Wisp~ screams back! It had no effect! <b>FTR</b>, do something! (Remember, you can always hit the SUBMIT button below to help <b>FTR</b> out!)`},
+		29:{ text: `The ~Will-O'-The-Wisp~ screams back! It had no effect! <b>FTR</b>, do something! (Remember, <u>you</u> can always hit the SUBMIT button below to help <b>FTR</b> out!)`},
 		30:{ text: `<b>FTR</b> dies. And that worm from before is <i>so</i> sad.`, title: `>FTR: DIE`, source: `user`},
-		31:{ text: `Is this what you wanted?`},
+		31:{ text: `Is this what <i>you</i> wanted?`},
 		32:{ text: `That's enough of that.`},
 		33:{ text: `I said that's enough of that.`, title: `>FTR: SLUT OUT`, source: `user`},
 		34:{ text: `Well, to each their own I suppose. <b>FTR</b> looks very beautiful skanking out for us, or whatever it is that you asked him to do. Good for him. The only thing I am judgmental of is your inability to focus on the task at hand!`, title: `>FTR: SLUT OUT`, source: `user`},
@@ -925,13 +925,13 @@
 		37:{ text: `<b>FTR</b> is probably saying, like, "hrrggghhhhhhhffffffffffffffrrrrrrffgggggggggfhhhh" oh look he got it!`},
 		38:{ text: `A confrontation begins. This time, <b>FTR</b> came prepared.`},
 		39:{ text: `...`, title: `>FTR: BATTLEx2`},
-		40:{ text: `Oh, yeah. Go ahead and click that command, why don't you? No, not you. <i>You.</i>`},
+		40:{ text: `Oh, yeah. Go ahead and click that command, why don't <i>you</i>? No, not <u>you</u>. <i>You.</i>`},
 		41:{ text: `<i>You</i> have to give it a second. Be patient.`},
 		42:{ text: `Come on. Relax. We'll get to it in a moment.`},
 		43:{ text: `Oh god.`},
 		44:{ text: `What the fuck did <i>you</i> do?`},
 		45:{ text: `WHAT THE FUCK DID <i>YOU</i> DO?`},
-		46:{ text: `It has all gone terribly wrong. And it's <i>YOUR</i> fault! No, no, not you. <i>You</i>.`},
+		46:{ text: `It has all gone terribly wrong. And it's <i>YOUR</i> fault! No, no, not <u>you.</u> <i>You</i>.`},
 		47:{ text: `It appears <b>FTR</b> is making the best out of a glitchy situation.`},
 		48:{ text: `Wait. Where is he going?`},
 		49:{ text: `I didn't even know there was an <i>up</i> up here.`},
@@ -942,7 +942,9 @@
 		54:{ text: `Once.`},
 		55:{ text: `And.`},
 		56:{ text: `For.`},
-		57:{ text: `All.`}
+		57:{ text: `All.`},
+		58:{ text: `Now that our pest problem is managed.`},
+		59:{ text: `Back to business as usual. Adventuring. Grinding for XP. Absorbing the spirit power of ~Will-O'-The-Wisps~. <u>You</u> get the idea.`}
 		};
 
       const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "webp", "gif"];
