@@ -335,6 +335,30 @@
 		.badge-author {
 		  background: #f3f3f3;
 		}
+				/* ===== Title flairs ===== */
+		.flairs{
+		  display:inline-flex;
+		  gap:6px;
+		  margin-left:8px;
+		  vertical-align:middle;
+		}
+
+		.flair{
+		  display:inline-flex;
+		  align-items:center;
+		  padding:2px 6px;
+		  font-size:.85em;
+		  line-height:1.2;
+		  border:1px solid #000;
+		  box-shadow: inset -2px -2px 0 #fff, inset 2px 2px 0 #000;
+		  background:#ffffff; /* default */
+		  user-select:none;
+		}
+
+		/* Specific looks */
+		.flair--author    { background:#f3f3f3; }       /* AUTHOR COMMAND */
+		.flair--spectator { background:#e9f0ff; }       /* SPECTATOR COMMAND */
+		.flair--agency    { background:#b9ff66; }       /* AGENCY: lime green */
 
 
    .button-bar {
@@ -884,7 +908,7 @@
 
     /* ======== COMIC PAGE LOGIC ======== */
     (function(){
-      const totalPages = 80; // Update when adding comics
+      const totalPages = 92; // Update when adding comics
       const captions = {
         1: { text: `Before you stands a bridge into darkness. Across the bridge, the DNGN. Your journey begins here. Humble. Unencumbered. Fastidious. Forthright? Brave... wait a second. Who is that?` },
         2: { text: `Hold on. Why don't we move some things out of the way?` },
@@ -965,7 +989,19 @@
 		77:{ text: `XP. That thread of God that gives a life its soul. That special essence that turns code stored in a solid state into memories of a time never-lived. So sweet to gaze upon just a piece...`},
 		78:{ text: `Or perhaps three.`},
 		79:{ text: `The placement of these values will define our <b>FTR</b>. Put in the wrong spot, <b>FTR</b> may live a completely different life than <u>you</u> might want. Think wisely.`},
-		80:{ text: `<b> A VOTE MUST TAKE PLACE IN ORDER TO PLACE FTR'S STATISTICS. PLEASE VISIT THE <a href="https://discord.gg/NezSfg2pJj">COMMUNITY EVENTS CHANNEL</a> AND VOTE BY 10/15/2025 AT 12PM EST TO PARTICIPATE. </b>`}
+		80:{ text: `<s><b> A VOTE MUST TAKE PLACE IN ORDER TO PLACE FTR'S STATISTICS. PLEASE VISIT THE <a href="https://discord.gg/NezSfg2pJj">COMMUNITY EVENTS CHANNEL</a> AND VOTE BY 10/15/2025 AT 12PM EST TO PARTICIPATE. </b></s><br> ~(This event concluded on 10/15/2025!)~`},
+		81:{ text: `<b>FTR</b> gets +1 HSL, +1 FLW, and +1 𓃡 DOG 𓃡.`},
+		82:{ text: `Now, a level <b>1</b> adventurer, <b>FTR</b> can set out on his way! Face monsters! Return with riches! Enact his power fantasy on the underlings of this mighty DNGN!`},
+		83:{ text: `...`},
+		84:{ text: `...`},
+		85:{ text: `Oh. I must have forgotten. Without the tyrant of a spectator, <b>FTR</b> needs an extra push.`},
+		86:{ text: `As an interested party, I have taken the liberty to donate some of <i>my</i> agency to <b>FTR</b>.`},
+		87:{ text: `Agency, or AGY, is the metric by which an adventurer has control over their actions, and their consequences. It is not a <b>CORE STATISTIC</b>, but rather a construct of my own. A mark that an adventurer is solely their own, to be sure.`},
+		88:{ text: `What will <b>FTR</b> do with his newfound AGY?`},
+		89:{ text: `It looks like he has himself an idea!`},
+		90:{ text: `?` },
+		91:{ text: `My god.`, title: `>FTR: JUMP OFF THE CLIFF`, flairs: [`AGENCY`]},
+		92:{ text: `This is very stupid, but I must admit, it's very badass.`}
 		};
       const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "webp", "gif"];
       const IMAGE_DIR = "Comics";
@@ -1176,47 +1212,62 @@ function renderPanels(page){
       }
 
 			  /* ===== Typed command title with optional flair badge ===== */
-		let titleTimer = null;
-		function setCommandTitle(page) {
-		  const titleEl = document.getElementById("command-title");
-		  if (!titleEl) return;
+		/* ===== Typed command title with optional flairs ===== */
+let titleTimer = null;
 
-		  // clear previous typing
-		  if (titleTimer) { clearTimeout(titleTimer); titleTimer = null; }
-		  titleEl.innerHTML = "";
-		  titleEl.style.display = "none"; // hidden until we know there's a title
+function buildFlairsHTML(data){
+  // Prefer explicit flairs set per page
+  let flairs = data && Array.isArray(data.flairs) ? data.flairs.slice() : [];
 
-		  const data = captions[page];
-		  if (!data || !data.title) return; // no title => keep hidden
+  // Backward compatible mapping from your existing "source"
+  if ((!flairs || !flairs.length) && data && typeof data.source === 'string'){
+    if (data.source === 'author') flairs = ['AUTHOR COMMAND'];
+    if (data.source === 'user')   flairs = ['SPECTATOR COMMAND'];
+  }
 
-		  // Reveal the white box
-		  titleEl.style.display = "block";
+  if (!flairs || !flairs.length) return '';
 
-		  const text = String(data.title);
-		  let i = 0;
+  // Normalize and map to classes
+  const items = flairs.map(raw => {
+    const label = String(raw).trim();
+    const up = label.toUpperCase();
+    let cls = 'flair'; // base
+    if (up === 'AUTHOR COMMAND')    cls += ' flair--author';
+    else if (up === 'SPECTATOR COMMAND') cls += ' flair--spectator';
+    else if (up === 'AGENCY')       cls += ' flair--agency';
+    return `<span class="${cls}">${label}</span>`;
+  });
 
-		  // Build the badge markup based on your flag
-		  // Supports either data.source === 'user' or data.user === true
-		  let badgeHTML = "";
-		  if (data.source === "user" || data.user === true) {
-			badgeHTML = `<span class="badge badge-user" title="Submitted by a reader">USER SUBMISSION</span>`;
-		  } else if (data.source === "author") {
-			// Optional: show your own flair; or leave empty to show nothing
-			// badgeHTML = `<span class="badge badge-author" title="Authored by SPEEP">AUTHOR</span>`;
-		  }
+  return `<span class="flairs">${items.join('')}</span>`;
+}
 
-		  const step = () => {
-			if (i <= text.length) {
-			  // type the title with a cursor
-			  titleEl.innerHTML = text.substring(0, i) + '<span class="cursor"></span>' + (badgeHTML ? " " + badgeHTML : "");
-			  i++;
-			  titleTimer = setTimeout(step, 50); // typing speed
-			} else {
-			  // finished typing, keep the badge
-			  titleEl.innerHTML = text + '<span class="cursor"></span>' + (badgeHTML ? " " + badgeHTML : "");
-			}
-		  };
-		  step();
+function setCommandTitle(page) {
+  const titleEl = document.getElementById("command-title");
+  if (!titleEl) return;
+
+  if (titleTimer) { clearTimeout(titleTimer); titleTimer = null; }
+  titleEl.innerHTML = "";
+  titleEl.style.display = "none";
+
+  const data = captions[page];
+  if (!data || !data.title) return;
+
+  titleEl.style.display = "block";
+
+  const text = String(data.title);
+  const flairsHTML = buildFlairsHTML(data);
+  let i = 0;
+
+  const step = () => {
+    if (i <= text.length) {
+      titleEl.innerHTML = text.substring(0, i) + '<span class="cursor"></span>' + flairsHTML;
+      i++;
+      titleTimer = setTimeout(step, 50);
+    } else {
+      titleEl.innerHTML = text + '<span class="cursor"></span>' + flairsHTML;
+    }
+  };
+  step();
 }
 
 
