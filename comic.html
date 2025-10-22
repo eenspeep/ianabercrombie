@@ -289,6 +289,7 @@
 /* Optional taller panel modifiers */
 .comic-panel.tall-45{ aspect-ratio: 4 / 5; }
 .comic-panel.tall-23{ aspect-ratio: 2 / 3; }
+.comic-panel.tall-87{ aspect-ratio: 8 / 7; }
 
 /* Multi-column layouts */
 .panel-area.columns-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -908,7 +909,7 @@
 
     /* ======== COMIC PAGE LOGIC ======== */
     (function(){
-      const totalPages = 100; // Update when adding comics
+      const totalPages = 101; // Update when adding comics
       const captions = {
         1: { text: `Before you stands a bridge into darkness. Across the bridge, the DNGN. Your journey begins here. Humble. Unencumbered. Fastidious. Forthright? Brave... wait a second. Who is that?` },
         2: { text: `Hold on. Why don't we move some things out of the way?` },
@@ -1005,11 +1006,12 @@
 		93:{ text: `<b>FTR</b> has fallen somewhere awfully far. Where might he have found himself?`},
 		94:{ text: `<span style="color:#8B2B99">The Depths...</span> a place of great magicka and ancient lore. You can tell it's magical because purple is the color of magic. Everyone knows that. That's why it's lore. Idiot.`, title: `>FTR: LOOK AROUND`, flairs: [`AGENCY`]},
 		95:{ text: `It's a shame there's no "literacy" <b>CORE STATISTIC</b>, because if there was, we'd have a number between 1 and 9999 that could tell us whether or not <b>FTR</b> can read those words in front of him.`},
-		96:{ text: `<img src="Animations/SWIRL.png" alt="swirl" class="swirl-img"><br><span style="color:#8B2B99">ZAK: WE STARTED WITHOUT YOU. SOZ. &lt;@:) </s>`},
+		96:{ text: `<img src="Animations/SWIRL.png" alt="swirl" class="swirl-img"><br><span style="color:#8B2B99">ZAK - WE STARTED WITHOUT YOU. SOZ. &lt;@:) </s>`},
 		97:{ text: `...`, title: `>FTR: READ THE SIGN`, flairs: [`AGENCY`]},
 		98:{ text: `Who the hell is <b>ZAK</b>?`},
 		99:{ text: `Oh. This idiot.`, title: `>ZAK: BUDGE`},
 		100:{ text: `What do <i>you</i> think <i>you're</i> up to?`, title: `>ZAK: RISE`},
+		101:{ text: `What the hell are <i>you</i> doing?`, title: `>ZAK: GET IT TOGETHER`, flairs: [`AGENCY`]},
 		};
       const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "webp", "gif"];
       const IMAGE_DIR = "Comics";
@@ -1021,7 +1023,8 @@
 			   // 18: { columns: 1, panels: [{ tall: '45' }] },
 			*/
 			const pageLayout = {
-			  38: { columns: 1, panels: [{ tall: '23' }] } 
+			  38: { columns: 1, panels: [{ tall: '23' }] },
+			  101: { columns: 1, panels: [{ tall: '87'}] },
 			};
 
 function renderPanels(page){
@@ -1042,6 +1045,7 @@ function renderPanels(page){
     el.className = 'comic-panel';
     if (p.tall === '45') el.classList.add('tall-45');
     if (p.tall === '23') el.classList.add('tall-23');
+	if (p.tall === '87') el.classList.add('tall-87');
 
     const pageStr = String(page).padStart(2, '0');
     const suffix = p.suffix ? String(p.suffix) : '';
