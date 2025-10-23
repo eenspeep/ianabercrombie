@@ -5,7 +5,11 @@
   <title>DNGN</title>
   <link rel="icon" type="image/png" href="screamgnome.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <style>
+	
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; width: 100%; }
 
@@ -80,6 +84,19 @@
       min-width: 0;
       min-height: 0;
     }
+	
+			/* Use only where you apply the class */
+		.font-press {
+		  font-family: "Press Start 2P", "Courier New", monospace;
+		  /* Pixel font helpers (tweak to taste): */
+		  letter-spacing: 0.02em;
+		  line-height: 1.4;
+		}
+
+		/* Optional helpers for quick size tweaks inside captions */
+		.fs-90  { font-size: 0.9em; }
+		.fs-110 { font-size: 1.1em; }
+		.fs-130 { font-size: 1.3em; }
 
     /* ===== Sidebar ===== */
     .sidebar {
@@ -277,6 +294,7 @@
       background-color: #ccc; background-size: cover; background-position: center;
       border: 1px solid black;
     }
+	
 /* Multi-panel container (keeps default look) */
 .panel-area{
   width: 100%;
@@ -909,7 +927,7 @@
 
     /* ======== COMIC PAGE LOGIC ======== */
     (function(){
-      const totalPages = 107; // Update when adding comics
+      const totalPages = 110; // Update when adding comics
       const captions = {
         1: { text: `Before you stands a bridge into darkness. Across the bridge, the DNGN. Your journey begins here. Humble. Unencumbered. Fastidious. Forthright? Brave... wait a second. Who is that?` },
         2: { text: `Hold on. Why don't we move some things out of the way?` },
@@ -1018,6 +1036,9 @@
 		105:{ text: `...`, title: `>ZAK: INITIALIZE TASK DESTROYER!`, flairs: [`AGENCY`]},
 		106:{ text: `...`,},
 		107:{ text: `...`, title: `>ZAK: DESTROY!`, flairs: [`AGENCY`]},
+		108:{ text: `Goodbye for now. <br><span class="font-press">REINITIALIZING DNGN NARRATOR...</span>`, title: `NARRATOR.EXE RESETTING...`},
+		109:{ text: `<span class="font-press">NARRATOR REINITIALIZATION 23%...</span>`, title: `>ZAK: OPEN MEATS`, flairs: [`AGENCY`] },
+		110:{ text: `<span class="font-press">NARRATOR REINITIALIZATION 45%...</span>`},
 		};
       const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "webp", "gif"];
       const IMAGE_DIR = "Comics";
@@ -1231,28 +1252,29 @@ function renderPanels(page){
       }
 
       function setCaption(page) {
-        const el = document.getElementById("caption");
-        if (!el) return;
-        const data = captions[page] || { text: "" };
-        const raw = data.text || "";
+  const el = document.getElementById("caption");
+  if (!el) return;
+  const data = captions[page] || { text: "" };
+  const raw = data.text || "";
 
-        // 1) Build chatlogs (if any) from [chat] blocks
-        let html = parseChatBlocks(raw);
+  // 1) Build chatlogs (if any) then apply inline effects
+  let html = parseChatBlocks(raw)
+    .replace(/~(.*?)~/g, '<span class="wiggle">$1</span>')
+    .replace(/\^(.*?)\^/g, '<span class="wavy">$1</span>')
+    .replace(/\{(.*?)\}/g, '<span class="shiny">$1</span>');
 
-        // 2) Apply inline effects outside chatlogs too
-        html = html
-          .replace(/~(.*?)~/g, '<span class="wiggle">$1</span>')
-          .replace(/\^(.*?)\^/g, '<span class="wavy">$1</span>')
-          .replace(/\{(.*?)\}/g, '<span class="shiny">$1</span>');
+  // 2) Normal caption vs banded caption
+  el.classList.toggle('caption--band', data.style === 'band');
+  if (data.style === 'band') {
+    el.innerHTML = `<div class="caption-band">${html}</div>`;
+  } else {
+    el.innerHTML = html;
+  }
 
-        el.innerHTML = html;
-
-        // 3) Prepare wavy char spans everywhere (inside/outside chat)
-        prepareWavySpans(el);
-
-        // 4) Enable minimize/expand handlers
-        wireChatlogToggles(el);
-      }
+  // 3) Effects + chat toggles
+  prepareWavySpans(el);
+  wireChatlogToggles(el);
+}
 
 			  /* ===== Typed command title with optional flair badge ===== */
 		/* ===== Typed command title with optional flairs ===== */
