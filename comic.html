@@ -1108,24 +1108,32 @@
 			  }
 			}
 
-					// 🔸 FLASH PANEL BRANCH
-		if (p.flash) {
-		  el.classList.add('flash-panel');
-		  el.style.background = '#222';
-		  el.style.color = '#fff';
+// 🔸 FLASH PANEL BRANCH
+if (p.flash) {
+  el.classList.add('flash-panel');
+  el.style.background = '#000';
+  el.style.color = '#fff';
 
-		  const player = document.createElement('ruffle-player');
-		  // use the page's swf or fall back to the Animations folder
-		  const swfPath = p.swf || 'Animations/OPdngn1.bin';
-		  player.setAttribute('src', swfPath);     // ✅ correct attribute
-		  player.style.width = '100%';
-		  player.style.height = '100%';
+  const swfPath = p.swf || 'Animations/OPdngn1.swf';
 
-		  el.textContent = '';                     // clear "Loading..."
-		  el.appendChild(player);
-		  area.appendChild(el);
-		  return;
-		}
+  // use Ruffle's factory so we don't race the custom element
+  const ruffle = window.RufflePlayer ? window.RufflePlayer.newest() : null;
+  if (ruffle) {
+    const player = ruffle.createPlayer();
+    player.style.width = '100%';
+    player.style.height = '100%';
+    el.innerHTML = '';
+    el.appendChild(player);
+    player.load(swfPath);              // ✅ this actually tells it to load the SWF
+  } else {
+    // fallback if ruffle hasn't loaded yet
+    el.textContent = 'Ruffle not ready.';
+  }
+
+  area.appendChild(el);
+  return;
+}
+
 
 
 			// 🔸 NORMAL IMAGE PANEL BRANCH
