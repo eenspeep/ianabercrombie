@@ -295,6 +295,21 @@
       border: 1px solid black;
     }
 	
+		.comic-panel.flash-panel {
+	  display: flex;
+	  align-items: center;
+	  justify-content: center;
+	  background: #000; /* or #fff; up to you */
+	  overflow: hidden;
+	}
+
+	.comic-panel.flash-panel ruffle-player {
+	  width: 100%;
+	  height: 100%;
+	}
+
+	
+	
 /* Multi-panel container (keeps default look) */
 .panel-area{
   width: 100%;
@@ -646,7 +661,7 @@
 
   <!-- Multi-gnomes layer -->
   <div id="gnome-layer"></div>
-
+	<script src="https://unpkg.com/@ruffle-rs/ruffle"></script>
   <script>
     "use strict";
 
@@ -927,7 +942,7 @@
 
     /* ======== COMIC PAGE LOGIC ======== */
     (function(){
-      const totalPages = 110; // Update when adding comics
+      const totalPages = 111; // Update when adding comics
       const captions = {
         1: { text: `Before you stands a bridge into darkness. Across the bridge, the DNGN. Your journey begins here. Humble. Unencumbered. Fastidious. Forthright? Brave... wait a second. Who is that?` },
         2: { text: `Hold on. Why don't we move some things out of the way?` },
@@ -1039,6 +1054,7 @@
 		108:{ text: `Goodbye for now. <br><span class="font-press">REINITIALIZING DNGN NARRATOR...</span>`, title: `NARRATOR.EXE RESETTING...`},
 		109:{ text: `<span class="font-press">NARRATOR REINITIALIZATION 23%...</span>`, title: `>ZAK: OPEN MEATS`, flairs: [`AGENCY`] },
 		110:{ text: `<span class="font-press">NARRATOR REINITIALIZATION 45%...</span>`},
+		111:{ text: `[S] means this is a SOUND PAGE! Make sure you turn your volume up!<br><span class="font-press">MUSIC: <i>DNGN</i> by <a href="https://www.youtube.com/@rarecrom">CROM</a></span>`, title: `[S] OPEN`},
 		};
       const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "webp", "gif"];
       const IMAGE_DIR = "Comics";
@@ -1058,69 +1074,90 @@
 			  105: { columns: 1, panels: [{ tall: '87'}] },
 			  106: { columns: 1, panels: [{ tall: '87'}] },
 			  107: { columns: 2, tall: '87', panels: [{ suffix: 'a' }, { suffix: 'b' }] },
+			  111: { columns: 1, panels: [{ flash: true, swf: "OPdngn1.swf"}] },
 			};
 
-function renderPanels(page){
-  const area = document.getElementById('panel-area');
-  if (!area) return;
+		function renderPanels(page){
+		  const area = document.getElementById('panel-area');
+		  if (!area) return;
 
-  // Clear
-  area.innerHTML = '';
+		  area.innerHTML = '';
 
-  // Config + columns
-  const cfg = pageLayout[page] || { columns: 1, panels: [{}] };
-  const cols = Math.max(1, Number(cfg.columns || 1));
-  area.classList.toggle('columns-2', cols === 2);
-  area.classList.toggle('columns-3', cols === 3);
+		  const cfg = pageLayout[page] || { columns: 1, panels: [{}] };
+		  const cols = Math.max(1, Number(cfg.columns || 1));
+		  area.classList.toggle('columns-2', cols === 2);
+		  area.classList.toggle('columns-3', cols === 3);
 
-  // Panel list + page-level tall (inherit)
-  const pageTall = cfg.tall ?? null;
-  const panels = Array.isArray(cfg.panels) && cfg.panels.length ? cfg.panels : [{}];
+		  const pageTall = cfg.tall ?? null;
+		  const panels = Array.isArray(cfg.panels) && cfg.panels.length ? cfg.panels : [{}];
 
-  panels.forEach((p0) => {
-    const p = p0 || {};
-    const el = document.createElement('div');
-    el.className = 'comic-panel';
+		  panels.forEach((p0, idx) => {
+			const p = p0 || {};
+			const el = document.createElement('div');
+			el.className = 'comic-panel';
 
-    // tall handling (panel overrides page)
-    const rawTall = (p.tall ?? pageTall);
-    if (rawTall != null) {
-      const t = String(rawTall).trim();
-      if (t === '45') el.classList.add('tall-45');
-      else if (t === '23') el.classList.add('tall-23');
-      else if (t === '87') el.classList.add('tall-87');          // your custom class
-      else if (/^\d+\/\d+$/.test(t)) el.style.aspectRatio = t;   // optional "W/H" like "8/7"
-    }
+			// panel / page aspect logic
+			const rawTall = (p.tall ?? pageTall);
+			if (rawTall != null) {
+			  const t = String(rawTall).trim();
+			  if (t === '45') el.classList.add('tall-45');
+			  else if (t === '23') el.classList.add('tall-23');
+			  else if (t === '87') el.classList.add('tall-87');
+			  else if (/^\d+\/\d+$/.test(t)) {
+				el.style.aspectRatio = t;
+			  }
+			}
 
-    // try to load the image for this panel (with optional suffix)
-    const pageStr = String(page).padStart(2, '0');
-    const suffix  = p.suffix ? String(p.suffix) : '';
-    let loaded = false;
+			// 🔸 FLASH PANEL BRANCH
+			if (p.flash) {
+			  el.classList.add('flash-panel');
+			  const player = document.createElement('ruffle-player');
+			  player.setAttribute('controls', 'true'); // optional
+			  player.style.width = '100%';
+			  player.style.height = '100%';
 
-    IMAGE_EXTENSIONS.forEach((ext) => {
-      const img = new Image();
-      const path = `${IMAGE_DIR}/page${pageStr}${suffix}.${ext}`;
-      img.onload = () => {
-        if (!loaded) {
-          loaded = true;
-          el.style.backgroundImage = `url("${path}")`;
-        }
-      };
-      img.src = path;
-    });
+			  // set file
+			  // p.swf should be something like "Animations/myfile.swf"
+			  if (p.swf) {
+				player.setAttribute('src', p.swf);
+			  }
 
-    // fallback if nothing loaded after a short delay
-    setTimeout(() => {
-      if (!loaded) {
-        console.warn('No image found for page', page, 'panel', suffix || '(default)');
-        el.style.backgroundImage = 'none';
-        el.style.backgroundColor = FALLBACK_COLOR; // stays white instead of grey if you want
-      }
-    }, 400);
+			  el.appendChild(player);
+			  area.appendChild(el);
+			  return; // skip image-loading
+			}
 
-    area.appendChild(el);
-  });
-}
+			// 🔸 NORMAL IMAGE PANEL BRANCH
+			const pageStr = String(page).padStart(2, '0');
+			const suffix = p.suffix ? String(p.suffix) : '';
+			let loaded = false;
+			const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "webp", "gif"];
+			const IMAGE_DIR = "Comics";
+			const FALLBACK_COLOR = "#fff";
+
+			IMAGE_EXTENSIONS.forEach((ext) => {
+			  const img = new Image();
+			  const path = `${IMAGE_DIR}/page${pageStr}${suffix}.${ext}`;
+			  img.onload = () => {
+				if (!loaded) {
+				  loaded = true;
+				  el.style.backgroundImage = `url("${path}")`;
+				}
+			  };
+			  img.src = path;
+			});
+
+			setTimeout(() => {
+			  if (!loaded) {
+				el.style.backgroundImage = 'none';
+				el.style.backgroundColor = FALLBACK_COLOR;
+			  }
+			}, 400);
+
+			area.appendChild(el);
+		  });
+		}
+
 
 
       function getPageFromURL() {
