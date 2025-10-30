@@ -1108,31 +1108,42 @@
 			  }
 			}
 
-// 🔸 FLASH PANEL BRANCH
+// 🔸 FLASH PANEL BRANCH (fixed)
 if (p.flash) {
   el.classList.add('flash-panel');
   el.style.background = '#000';
   el.style.color = '#fff';
 
   const swfPath = p.swf || 'Animations/OPdngn1.swf';
-
-  // use Ruffle's factory so we don't race the custom element
   const ruffle = window.RufflePlayer ? window.RufflePlayer.newest() : null;
+
   if (ruffle) {
     const player = ruffle.createPlayer();
     player.style.width = '100%';
     player.style.height = '100%';
+
+    // 1) put player in the panel
     el.innerHTML = '';
     el.appendChild(player);
-    player.load(swfPath);              // ✅ this actually tells it to load the SWF
+
+    // 2) put the panel in the DOM
+    area.appendChild(el);
+
+    // 3) now that it's connected, load the SWF
+    player.load(swfPath).then(() => {
+      console.log('[DNGN RUFFLE] SWF loaded OK:', swfPath);
+    }).catch(err => {
+      console.error('[DNGN RUFFLE] SWF failed to load:', swfPath, err);
+      el.textContent = 'SWF failed to load. See console.';
+    });
   } else {
-    // fallback if ruffle hasn't loaded yet
     el.textContent = 'Ruffle not ready.';
+    area.appendChild(el);
   }
 
-  area.appendChild(el);
   return;
 }
+
 
 
 
