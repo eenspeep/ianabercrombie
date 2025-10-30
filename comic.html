@@ -1054,7 +1054,7 @@
 		108:{ text: `Goodbye for now. <br><span class="font-press">REINITIALIZING DNGN NARRATOR...</span>`, title: `NARRATOR.EXE RESETTING...`},
 		109:{ text: `<span class="font-press">NARRATOR REINITIALIZATION 23%...</span>`, title: `>ZAK: OPEN MEATS`, flairs: [`AGENCY`] },
 		110:{ text: `<span class="font-press">NARRATOR REINITIALIZATION 45%...</span>`},
-		111:{ text: `[S] means this is a SOUND PAGE! Make sure you turn your volume up!<br><span class="font-press">MUSIC: <i>DNGN</i> by <a href="https://www.youtube.com/@rarecrom">CROM</a></span>`, title: `[S] OPEN`},
+		111:{ text: `[S] means this is a SOUND PAGE! Make sure you turn your volume up, and watch on a computer!<br><span class="font-press">MUSIC: <i>DNGN</i> by <a href="https://www.youtube.com/@rarecrom">CROM</a></span>`, title: `[S] OPEN`},
 		};
       const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "webp", "gif"];
       const IMAGE_DIR = "Comics";
@@ -1109,23 +1109,22 @@
 			}
 
 			// 🔸 FLASH PANEL BRANCH
-			if (p.flash) {
+									if (p.flash) {
 			  el.classList.add('flash-panel');
+			  el.style.background = '#222';
+			  el.style.color = '#fff';
+			  el.textContent = 'Loading SWF...';
+
 			  const player = document.createElement('ruffle-player');
-			  player.setAttribute('controls', 'true'); // optional
+			  player.setAttribute('data-swf-url', p.swf || 'Animations/OPdngn1.swf');
 			  player.style.width = '100%';
 			  player.style.height = '100%';
 
-			  // set file
-			  // p.swf should be something like "Animations/myfile.swf"
-			  if (p.swf) {
-				player.setAttribute('src', p.swf);
-			  }
-
 			  el.appendChild(player);
 			  area.appendChild(el);
-			  return; // skip image-loading
+			  return;
 			}
+
 
 			// 🔸 NORMAL IMAGE PANEL BRANCH
 			const pageStr = String(page).padStart(2, '0');
