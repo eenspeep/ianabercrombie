@@ -1074,7 +1074,7 @@
 			  105: { columns: 1, panels: [{ tall: '87'}] },
 			  106: { columns: 1, panels: [{ tall: '87'}] },
 			  107: { columns: 2, tall: '87', panels: [{ suffix: 'a' }, { suffix: 'b' }] },
-			  111: { columns: 1, panels: [{ flash: true, swf: "OPdngn1.bin"}] },
+			  111: { columns: 1, panels: [{ flash: true, swf: "Animations/OPdngn1.swf"}] },
 			};
 
 		function renderPanels(page){
@@ -1108,22 +1108,24 @@
 			  }
 			}
 
-			// 🔸 FLASH PANEL BRANCH
-									if (p.flash) {
-			  el.classList.add('flash-panel');
-			  el.style.background = '#222';
-			  el.style.color = '#fff';
-			  el.textContent = 'Loading SWF...';
+					// 🔸 FLASH PANEL BRANCH
+		if (p.flash) {
+		  el.classList.add('flash-panel');
+		  el.style.background = '#222';
+		  el.style.color = '#fff';
 
-			  const player = document.createElement('ruffle-player');
-			  player.setAttribute('data-swf-url', p.swf || 'Animations/OPdngn1.swf');
-			  player.style.width = '100%';
-			  player.style.height = '100%';
+		  const player = document.createElement('ruffle-player');
+		  // use the page's swf or fall back to the Animations folder
+		  const swfPath = p.swf || 'Animations/OPdngn1.bin';
+		  player.setAttribute('src', swfPath);     // ✅ correct attribute
+		  player.style.width = '100%';
+		  player.style.height = '100%';
 
-			  el.appendChild(player);
-			  area.appendChild(el);
-			  return;
-			}
+		  el.textContent = '';                     // clear "Loading..."
+		  el.appendChild(player);
+		  area.appendChild(el);
+		  return;
+		}
 
 
 			// 🔸 NORMAL IMAGE PANEL BRANCH
