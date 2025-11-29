@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/@ruffle-rs/ruffle" defer></script>
+
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; width: 100%; }
@@ -282,28 +283,6 @@
       font: inherit;
       background: #fff;
     }
-	
-		.menu-go-row {
-	  display: flex;
-	  align-items: center;
-	  gap: 6px;
-	  margin-top: 4px;
-	}
-
-	#menu-page-go {
-	  border: 1px solid #000;
-	  background: #e9e9e9;
-	  padding: 2px 8px;
-	  font: inherit;
-	  cursor: pointer;
-	  box-shadow: inset -2px -2px 0 #fff, inset 2px 2px 0 #000;
-	}
-
-	#menu-page-go:active {
-	  transform: translate(1px,1px);
-	  box-shadow: inset -2px -2px 0 #000, inset 2px 2px 0 #fff;
-	  background: #dcdcdc;
-	}
 
     .window-body {
       padding: 16px;
@@ -366,6 +345,14 @@
       50.01%, 100% { opacity: 0; }
     }
 
+    .panel-area{
+      width: 100%;
+      display: grid;
+      grid-auto-rows: auto;
+      gap: 16px;
+      place-items: center;
+    }
+
     .comic-panel {
       position: relative; z-index: 1;
       width: 82%; max-width: 720px;
@@ -385,14 +372,6 @@
     .comic-panel.flash-panel ruffle-player {
       width: 100%;
       height: 100%;
-    }
-
-    .panel-area{
-      width: 100%;
-      display: grid;
-      grid-auto-rows: auto;
-      gap: 16px;
-      place-items: center;
     }
 
     .comic-panel.tall-45{ aspect-ratio: 4 / 5; }
@@ -432,13 +411,6 @@
       box-shadow: inset -2px -2px 0 #fff, inset 2px 2px 0 #000;
       vertical-align: middle;
       user-select: none;
-    }
-    .badge-user {
-      background: #ffffff;
-      box-shadow: inset -2px -2px 0 #fff, inset 2px 2px 0 #000;
-    }
-    .badge-author {
-      background: #f3f3f3;
     }
 
     .flairs{
@@ -568,51 +540,169 @@
     .gate-actions .btn-95{ text-align: center; }
     .gate-remember{ display: block; padding: 0 14px 14px; font-size: .95rem; }
     @media (max-width: 480px){ .gate-actions{ grid-template-columns: 1fr; } }
+		/* CHATLOG CONTAINER – wrapper, no box of its own */
+		.chatlog {
+		  margin: 0 auto;
+		  max-width: 82%;
+		  text-align: center;
+		  border: none;
+		  background: transparent;
+		  box-shadow: none;
+		}
 
-    .chatlog {
-      border: 1px solid #000;
-      background: #fff;
-      box-shadow: inset -2px -2px 0 #000, inset 2px 2px 0 #fff, 3px 3px 6px rgba(0,0,0,.08);
-      margin: 10px auto;
-      max-width: 82%;
-      text-align: left;
-    }
-    .chatlog-header {
-      display: flex; align-items: center; justify-content: space-between;
-      gap: 8px;
-      background: #e0e0e0;
-      border-bottom: 1px solid #000;
-      padding: 6px 8px;
-      font-weight: bold;
-      font-size: clamp(.95rem, 2vmin, 1rem);
-    }
-    .chatlog-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .chatlog-toggle {
-      border: 1px solid #000;
-      background: #fff;
-      box-shadow: inset -2px -2px 0 #fff, inset 2px 2px 0 #000;
-      padding: 2px 8px;
-      line-height: 1;
-      cursor: pointer;
-      user-select: none;
-    }
-    .chatlog-toggle:active {
-      transform: translate(1px,1px);
-      box-shadow: inset -2px -2px 0 #000, inset 2px 2px 0 #fff;
-      background: #dcdcdc;
-    }
-    .chatlog.minimized .chatlog-body { display: none; }
-    .chatlog-body {
-      max-height: 40vh; overflow: auto; padding: 10px 12px;
-      line-height: 1.5;
-    }
-    .chatline { margin: 2px 0; }
-    .chat-name { font-weight: bold; }
-    .chat-msg  { white-space: pre-wrap; }
+		button.chatlog-toggle:active {
+		  transform: translate(1px,1px);
+		  box-shadow:
+			inset -2px -2px 0 #000,
+			inset 2px 2px 0 #fff;
+		  background: #dcdcdc;
+		}
 
-    .chat-FTR .chat-name { color: #b71c1c; }
-    .chat-WZD .chat-name { color: #1565c0; }
-    .chat-THF .chat-name { color: #2e7d32; }
+		/* The label itself */
+		.chatlog-label {
+		  display: block;
+		  text-align: center;
+		  white-space: nowrap;      /* keeps STONELOG snug in the middle */
+		}
+
+
+		/* Collapsed body */
+		.chatlog.minimized .chatlog-body {
+		  display: none;
+		}
+
+		/* When NOT minimized, show the box ONLY around the chat body */
+		.chatlog:not(.minimized) .chatlog-body {
+		  border: 1px solid #000;
+		  background: #fff;
+		  box-shadow:
+			inset -2px -2px 0 #000,
+			inset 2px 2px 0 #fff,
+			3px 3px 6px rgba(0,0,0,.08);
+		  margin-top: 4px;   /* tiny gap between button and box */
+		}
+
+
+		/* Inside of the chat – tight top/bottom spacing */
+		.chatlog-body {
+		  max-height: 40vh;
+		  overflow: auto;
+		  padding: 0 5px;        /* no top/bottom padding, only sides */
+		  line-height: 1.6;
+		  text-align: left;
+		  margin: 0;
+		}
+
+		/* Each chat line – NO extra margin between lines */
+		.chatline {
+		  margin: 0;
+		}
+
+		/* Keep name + text on the same line */
+		.chat-name,
+		.chat-msg {
+		  display: inline;
+		  text-align: left;
+		  white-space: pre-wrap;
+		}
+
+		/* WHOLE LINE COLORED PER CHARACTER */
+		.chat-FTR .chat-name,
+		.chat-FTR .chat-msg {
+		  color: #ee2d36;
+		}
+		.chat-WZD .chat-name,
+		.chat-WZD .chat-msg {
+		  color: #4d74a8;
+		}
+		.chat-THF .chat-name,
+		.chat-THF .chat-msg {
+		  color: #1b8d3d;
+		}
+
+		/* Fallback if you add more speakers */
+		.chatline .chat-name {
+		  font-weight: bold;
+		}
+
+		/* Tiny, centered "header" button like a pesterlog title */
+		button.chatlog-toggle {
+		  all: unset;                /* wipe all inherited/UA/button styles */
+		  box-sizing: border-box;
+
+		  display: inline-block;     /* hugs the text, not full width */
+		  margin: 0 auto;
+		  padding: 0 8px;
+
+		  font-family: "Courier New", monospace;
+		  font-size: 0.8rem;
+		  line-height: 1.2;
+		  text-align: center;        /* center the label inside the button */
+
+		  cursor: pointer;
+		  user-select: none;
+
+		  border: 1px solid #000;
+		  background: #e0e0e0;
+		  box-shadow:
+			inset -2px -2px 0 #fff,
+			inset 2px 2px 0 #000;
+		}
+
+		button.chatlog-toggle:active {
+		  transform: translate(1px,1px);
+		  box-shadow:
+			inset -2px -2px 0 #000,
+			inset 2px 2px 0 #fff;
+		  background: #dcdcdc;
+		}
+
+		button.chatlog-toggle:focus-visible {
+		  outline: 1px dotted #000;
+		  outline-offset: 2px;
+		}
+
+		/* Remove extra space above the chatlog button */
+		.chatlog {
+		  margin-top: 0 !important;
+		}
+
+		/* Remove margins on ANY element directly before a chatlog */
+		.comic-text > *:has(+ .chatlog),
+		.comic-text > *:has(+ .chatlog ~ *),
+		.comic-text > * + .chatlog {
+		  margin-top: 0 !important;
+		  padding-top: 0 !important;
+		}
+
+		/* Remove default block spacing INSIDE the chatlog wrapper */
+		.chatlog-toggle {
+		  margin-top: 0 !important;
+		  margin-bottom: 0 !important;
+		}
+
+		/* Tighten the box itself when open */
+		.chatlog-body {
+		  margin-top: 0 !important;
+		  margin-bottom: 0 !important;
+		}
+		
+		/* Tighten paragraph spacing inside captions */
+		.comic-text p {
+		  margin-top: 0;
+		  margin-bottom: 0.25em;  /* small gap between lines, not a huge chasm */
+		}
+
+		/* If a paragraph is directly followed by a chatlog, remove that extra bottom gap */
+		.comic-text p + .chatlog {
+		  margin-top: 0;
+		}
+		
+		
+
+
+
+
 
     @media (max-width: 640px){
       .chatlog-body { max-height: 50vh; }
@@ -728,13 +818,10 @@
               <button type="button" data-nav="first">First</button>
               <div class="menu-separator"></div>
               <div class="menu-go">
-			  <label for="menu-page-input">Go to page:</label>
-			  <div class="menu-go-row">
-				<input type="number" id="menu-page-input" min="1" />
-				<button type="button" id="menu-page-go">Go</button>
-			  </div>
-			</div>
-						</div>
+                <label for="menu-page-input">Go to page:</label>
+                <input type="number" id="menu-page-input" min="1" />
+              </div>
+            </div>
           </div>
           <div class="menu-item" data-menu="view">
             <span class="menu-label">View</span>
@@ -788,6 +875,7 @@
   <script>
     "use strict";
 
+    /* ===== Epilepsy gate ===== */
     (function(){
       const gate = document.getElementById('epilepsy-gate');
       if (!gate) return;
@@ -823,6 +911,7 @@
       }
     })();
 
+    /* ===== Mobile top menu ===== */
     (function(){
       const btn = document.getElementById('menuBtn');
       const dd  = document.getElementById('dropdown');
@@ -837,6 +926,7 @@
       document.addEventListener('click', ()=>{ dd.style.display='none'; btn.setAttribute('aria-expanded','false'); });
     })();
 
+    /* ===== Cursor shadow ===== */
     (function(){
       const isTouchLike = window.matchMedia('(hover: none)').matches || 'ontouchstart' in window;
       const cursorShadow = document.getElementById('cursor-shadow');
@@ -848,6 +938,7 @@
       }
     })();
 
+    /* ===== Sidebar photo explosion ===== */
     (function(){
       const images = ["Icons/icon1.png","Icons/icon2.png","Icons/icon3.png","Icons/icon4.png"];
       const titles = {
@@ -901,6 +992,7 @@
       });
     })();
 
+    /* ===== Gnome counter ===== */
     (function(){
       const countEl = document.getElementById('gnome-count');
       const COUNT_NS = 'speep.me';
@@ -944,6 +1036,7 @@
       };
     })();
 
+    /* ===== Gnome spawner ===== */
     (function(){
       const gnomeLayer = document.getElementById('gnome-layer');
 
@@ -1055,7 +1148,7 @@
     })();
 
     (function(){
-      const totalPages = 126;
+      const totalPages = 133;
       const captions = {
         1: { text: `Before you stands a bridge into darkness. Across the bridge, the DNGN. Your journey begins here. Humble. Unencumbered. Fastidious. Forthright? Brave... wait a second. Who is that?` },
         2: { text: `Hold on. Why don't we move some things out of the way?` },
@@ -1117,7 +1210,7 @@
         58:{ text: `Now that our pest problem is managed.`},
         59:{ text: `Back to business as usual. Adventuring. Grinding for XP. Absorbing the spirit power of ~Will-O'-The-Wisps~. <u>You</u> get the idea.`},
         60:{ text: `...`},
-        61:{ text: `Luckily, with whatever XP we're bringing in, we can begin to allocate <b>FTR</b>'s <b>CORE STATISTICS</b>. Should be a ton. Hopefully.`},
+        61:{ text: `Luckily, with whatever XP we're bringing in, we can begin to allocate <b>FTR</b>'s <b>CORE STATISTICS</b>. Should be a ton. Hopefully.` },
         62:{ text: `But first, as this is the tutorial for the comic, we'll need to discuss the nature of the <b>CORE STATISTICS</b>, HSL, MSS, FLW, DOG, SPL, and QTY.`},
         63:{ text: `HSL corresponds to HUSTLE. It represents the ability to get the job done against all odds. With a high enough HSL <b>CORE</b> value, an adventurer can accomplish anything, given determination and some time. <i>Anything.</i>`},
         64:{ text: `MSS corresponds to MASS. It represents the sheer vastness of an adventurer. Those lucky enough to have a high MSS <b>CORE</b> value are unstoppable forces of girth, breadth, and juggertude.`},
@@ -1179,22 +1272,37 @@
         120:{ text: `For some of us, that's "hitting."`, title: `>FTR: HIT`, source: `user`},
         121:{ text: `Oops.`},
         122:{ text: `If I were <u>you</u>, I would find a way to stop <b>FTR</b> from manipulating that sphere. Chat bubbles are very dangerous things indeed. Some of the worst things ever have been caused by conversations. Can <u>you</u> <a href="submit.html?page=122">intercede?</a>`},
-		123:{ text: `<b>FTR</b> contemplates his mistakes, and also the implication of his own backstory.`, title: `>FTR: PANIC ABOUT WHETHER YOU LEFT THE STOVE ON`, source:`user`},
-		124:{ text: `What a great use of <b>DOG</b>!`, title: `>FTR: EAT CHAT BUBBLE`, source: `user`},
-		125:{ text: `Unfortunately, <b>FTR</b>'s trusty <br><span class="font-press">BUCKET HELM</span> precludes intentional consumption. Even the consumption of technically-intangible narrative constructs.`},
-		126:{ text: `Vapid fools. When I am in full control, I will not succumb to such frivolities. If <b>FTR</b> knew what was good for him (or if he knew anything), he would grab that key and be on his merry way. But no, first, he must become a chat bubble. Sigh.`, title: `>FTR: BECOME THE CHATTERBOX`, source: `user`},
+        123:{ text: `<b>FTR</b> contemplates his mistakes, and also the implication of his own backstory.`, title: `>FTR: PANIC ABOUT WHETHER YOU LEFT THE STOVE ON`, source:`user`},
+        124:{ text: `What a great use of <b>DOG</b>!`, title: `>FTR: EAT CHAT BUBBLE`, source: `user`},
+        125:{ text: `Unfortunately, <b>FTR</b>'s trusty <br><span class="font-press">BUCKET HELM</span> precludes intentional consumption. Even the consumption of technically-intangible narrative constructs.`},
+        126:{ text: `Vapid fools. When I am in full control, I will not succumb to such frivolities. If <b>FTR</b> knew what was good for him (or if he knew anything), he would grab that key and be on his merry way. But no, first, he must become a chat bubble. Sigh.`, title: `>FTR: BECOME THE CHATTERBOX`, source: `user`},
+        127:{ text: `Good call, <b>FTR</b>.`, title: `>FTR: EXIT THE INTERFACE`, flairs: [`AGENCY`]},
+        128:{ text: `...`},
+        129:{ text: `Alright little buddy. It's <b>FTR</b>'s call. Easy choice. He can either grab the important key, or the annoying communication sphere.`},
+        130:{ text: `I guess this is what <b>AGENCY</b> is all about. Oh well. You can't make a <b>FTR</b> without breaking a few horn-things.`, title: `>FTR: EQUIP SENDING STONE`, flairs: [`AGENCY`]},
+        131:{ text: `<span style="color:#FF0000"><span class="font-press">4/64</span></span>`},
+        132:{ text: `<i>bzz... bzzz... bzzz...</i><br>Well are you going to pick that thing up?`},
+        133:{  
+          text: `<img src="Animations/blink.gif" alt="blinking chat-symbol" class="swirl-img">[chat title="STONELOG"]
+        <b>STONELOG BEGIN</b>
+        WZD: Hello...
+        WZD: FTR. Hello.
+        WZD: Respond at once. With quickness. And celerity.
+        WZD: Grave matters at hand.
+        WZD: ((OOC: Zak. I know you said not to break RP but we've been waiting on you. Really FREAKIN struggling without you here.))
+        WZD: GNOME ALERT 
+        WZD: GNOMES PRESENT
+        WZD: FTR DO YOU READ ME 
+        WZD: AAAAAAAAAAAA
+        <b>STONELOG END</b>
+        [/chat]`
+        },
       };
 
       const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "webp", "gif"];
       const IMAGE_DIR = "Comics";
       const FALLBACK_COLOR = "#fff";
 
-      /* ===== Page layout config =====
-         Define per-page panel layout. Pages not listed use one default 4:3 panel.
-         Examples:
-         // 12: { columns: 2, panels: [{ suffix: 'a' }, { suffix: 'b' }] },
-         // 18: { columns: 1, panels: [{ tall: '45' }] },
-      */
       const pageLayout = {
         38: { columns: 1, panels: [{ tall: '23' }] },
         101: { columns: 1, panels: [{ tall: '87'}] },
@@ -1211,86 +1319,73 @@
       function setCurrentPage(p){ currentPage = p; }
       function getCurrentPage(){ return currentPage; }
 
-function renderPanels(page) {
-  const area = document.getElementById('panel-area');
-  if (!area) return;
+      /* ===== Panels ===== */
+      function renderPanels(page) {
+        const area = document.getElementById('panel-area');
+        if (!area) return;
 
-  area.innerHTML = '';
+        area.innerHTML = '';
 
-  // 🔥 SPECIAL CASE: [S] PAGE 111 WITH SWF
-  if (page === 111) {
-    console.log("Rendering SWF panel for page 111 via <object>");
+        // Brute-force Ruffle fix for page 111
+        if (page === 111) {
+          const el = document.createElement('div');
+          el.className = 'comic-panel flash-panel';
 
-    const el = document.createElement('div');
-    el.className = 'comic-panel flash-panel';
-    el.style.background = '#000';
-    el.style.position = 'relative';
+          const rp = document.createElement('ruffle-player');
+          rp.setAttribute('data-src', 'Animations/OPdngn1.swf');
+          rp.style.width = '100%';
+          rp.style.height = '100%';
+          rp.style.display = 'block';
 
-    // This is the pattern Ruffle's CDN loves to polyfill
-    el.innerHTML = `
-      <object
-        type="application/x-shockwave-flash"
-        data="Animations/OPdngn1.swf"
-        width="100%"
-        height="100%">
-        <param name="movie" value="Animations/OPdngn1.swf">
-      </object>
-    `;
-
-    area.appendChild(el);
-    return; // do not run normal image logic for this page
-  }
-
-  // Normal panel logic for all *other* pages
-  const layout  = pageLayout[page] || null;
-  const columns = layout?.columns || 1;
-  const panels  = layout?.panels || [{}];
-
-  // Let your CSS columns classes kick in
-  area.classList.toggle('columns-2', columns === 2);
-  area.classList.toggle('columns-3', columns === 3);
-  area.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
-
-  panels.forEach((p) => {
-    const el = document.createElement('div');
-    el.className = 'comic-panel';
-
-    // Aspect ratio handling
-    if (p.tall) {
-      el.style.aspectRatio = `720 / ${p.tall}`;
-    } else {
-      el.style.aspectRatio = '720 / 540';
-    }
-
-    const pageStr = String(page).padStart(2, '0');
-    const suffix  = p.suffix ? String(p.suffix) : '';
-    let loaded = false;
-
-    IMAGE_EXTENSIONS.forEach((ext) => {
-      const img  = new Image();
-      const path = `${IMAGE_DIR}/page${pageStr}${suffix}.${ext}`;
-      img.onload = () => {
-        if (!loaded) {
-          loaded = true;
-          el.style.backgroundImage = `url("${path}")`;
+          el.appendChild(rp);
+          area.appendChild(el);
+          return;
         }
-      };
-      img.src = path;
-    });
 
-    setTimeout(() => {
-      if (!loaded) {
-        el.style.backgroundImage = 'none';
-        el.style.backgroundColor = FALLBACK_COLOR;
+        const layout  = pageLayout[page] || null;
+        const columns = layout?.columns || 1;
+        const panels  = layout?.panels || [{}];
+
+        area.classList.toggle('columns-2', columns === 2);
+        area.classList.toggle('columns-3', columns === 3);
+        area.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
+
+        panels.forEach((p) => {
+          const el = document.createElement('div');
+          el.className = 'comic-panel';
+
+          if (p.tall) {
+            el.style.aspectRatio = `720 / ${p.tall}`;
+          } else {
+            el.style.aspectRatio = '720 / 540';
+          }
+
+          const pageStr = String(page).padStart(2, '0');
+          const suffix  = p.suffix ? String(p.suffix) : '';
+          let loaded = false;
+
+          IMAGE_EXTENSIONS.forEach((ext) => {
+            const img  = new Image();
+            const path = `${IMAGE_DIR}/page${pageStr}${suffix}.${ext}`;
+            img.onload = () => {
+              if (!loaded) {
+                loaded = true;
+                el.style.backgroundImage = `url("${path}")`;
+              }
+            };
+            img.src = path;
+          });
+
+          setTimeout(() => {
+            if (!loaded) {
+              el.style.backgroundImage = 'none';
+              el.style.backgroundColor = FALLBACK_COLOR;
+            }
+          }, 400);
+
+          area.appendChild(el);
+        });
       }
-    }, 400);
-
-    area.appendChild(el);
-  });
-}
-
-
-
 
       function getPageFromURL() {
         const m = window.location.search.match(/[?&]page=(\d+)/);
@@ -1314,59 +1409,97 @@ function renderPanels(page) {
         }
       }
 
+      /* ===== CHAT PARSER with Pesterlog-style box ===== */
       function parseChatBlocks(raw) {
         const CHAT_RE = /\[chat([^\]]*)\]([\s\S]*?)\[\/chat\]/gi;
 
-        function parseAttrs(attrStr) {
-          const out = { title: 'LOG', min: false };
-          const titleMatch = attrStr && attrStr.match(/title\s*=\s*"([^"]*)"/i);
-          if (titleMatch) out.title = (titleMatch[1] || '').trim() || 'LOG';
-          if (attrStr && /\bmin\b/i.test(attrStr)) out.min = true;
-          return out;
-        }
+			   function parseAttrs(attrStr) {
+		  // Default: MINIMIZED
+		  const out = { title: "LOG", min: true };
 
+		  if (!attrStr) return out;
+
+		  const titleMatch = attrStr.match(/title\s*=\s*"([^"]*)"/i);
+		  if (titleMatch) {
+			out.title = (titleMatch[1] || "").trim() || "LOG";
+		  }
+
+		  // If they explicitly ask to open, override
+		  if (/\bopen\b/i.test(attrStr)) {
+			out.min = false;
+		  }
+
+		  // If they explicitly say min, keep it minimized (or re-minimize)
+		  if (/\bmin\b/i.test(attrStr)) {
+			out.min = true;
+		  }
+
+		  return out;
+		}
+
+
+        // ONE LINE OF CHAT PER <div>, entire line colored if speaker known
         function lineToHTML(line) {
-          const m = line.match(/^\s*([A-Za-z0-9_]+)\s*:\s*([\s\S]*)$/);
-          if (!m) return '';
-          const who = m[1].toUpperCase();
-          let msg  = m[2];
+          if (!line.trim()) return "";
 
+          // Try to parse "WHO: message"
+          const m = line.match(/^\s*([A-Za-z0-9_]+)\s*:\s*([\s\S]*)$/);
+          let who, msg;
+
+          if (m) {
+            who = m[1].toUpperCase();
+            msg = m[2] || "";
+          } else {
+            // Non-character lines like "LOG BEGIN"
+            who = "";
+            msg = line;
+          }
+
+          // Inline wiggle/wave/shine markup
           msg = msg
             .replace(/~(.*?)~/g, '<span class="wiggle">$1</span>')
             .replace(/\^(.*?)\^/g, '<span class="wavy">$1</span>')
             .replace(/\{(.*?)\}/g, '<span class="shiny">$1</span>');
 
-          const whoClass = ['FTR','WZD','THF'].includes(who) ? `chat-${who}` : '';
-          return `<div class="chatline ${whoClass}">
-            <span class="chat-name">${who}:</span>
-            <span class="chat-msg"> ${msg}</span>
-          </div>`;
+          const knownSpeakers = ["FTR", "WZD", "THF"];
+          const whoClass = knownSpeakers.includes(who) ? `chat-${who}` : "";
+
+          const nameHTML = who ? `<span class="chat-name">${who}:</span>` : "";
+          const spacer = who ? " " : "";
+          const msgHTML = `<span class="chat-msg">${msg}</span>`;
+
+          return `<div class="chatline ${whoClass}">${nameHTML}${spacer}${msgHTML}</div>`;
         }
 
         return raw.replace(CHAT_RE, (_, attrStr, body) => {
-          const attrs = parseAttrs(attrStr || '');
-          const minimized = attrs.min ? ' minimized' : '';
-          const lines = (body || '').split(/\r?\n/).map(s => s.trim()).filter(Boolean);
-          const items = lines.map(lineToHTML).join('');
-          const id = 'chat-' + Math.random().toString(36).slice(2, 8);
-          return `
-            <div class="chatlog${minimized}" data-chat-id="${id}">
-              <div class="chatlog-header">
-                <div class="chatlog-title">${attrs.title}</div>
-                <button class="chatlog-toggle" aria-expanded="${attrs.min ? 'false' : 'true'}" aria-controls="${id}">
-                  ${attrs.min ? 'Expand' : 'Minimize'}
-                </button>
-              </div>
-              <div class="chatlog-body" id="${id}">
-                ${items}
-              </div>
-            </div>
-          `;
+          const attrs = parseAttrs(attrStr || "");
+          const minimized = attrs.min ? " minimized" : "";
+          const lines = (body || "")
+            .split(/\r?\n/)
+            .map(s => s.trim())
+            .filter(Boolean);
+          const items = lines.map(lineToHTML).join("");
+          const id = "chat-" + Math.random().toString(36).slice(2, 8);
+
+          // SIMPLE STRUCTURE: centered button, body below
+				 return `
+		  <div class="chatlog${minimized}" data-chat-id="${id}">
+			<button class="chatlog-toggle"
+					aria-expanded="${attrs.min ? "false" : "true"}"
+					aria-controls="${id}">
+			  <span class="chatlog-label">${attrs.title}</span>
+			</button>
+			<div class="chatlog-body" id="${id}">
+			  ${items}
+			</div>
+		  </div>
+`;
+
         });
       }
 
-      function wireChatlogToggles(captionRoot){
-        captionRoot.addEventListener('click', (e) => {
+      function wireChatlogToggles(root){
+        root.addEventListener('click', (e) => {
           const btn = e.target.closest('.chatlog-toggle');
           if (!btn) return;
           const box = btn.closest('.chatlog');
@@ -1374,11 +1507,9 @@ function renderPanels(page) {
           if (expanded) {
             box.classList.add('minimized');
             btn.setAttribute('aria-expanded', 'false');
-            btn.textContent = 'Expand';
           } else {
             box.classList.remove('minimized');
             btn.setAttribute('aria-expanded', 'true');
-            btn.textContent = 'Minimize';
           }
         });
       }
@@ -1451,282 +1582,206 @@ function renderPanels(page) {
 
         if (!flairs || !flairs.length) return '';
 
-        const items = flairs.map(raw => {
-          const label = String(raw).trim();
-          const up = label.toUpperCase();
-          let cls = 'flair';
-          if (up === 'AUTHOR COMMAND')    cls += ' flair--author';
-          else if (up === 'SPECTATOR COMMAND') cls += ' flair--spectator';
-          else if (up === 'AGENCY')       cls += ' flair--agency';
-          return `<span class="${cls}">${label}</span>`;
+        const labelClass = (name) => {
+          if (name.toUpperCase().includes('AUTHOR')) return 'flair flair--author';
+          if (name.toUpperCase().includes('SPECTATOR')) return 'flair flair--spectator';
+          if (name.toUpperCase().includes('AGENCY')) return 'flair flair--agency';
+          return 'flair';
+        };
+
+        return `
+          <span class="flairs">
+            ${flairs.map(f => `<span class="${labelClass(f)}">${f}</span>`).join('')}
+          </span>
+        `;
+      }
+
+      function setTitle(page){
+        const titleEl = document.getElementById('command-title');
+        if (!titleEl) return;
+        const data = captions[page] || {};
+        const title = data.title || '';
+        const flairsHTML = buildFlairsHTML(data);
+        if (!title) {
+          titleEl.style.display = 'none';
+          titleEl.textContent = '';
+          titleEl.innerHTML = '';
+          return;
+        }
+
+        const htmlTitle = `&gt;${title}${flairsHTML}`;
+        titleEl.style.display = 'block';
+        titleEl.innerHTML = htmlTitle;
+
+        if (titleTimer) {
+          clearTimeout(titleTimer);
+          titleTimer = null;
+        }
+
+        const cursorSpan = document.createElement('span');
+        cursorSpan.className = 'cursor';
+        titleEl.appendChild(cursorSpan);
+
+        titleTimer = setTimeout(() => {
+          if (!titleEl.contains(cursorSpan)) return;
+          cursorSpan.remove();
+          titleTimer = null;
+        }, 1600);
+      }
+
+      function setStatus(page){
+        const sbLeft = document.querySelector('.sb-left');
+        if (!sbLeft) return;
+        sbLeft.textContent = `Page ${page} of ${totalPages}`;
+      }
+
+      function initNav(){
+        const first = document.getElementById('first');
+        const prev = document.getElementById('prev');
+        const next = document.getElementById('next');
+        const latest = document.getElementById('latest');
+        const jump = document.getElementById('page-jump');
+
+        if (!first || !prev || !next || !latest || !jump) return;
+
+        first.addEventListener('click', e => { e.preventDefault(); goToPage(1); });
+        latest.addEventListener('click', e => { e.preventDefault(); goToPage(totalPages); });
+
+        prev.addEventListener('click', e => {
+          e.preventDefault();
+          goToPage(getCurrentPage() - 1);
+        });
+        next.addEventListener('click', e => {
+          e.preventDefault();
+          goToPage(getCurrentPage() + 1);
         });
 
-        return `<span class="flairs">${items.join('')}</span>`;
-      }
+        jump.addEventListener('change', () => {
+          const v = parseInt(jump.value, 10);
+          if (!isNaN(v)) goToPage(v);
+        });
 
-      function setCommandTitle(page) {
-        const titleEl = document.getElementById("command-title");
-        if (!titleEl) return;
-
-        if (titleTimer) { clearTimeout(titleTimer); titleTimer = null; }
-        titleEl.innerHTML = "";
-        titleEl.style.display = "none";
-
-        const data = captions[page];
-        if (!data || !data.title) return;
-
-        titleEl.style.display = "block";
-
-        const text = String(data.title);
-        const flairsHTML = buildFlairsHTML(data);
-        let i = 0;
-
-        const step = () => {
-          if (i <= text.length) {
-            titleEl.innerHTML = text.substring(0, i) + '<span class="cursor"></span>' + flairsHTML;
-            i++;
-            titleTimer = setTimeout(step, 50);
-          } else {
-            titleEl.innerHTML = text + '<span class="cursor"></span>' + flairsHTML;
-          }
-        };
-        step();
-      }
-
-      function getPageFromURLSafe(){
-        const p = getPageFromURL();
-        return Number.isFinite(p) && p >= 1 ? p : 1;
-      }
-
-      function bindNavigation(page) {
-        const byId = (id) => document.getElementById(id);
-
-        const first = byId("first");
-        const prev  = byId("prev");
-        const next  = byId("next");
-        const latest= byId("latest");
-        const jump  = byId("page-jump");
-
-        if (first) first.addEventListener("click", (e) => { e.preventDefault(); goToPage(1); });
-        if (prev)  prev.addEventListener("click",  (e) => { e.preventDefault(); goToPage(page - 1); });
-        if (next)  next.addEventListener("click",  (e) => { e.preventDefault(); goToPage(page + 1); });
-        if (latest)latest.addEventListener("click",(e) => { e.preventDefault(); goToPage(totalPages); });
-
-        if (jump) {
-          jump.value = page;
-          jump.addEventListener("change", (e) => {
-            const val = parseInt(e.target.value, 10);
-            if (!Number.isNaN(val)) goToPage(val);
+        const menuInput = document.getElementById('menu-page-input');
+        if (menuInput) {
+          menuInput.addEventListener('change', () => {
+            const v = parseInt(menuInput.value, 10);
+            if (!isNaN(v)) goToPage(v);
           });
         }
 
-        document.addEventListener("keydown", (e) => {
-          if (e.key === "ArrowRight") goToPage(page + 1);
-          if (e.key === "ArrowLeft")  goToPage(page - 1);
-          if (e.key === "Home")       goToPage(1);
-          if (e.key === "End")        goToPage(totalPages);
+        document.querySelectorAll('[data-nav]').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const action = btn.getAttribute('data-nav');
+            if (action === 'first') goToPage(1);
+            if (action === 'latest') goToPage(totalPages);
+            if (action === 'next') goToPage(getCurrentPage() + 1);
+            if (action === 'prev') goToPage(getCurrentPage() - 1);
+          });
         });
       }
 
-      function doSave() {
-        const page = getCurrentPage();
-        try {
-          localStorage.setItem("comicSave", String(page));
-          alert("Game saved!");
-        } catch (err) {
-          console.error("Save failed:", err);
-          alert("Save failed (check browser storage settings).");
+      function initMenuBar(){
+        const menuItems = document.querySelectorAll('.menu-item');
+        let openMenu = null;
+
+        function closeMenu(){
+          if (!openMenu) return;
+          openMenu.classList.remove('menu-open');
+          openMenu = null;
         }
-      }
 
-      function doLoad() {
-        try {
-          const saved = parseInt(localStorage.getItem("comicSave") || "", 10);
-          if (!Number.isNaN(saved)) {
-            goToPage(saved);
-          } else {
-            alert("No saved game found.");
-          }
-        } catch (err) {
-          console.error("Load failed:", err);
-          alert("Load failed (check browser storage settings).");
-        }
-      }
-
-      function bindSaveLoad() {
-        const saveBtn = document.getElementById("save-btn");
-        const loadBtn = document.getElementById("load-btn");
-        if (saveBtn) saveBtn.onclick = () => { doSave(); };
-        if (loadBtn) loadBtn.onclick = () => { doLoad(); };
-      }
-
-      function bindMenus() {
-  const menubar = document.querySelector('.menubar');
-  if (!menubar) return;
-
-  let openItem = null;
-
-  function openMenu(item) {
-    if (openItem && openItem !== item) {
-      openItem.classList.remove('menu-open');
-    }
-    openItem = item;
-    if (item) item.classList.add('menu-open');
-  }
-
-  // Top-level menu open/close behavior
-  menubar.querySelectorAll('.menu-item').forEach(item => {
-    const label = item.querySelector('.menu-label');
-
-    item.addEventListener('mouseenter', () => {
-      if (openItem) openMenu(item);
-    });
-
-    if (label) {
-      label.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const isOpen = item.classList.contains('menu-open');
-        openMenu(isOpen ? null : item);
-      });
-    }
-  });
-
-  document.addEventListener('click', () => {
-    if (openItem) {
-      openItem.classList.remove('menu-open');
-      openItem = null;
-    }
-  });
-
-  // ===== FILE MENU =====
-  const fileMenu = menubar.querySelector('.menu-item[data-menu="file"]');
-  if (fileMenu) {
-    fileMenu.querySelectorAll('[data-action]').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const action = btn.getAttribute('data-action');
-        if (action === 'save') doSave();
-        else if (action === 'load') doLoad();
-        else if (action === 'submit') {
-          const submitLink = document.getElementById("submit-link");
-          if (submitLink) window.location.href = submitLink.href;
-        }
-        openMenu(null);
-      });
-    });
-  }
-
-  // ===== EDIT MENU (including Go to page) =====
-  const editMenu = menubar.querySelector('.menu-item[data-menu="edit"]');
-  if (editMenu) {
-    // Next / Prev / Latest / First
-    editMenu.querySelectorAll('[data-nav]').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const nav = btn.getAttribute('data-nav');
-        const page = getCurrentPage();
-        if (nav === 'next')      goToPage(page + 1);
-        else if (nav === 'prev') goToPage(page - 1);
-        else if (nav === 'latest') goToPage(totalPages);
-        else if (nav === 'first')  goToPage(1);
-        openMenu(null);
-      });
-    });
-
-    const menuInput = editMenu.querySelector('#menu-page-input');
-    const menuGoBtn = editMenu.querySelector('#menu-page-go');
-
-    if (menuInput) {
-      // Prevent clicks on the input (including spinner arrows) from closing the menu
-      ['click', 'mousedown'].forEach(ev => {
-        menuInput.addEventListener(ev, (e) => {
-          e.stopPropagation();
+        menuItems.forEach(item => {
+          const label = item.querySelector('.menu-label');
+          label.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (openMenu === item){
+              closeMenu();
+            } else {
+              closeMenu();
+              item.classList.add('menu-open');
+              openMenu = item;
+            }
+          });
         });
-      });
 
-      // Pressing Enter should act like pressing Go
-      menuInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          if (menuGoBtn) {
-            menuGoBtn.click();
+        document.addEventListener('click', () => {
+          closeMenu();
+        });
+      }
+
+      function initSaveLoad(){
+        function saveGame(){
+          try {
+            localStorage.setItem('dngn_last_page', String(getCurrentPage()));
+            alert('Game saved!');
+          } catch {
+            alert('Unable to save game (localStorage unavailable).');
           }
         }
-      });
-    }
-
-    if (menuGoBtn && menuInput) {
-      // Keep clicks on Go from closing the menu before we handle navigation
-      ['click', 'mousedown'].forEach(ev => {
-        menuGoBtn.addEventListener(ev, (e) => {
-          e.stopPropagation();
-        });
-      });
-
-      menuGoBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const val = parseInt(menuInput.value, 10);
-        if (!Number.isNaN(val)) {
-          goToPage(val);
+        function loadGame(){
+          try {
+            const n = parseInt(localStorage.getItem('dngn_last_page') || '', 10);
+            if (!isNaN(n)) {
+              goToPage(n);
+            } else {
+              alert('No saved game found.');
+            }
+          } catch {
+            alert('Unable to load game (localStorage unavailable).');
+          }
         }
-        openMenu(null);
-      });
-    }
-  }
 
-  // ===== VIEW MENU =====
-  const viewMenu = menubar.querySelector('.menu-item[data-menu="view"]');
-  if (viewMenu) {
-    const btn = viewMenu.querySelector('[data-view="archival"]');
-    if (btn) {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        alert("ARCHIVAL MODE is a work in progress.");
-        openMenu(null);
-      });
-    }
-  }
+        const saveBtn = document.getElementById('save-btn');
+        const loadBtn = document.getElementById('load-btn');
+        if (saveBtn) saveBtn.addEventListener('click', saveGame);
+        if (loadBtn) loadBtn.addEventListener('click', loadGame);
 
-  // ===== HELP MENU =====
-  const helpMenu = menubar.querySelector('.menu-item[data-menu="help"]');
-  if (helpMenu) {
-    const guideBtn = helpMenu.querySelector('[data-help="guide"]');
-    if (guideBtn) {
-      guideBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        alert("COMIC GUIDE is a work in progress.");
-        openMenu(null);
-      });
-    }
-  }
-}
-
-
-      function renderPage() {
-        const page = getPageFromURLSafe();
-        setCurrentPage(page);
-        setCommandTitle(page);
-        setCaption(page);
-        renderPanels(page);
-        bindNavigation(page);
-        bindSaveLoad();
-        bindMenus();
-
-        const sbLeft = document.querySelector('.sb-left');
-        if (sbLeft) sbLeft.textContent = `Viewing page ${page} of ${totalPages}`;
-
-        const submitLink = document.getElementById("submit-link");
-        if (submitLink) submitLink.href = `submit.html?page=${page}`;
+        document.querySelectorAll('[data-action="save"]').forEach(btn => {
+          btn.addEventListener('click', saveGame);
+        });
+        document.querySelectorAll('[data-action="load"]').forEach(btn => {
+          btn.addEventListener('click', loadGame);
+        });
+        document.querySelectorAll('[data-action="submit"]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const p = getCurrentPage();
+            window.location.href = `submit.html?page=${p}`;
+          });
+        });
       }
 
-      document.addEventListener("DOMContentLoaded", () => {
-        try {
-          renderPage();
-        } catch (err) {
-          console.error("Fatal script error:", err);
-          alert("A script error occurred. Open DevTools (F12) → Console for details.");
-        }
-      });
+      function initHelps(){
+        document.querySelectorAll('[data-help="guide"]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            alert('Comic guide coming soon!');
+          });
+        });
+        document.querySelectorAll('[data-view="archival"]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            alert('Archival mode is currently a work in progress.');
+          });
+        });
+      }
+
+      function init(){
+        const startPage = getPageFromURL();
+        setCurrentPage(startPage);
+        renderPanels(startPage);
+        setCaption(startPage);
+        setTitle(startPage);
+        setStatus(startPage);
+        initNav();
+        initMenuBar();
+        initSaveLoad();
+        initHelps();
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
     })();
   </script>
 </body>
