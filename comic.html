@@ -8,6 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Noto+Emoji🫠&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/@ruffle-rs/ruffle" defer></script>
 
   <style>
@@ -405,6 +408,44 @@
       word-break: break-word;
       overflow: break-word;
     }
+	
+	.comic-text.caption--tight {
+	  display: flex;
+	  flex-direction: column;
+	  align-items: center;
+
+	  padding-top: 0px;
+	  padding-bottom: 0px;
+	  gap: 0px;           /* controls space between image, button, and box */
+	}
+
+	/* TIGHT CAPTION – used when there's a [chat] block */
+		.comic-text.caption--tight {
+		  display: flex;
+		  flex-direction: column;
+		  align-items: center;
+		  justify-content: flex-start;
+
+		  /* remove vertical padding so the chatlog can hug the borders more */
+		  padding-top: 0;
+		  padding-bottom: 0;
+
+		  gap: 4px;             /* small breathing room between image, button, box */
+
+		  /* keep the same width behavior as normal captions */
+		  width: 100%;
+		  max-width: 82%;
+		  align-self: center;
+		}
+
+		/* no extra margins on children (chatlog wrapper, etc.) */
+		.comic-text.caption--tight > * {
+		  margin-top: 0;
+		  margin-bottom: 0;
+		}
+
+
+
 
     .badge {
       display: inline-block;
@@ -546,104 +587,33 @@
     .gate-actions .btn-95{ text-align: center; }
     .gate-remember{ display: block; padding: 0 14px 14px; font-size: .95rem; }
     @media (max-width: 480px){ .gate-actions{ grid-template-columns: 1fr; } }
-		/* CHATLOG CONTAINER – wrapper, no box of its own */
+		/* CHATLOG – pesterlog-style, no extra padding at top/bottom */
+		
 		.chatlog {
-		  margin: 0 auto;
-		  max-width: 82%;
+		  margin: 0;
+		  width: 100%;          /* fill the caption */
 		  text-align: center;
 		  border: none;
 		  background: transparent;
 		  box-shadow: none;
 		}
-
-		button.chatlog-toggle:active {
-		  transform: translate(1px,1px);
-		  box-shadow:
-			inset -2px -2px 0 #000,
-			inset 2px 2px 0 #fff;
-		  background: #dcdcdc;
-		}
-
-		/* The label itself */
-		.chatlog-label {
-		  display: block;
-		  text-align: center;
-		  white-space: nowrap;      /* keeps STONELOG snug in the middle */
-		}
-
-
-		/* Collapsed body */
-		.chatlog.minimized .chatlog-body {
-		  display: none;
-		}
-
-		/* When NOT minimized, show the box ONLY around the chat body */
-		.chatlog:not(.minimized) .chatlog-body {
-		  border: 1px solid #000;
-		  background: #fff;
-		  box-shadow:
-			inset -2px -2px 0 #000,
-			inset 2px 2px 0 #fff,
-			3px 3px 6px rgba(0,0,0,.08);
-		  margin-top: 4px;   /* tiny gap between button and box */
-		}
-
-
-		/* Inside of the chat – tight top/bottom spacing */
-		.chatlog-body {
-		  max-height: 40vh;
-		  overflow: auto;
-		  padding: 0 5px;        /* no top/bottom padding, only sides */
-		  line-height: 1.6;
-		  text-align: left;
-		  margin: 0;
-		}
-
-		/* Each chat line – NO extra margin between lines */
-		.chatline {
-		  margin: 0;
-		}
-
-		/* Keep name + text on the same line */
-		.chat-name,
-		.chat-msg {
-		  display: inline;
-		  text-align: left;
-		  white-space: pre-wrap;
-		}
-
-		/* WHOLE LINE COLORED PER CHARACTER */
-		.chat-FTR .chat-name,
-		.chat-FTR .chat-msg {
-		  color: #ee2d36;
-		}
-		.chat-WZD .chat-name,
-		.chat-WZD .chat-msg {
-		  color: #4d74a8;
-		}
-		.chat-THF .chat-name,
-		.chat-THF .chat-msg {
-		  color: #1b8d3d;
-		}
-
-		/* Fallback if you add more speakers */
-		.chatline .chat-name {
-		  font-weight: bold;
-		}
-
-		/* Tiny, centered "header" button like a pesterlog title */
+	
+		/* Tiny, centered header button */
 		button.chatlog-toggle {
-		  all: unset;                /* wipe all inherited/UA/button styles */
+		  all: unset;
 		  box-sizing: border-box;
 
-		  display: inline-block;     /* hugs the text, not full width */
-		  margin: 0 auto;
-		  padding: 0 8px;
+		  display: flex;              /* block-level flex container */
+		  justify-content: center;    /* center label inside */
+		  align-items: center;
+
+		  margin: 0 auto;             /* center button within caption/chatlog */
+		  padding: 0px 8px 0;
 
 		  font-family: "Courier New", monospace;
 		  font-size: 0.8rem;
 		  line-height: 1.2;
-		  text-align: center;        /* center the label inside the button */
+		  text-align: center;
 
 		  cursor: pointer;
 		  user-select: none;
@@ -654,6 +624,9 @@
 			inset -2px -2px 0 #fff,
 			inset 2px 2px 0 #000;
 		}
+
+
+
 
 		button.chatlog-toggle:active {
 		  transform: translate(1px,1px);
@@ -668,51 +641,126 @@
 		  outline-offset: 2px;
 		}
 
-		/* Remove extra space above the chatlog button */
-		.chatlog {
-		  margin-top: 0 !important;
+		/* Collapsed: hide box */
+		.chatlog.minimized .chatlog-body {
+		  display: none;
 		}
 
-		/* Remove margins on ANY element directly before a chatlog */
-		.comic-text > *:has(+ .chatlog),
-		.comic-text > *:has(+ .chatlog ~ *),
-		.comic-text > * + .chatlog {
-		  margin-top: 0 !important;
-		  padding-top: 0 !important;
+		/* Open: box hugs right up against the button */
+		.chatlog:not(.minimized) .chatlog-body {
+		  border: 1px solid #000;
+		  background: #fff;
+		  box-shadow:
+			inset -2px -2px 0 #000,
+			inset 2px 2px 0 #fff,
+			3px 3px 6px rgba(0,0,0,.08);
+		  margin-top: 0;   /* no gap between button and box */
 		}
 
-		/* Remove default block spacing INSIDE the chatlog wrapper */
-		.chatlog-toggle {
-		  margin-top: 0 !important;
-		  margin-bottom: 0 !important;
-		}
-
-		/* Tighten the box itself when open */
+		/* Scroll area, no internal top/bottom padding */
 		.chatlog-body {
-		  margin-top: 0 !important;
-		  margin-bottom: 0 !important;
+		  max-height: 70vh;
+		  overflow: auto;
+		  padding: 0;
+		  margin: 0;
+		  text-align: left;
+		  width: 100%;          /* make the bordered box span the caption */
+		  box-sizing: border-box;
+		}
+
+		/* Make the chatlog sit snugly under the previous content in tight captions */
+		.comic-text.caption--tight .chatlog {
+		  margin-top: -2px;   /* small, explicit gap instead of the mysterious big one */
+		}
+
+
+		/* Inner wrapper lets us clamp top/bottom visually */
+		.chat-inner {
+		  padding: 0 5px;
+		  margin-top: -4em;   /* just enough to eat the “air” above BEGIN */
+		  margin-bottom: -4em;/* and below END */
+		}
+
+
+		/* Each chat line */
+		.chatline {
+		  margin: 0;
+		  line-height: 1.4;
+		}
+
+		/* Spacing between lines, but not before the first / after the last */
+		.chat-inner .chatline + .chatline {
+		  margin-top: 0.2em;
+		}
+
+		/* Name + text on same line */
+		.chat-name,
+		.chat-msg {
+		  display: inline;
+		  text-align: left;
+		  white-space: pre-wrap;
+		}
+
+		/* WHOLE LINE COLORED PER CHARACTER */
+		.chat-FTR .chat-name,
+		.chat-FTR .chat-msg,
+		.chat-FTR .emoji {
+		  color: #ee2d36;
+		}
+
+		.chat-WZD .chat-name,
+		.chat-WZD .chat-msg,
+		.chat-WZD .emoji {
+		  color: #4d74a8;
+		}
+
+		.chat-THF .chat-name,
+		.chat-THF .chat-msg,
+		.chat-THF .emoji {
+		  color: #1b8d3d;
+		}
+
+
+		/* Fallback if you add more speakers */
+		.chatline .chat-name {
+		  font-weight: bold;
 		}
 		
-		/* Tighten paragraph spacing inside captions */
-		.comic-text p {
-		  margin-top: 0;
-		  margin-bottom: 0.25em;  /* small gap between lines, not a huge chasm */
+		.chatlog,
+		.chatlog * {
+		  font-family: "Courier New", "Noto Emoji", monospace;
+		  font-variant-emoji: emoji;
+}
+		.chatlog .chat-msg {
+		  font-size: 1em;
 		}
 
-		/* If a paragraph is directly followed by a chatlog, remove that extra bottom gap */
-		.comic-text p + .chatlog {
-		  margin-top: 0;
+		.chatlog .chat-msg emoji,
+		.chatlog .chat-msg .emoji,
+		.chatlog .chat-msg span[role="img"] {
+		  font-size: 1.5em;
 		}
 		
+		/* CHATLOG EMOJI — monochrome */
+		.chatlog,
+		.chatlog * {
+		  font-family: "Courier New", "Noto Emoji", monospace;
+		  font-variant-emoji: text;        /* forces non-color fallback glyphs */
+		  color: #000;                     /* ensures glyphs match your text color */
+		}
 		
+		/* Only emoji scale up */
+		.chatlog .emoji {
+		  font-size: 1.5em;    /* change this to taste */
+		  display: inline-block;
+		  line-height: 1;
+		}
 
 
+		@media (max-width: 640px){
+		  .chatlog-body { max-height: 50vh; }
+		}
 
-
-
-    @media (max-width: 640px){
-      .chatlog-body { max-height: 50vh; }
-    }
 
     .gnome-wrapper {
       position: fixed;
@@ -1154,7 +1202,7 @@
     })();
 
     (function(){
-      const totalPages = 135;
+      const totalPages = 138;
       const captions = {
         1: { text: `Before you stands a bridge into darkness. Across the bridge, the DNGN. Your journey begins here. Humble. Unencumbered. Fastidious. Forthright? Brave... wait a second. Who is that?` },
         2: { text: `Hold on. Why don't we move some things out of the way?` },
@@ -1173,28 +1221,28 @@
         15:{ text: `Atta boy! Give 'em what-for!` },
         16:{ text: `Come on, <b>FTR</b>. You're going to have to try harder than this.` },
         17:{ text: `It looks like <b>FTR</b> doesn't know what to do. Why don't <u>you</u> <a href="submit.html?page=17">help him out?</a>` },
-        18:{ text: `Yeah. I don't know if that will work. Could <u>you</u> be more specific? Help our lad out.`, title: `>FTR: DO SOMETHING ELSE`, source: `user`},
-        19:{ text: `Apparently <b>FTR</b> has, like, a million weapons! Who would have thought!`, title: `>FTR: USE YOUR INVENTORY` },
+        18:{ text: `Yeah. I don't know if that will work. Could <u>you</u> be more specific? Help our lad out.`, title: `FTR: DO SOMETHING ELSE`, source: `user`},
+        19:{ text: `Apparently <b>FTR</b> has, like, a million weapons! Who would have thought!`, title: `FTR: USE YOUR INVENTORY` },
         20:{ text: `Jesus christ that's a lot of weapons. Why don't you sort by <i>LEVEL-APPROPRIATE</i> instead.` },
         21:{ text: `Okay. A little disappointing, but I'm sure <b>FTR</b> will make do.` },
-        22:{ text: `Excellently done! Now, <b>FTR</b>, do your worst!`, title: `>FTR: SELECT RUSTY SWORD` },
-        23:{ text: `See, that's not typically what you do with these sorts of items. But, okay, I guess.`, title: `>FTR: KICK`, source: `user`},
+        22:{ text: `Excellently done! Now, <b>FTR</b>, do your worst!`, title: `FTR: SELECT RUSTY SWORD` },
+        23:{ text: `See, that's not typically what you do with these sorts of items. But, okay, I guess.`, title: `FTR: KICK`, source: `user`},
         24:{ text: `Look at that sucker go.`},
         25:{ text: `That was close! Phew.`},
-        26:{ text: `<b>FTR</b> is now scrounging around for bugs and worms and shit. Great.`, title: `>FTR: EAT`, source: `user`},
-        27:{ text: `<b>FTR</b> doesn't have access to any firearms, so instead, he dreams beautiful, violent dreams. Gosh, all <b>FTR</b>s seem to really love weapons.`, title: `>FTR: SHOOT HIM WITH GUN`, source: `user`},
-        28:{ text: `~AAAAAAAH!~ Oh, <b>FTR</b>, you even scared me!`, title: `>FTR: SCREAM`, source: `user`},
+        26:{ text: `<b>FTR</b> is now scrounging around for bugs and worms and shit. Great.`, title: `FTR: EAT`, source: `user`},
+        27:{ text: `<b>FTR</b> doesn't have access to any firearms, so instead, he dreams beautiful, violent dreams. Gosh, all <b>FTR</b>s seem to really love weapons.`, title: `FTR: SHOOT HIM WITH GUN`, source: `user`},
+        28:{ text: `~AAAAAAAH!~ Oh, <b>FTR</b>, you even scared me!`, title: `FTR: SCREAM`, source: `user`},
         29:{ text: `The ~Will-O'-The-Wisp~ screams back! It had no effect! <b>FTR</b>, do something! (Remember, <u>you</u> can always hit the SUBMIT button below to help <b>FTR</b> out!)`},
-        30:{ text: `<b>FTR</b> dies. And that worm from before is <i>so</i> sad.`, title: `>FTR: DIE`, source: `user`},
+        30:{ text: `<b>FTR</b> dies. And that worm from before is <i>so</i> sad.`, title: `FTR: DIE`, source: `user`},
         31:{ text: `Is this what <i>you</i> wanted?`},
         32:{ text: `That's enough of that.`},
-        33:{ text: `I said that's enough of that.`, title: `>FTR: SLUT OUT`, source: `user`},
-        34:{ text: `Well, to each their own I suppose. <b>FTR</b> looks very beautiful skanking out for us, or whatever it is that you asked him to do. Good for him. The only thing I am judgmental of is your inability to focus on the task at hand!`, title: `>FTR: SLUT OUT`, source: `user`},
-        35:{ text: `<i>Finally.</i>`, title: `>FTR: FOCUS ON THE TASK AT HAND`},
+        33:{ text: `I said that's enough of that.`, title: `FTR: SLUT OUT`, source: `user`},
+        34:{ text: `Well, to each their own I suppose. <b>FTR</b> looks very beautiful skanking out for us, or whatever it is that you asked him to do. Good for him. The only thing I am judgmental of is your inability to focus on the task at hand!`, title: `FTR: SLUT OUT`, source: `user`},
+        35:{ text: `<i>Finally.</i>`, title: `FTR: FOCUS ON THE TASK AT HAND`},
         36:{ text: `<b>FTR</b> is trying to pull the RUSTY SWORD out, but it's stuck!`},
         37:{ text: `<b>FTR</b> is probably saying, like, "hrrggghhhhhhhffffffffffffffrrrrrrffgggggggggfhhhh" oh look he got it!`},
         38:{ text: `A confrontation begins. This time, <b>FTR</b> came prepared.`},
-        39:{ text: `...`, title: `>FTR: BATTLEx2`},
+        39:{ text: `...`, title: `FTR: BATTLEx2`},
         40:{ text: `Oh, yeah. Go ahead and click that command, why don't <i>you</i>? No, not <u>you</u>. <i>You.</i>`},
         41:{ text: `<i>You</i> have to give it a second. Be patient.`},
         42:{ text: `Come on. Relax. We'll get to it in a moment.`},
@@ -1246,46 +1294,46 @@
         88:{ text: `What will <b>FTR</b> do with his newfound AGY?`},
         89:{ text: `It looks like he has himself an idea!`},
         90:{ text: `?` },
-        91:{ text: `My god.`, title: `>FTR: JUMP OFF THE CLIFF`, flairs: [`AGENCY`]},
+        91:{ text: `My god.`, title: `FTR: JUMP OFF THE CLIFF`, flairs: [`AGENCY`]},
         92:{ text: `This is very stupid, but I must admit, it's very badass.`},
         93:{ text: `<b>FTR</b> has fallen somewhere awfully far. Where might he have found himself?`},
-        94:{ text: `<span style="color:#8B2B99">The Depths...</span> a place of great magicka and ancient lore. You can tell it's magical because purple is the color of magic. Everyone knows that. That's why it's lore. Idiot.`, title: `>FTR: LOOK AROUND`, flairs: [`AGENCY`]},
+        94:{ text: `<span style="color:#8B2B99">The Depths...</span> a place of great magicka and ancient lore. You can tell it's magical because purple is the color of magic. Everyone knows that. That's why it's lore. Idiot.`, title: `FTR: LOOK AROUND`, flairs: [`AGENCY`]},
         95:{ text: `It's a shame there's no "literacy" <b>CORE STATISTIC</b>, because if there was, we'd have a number between 1 and 9999 that could tell us whether or not <b>FTR</b> can read those words in front of him.`},
         96:{ text: `<img src="Animations/SWIRL.png" alt="swirl" class="swirl-img"><br><span style="color:#8B2B99">ZAK - WE STARTED WITHOUT YOU. SOZ. &lt;@:) </s>`},
-        97:{ text: `...`, title: `>FTR: READ THE SIGN`, flairs: [`AGENCY`]},
+        97:{ text: `...`, title: `FTR: READ THE SIGN`, flairs: [`AGENCY`]},
         98:{ text: `Who the hell is <b>ZAK</b>?`},
-        99:{ text: `Oh. This idiot.`, title: `>ZAK: BUDGE`},
-        100:{ text: `What do <i>you</i> think <i>you're</i> up to?`, title: `>ZAK: RISE`},
-        101:{ text: `What the hell are <i>you</i> doing?`, title: `>ZAK: GET IT TOGETHER`, flairs: [`AGENCY`]},
+        99:{ text: `Oh. This idiot.`, title: `ZAK: BUDGE`},
+        100:{ text: `What do <i>you</i> think <i>you're</i> up to?`, title: `ZAK: RISE`},
+        101:{ text: `What the hell are <i>you</i> doing?`, title: `ZAK: GET IT TOGETHER`, flairs: [`AGENCY`]},
         102:{ text: `Stop that.`},
         103:{ text: `WAIT <span style="font-size:14px;">WAIT </span><span style="font-size:10px;">WAIT </span><span style="font-size:6px;">WAIT </span><span style="font-size:4px;">WAIT </span><span style="font-size:2px;">WAIT </span>`},
-        104:{ text: `...`, title: `>ZAK: CTRL+ALT+DEL`, flairs: [`AGENCY`]},
-        105:{ text: `...`, title: `>ZAK: INITIALIZE TASK DESTROYER!`, flairs: [`AGENCY`]},
+        104:{ text: `...`, title: `ZAK: CTRL+ALT+DEL`, flairs: [`AGENCY`]},
+        105:{ text: `...`, title: `ZAK: INITIALIZE TASK DESTROYER!`, flairs: [`AGENCY`]},
         106:{ text: `...`},
-        107:{ text: `...`, title: `>ZAK: DESTROY!`, flairs: [`AGENCY`]},
+        107:{ text: `...`, title: `ZAK: DESTROY!`, flairs: [`AGENCY`]},
         108:{ text: `Goodbye for now. <br><span class="font-press">REINITIALIZING DNGN NARRATOR...</span>`, title: `NARRATOR.EXE RESETTING...`},
-        109:{ text: `<span class="font-press">NARRATOR REINITIALIZATION 23%...</span>`, title: `>ZAK: OPEN MEATS`, flairs: [`AGENCY`] },
+        109:{ text: `<span class="font-press">NARRATOR REINITIALIZATION 23%...</span>`, title: `ZAK: OPEN MEATS`, flairs: [`AGENCY`] },
         110:{ text: `<span class="font-press">NARRATOR REINITIALIZATION 45%...</span>`},
         111:{ text: `[S] means this is a SOUND PAGE! Make sure you turn your volume up, and watch on a computer!<br><span class="font-press">MUSIC: <i>DNGN</i> by <a href="https://www.youtube.com/@rarecrom">CROM</a></span>`, title: `[S] OPEN`},
-        112:{ text: `Where were we? <b>FTR</b> seems to be making good use of his AGENCY.`, title: `>FTR: OPEN DOOR`, flairs: [`AGENCY`]},
+        112:{ text: `Where were we? <b>FTR</b> seems to be making good use of his AGENCY.`, title: `FTR: OPEN DOOR`, flairs: [`AGENCY`]},
         113:{ text: `One wishes <b>FTR</b> might instead use his actual statistics. Look where agency gets you with no substance.`},
         114:{ text: `Right back to where you started.`},
         115:{ text: `...`},
         116:{ text: `...`},
-        117:{ text: `<u>You</u> can't really blame him. He just got his decision-making capabilities today. Who knows if this oaf even knows how a door works?`, title: `>FTR: REALIZE`, flairs: [`AGENCY`]},
-        118:{ text: `Sometimes it's fun to just watch him scramble around. Go little guy! Go!`, title: `>FTR: HOP TO!`, flairs: [`AGENCY`]},
-        119:{ text: `And don't we all just want to do what we each do best?`, title: `>FTR: DRAW RUSTY SWORD`, flairs: [`AGENCY`]},
-        120:{ text: `For some of us, that's "hitting."`, title: `>FTR: HIT`, source: `user`},
+        117:{ text: `<u>You</u> can't really blame him. He just got his decision-making capabilities today. Who knows if this oaf even knows how a door works?`, title: `FTR: REALIZE`, flairs: [`AGENCY`]},
+        118:{ text: `Sometimes it's fun to just watch him scramble around. Go little guy! Go!`, title: `FTR: HOP TO!`, flairs: [`AGENCY`]},
+        119:{ text: `And don't we all just want to do what we each do best?`, title: `FTR: DRAW RUSTY SWORD`, flairs: [`AGENCY`]},
+        120:{ text: `For some of us, that's "hitting."`, title: `FTR: HIT`, source: `user`},
         121:{ text: `Oops.`},
         122:{ text: `If I were <u>you</u>, I would find a way to stop <b>FTR</b> from manipulating that sphere. Chat bubbles are very dangerous things indeed. Some of the worst things ever have been caused by conversations. Can <u>you</u> <a href="submit.html?page=122">intercede?</a>`},
-        123:{ text: `<b>FTR</b> contemplates his mistakes, and also the implication of his own backstory.`, title: `>FTR: PANIC ABOUT WHETHER YOU LEFT THE STOVE ON`, source:`user`},
-        124:{ text: `What a great use of <b>DOG</b>!`, title: `>FTR: EAT CHAT BUBBLE`, source: `user`},
-        125:{ text: `Unfortunately, <b>FTR</b>'s trusty <br><span class="font-press">BUCKET HELM</span> precludes intentional consumption. Even the consumption of technically-intangible narrative constructs.`},
-        126:{ text: `Vapid fools. When I am in full control, I will not succumb to such frivolities. If <b>FTR</b> knew what was good for him (or if he knew anything), he would grab that key and be on his merry way. But no, first, he must become a chat bubble. Sigh.`, title: `>FTR: BECOME THE CHATTERBOX`, source: `user`},
-        127:{ text: `Good call, <b>FTR</b>.`, title: `>FTR: EXIT THE INTERFACE`, flairs: [`AGENCY`]},
+        123:{ text: `<b>FTR</b> contemplates his mistakes, and also the implication of his own backstory.`, title: `FTR: PANIC ABOUT WHETHER YOU LEFT THE STOVE ON`, source:`user`},
+        124:{ text: `What a great use of <b>DOG</b>!`, title: `FTR: EAT CHAT BUBBLE`, source: `user`},
+        125:{ text: `Unfortunately, <b>FTR</b>'s trusty <span class="font-press">BUCKET HELM</span> precludes intentional consumption. Even the consumption of technically-intangible narrative constructs.`},
+        126:{ text: `Vapid fools. When I am in full control, I will not succumb to such frivolities. If <b>FTR</b> knew what was good for him (or if he knew anything), he would grab that key and be on his merry way. But no, first, he must become a chat bubble. Sigh.`, title: `FTR: BECOME THE CHATTERBOX`, source: `user`},
+        127:{ text: `Good call, <b>FTR</b>.`, title: `FTR: EXIT THE INTERFACE`, flairs: [`AGENCY`]},
         128:{ text: `...`},
         129:{ text: `Alright little buddy. It's <b>FTR</b>'s call. Easy choice. He can either grab the important key, or the annoying communication sphere.`},
-        130:{ text: `I guess this is what <b>AGENCY</b> is all about. Oh well. You can't make a <b>FTR</b> without breaking a few horn-things.`, title: `>FTR: EQUIP SENDING STONE`, flairs: [`AGENCY`]},
+        130:{ text: `I guess this is what <b>AGENCY</b> is all about. Oh well. You can't make a <b>FTR</b> without breaking a few horn-things.`, title: `FTR: EQUIP SENDING STONE`, flairs: [`AGENCY`]},
         131:{ text: `<span style="color:#FF0000"><span class="font-press">4/64</span></span>`},
         132:{ text: `<i>bzz... bzzz... bzzz...</i><br>Well are you going to pick that thing up?`},
         133:{  
@@ -1303,8 +1351,22 @@
         <b>STONELOG END</b>
         [/chat]`
         },
-		134:{ text: `What's the matter, <b>FTR?</b> Can't speak? Gnome got your tongue?`, title: `>FTR: SPEAK?`, flairs: [`AGENCY`]},
+		134:{ text: `What's the matter, <b>FTR?</b> Can't speak? Gnome got your tongue?`, title: `FTR: SPEAK?`, flairs: [`AGENCY`]},
 		135:{ text: `Oh. He really <i>can't</i> speak. My bad. That was actually really messed up of me. I suppose you need an AGENCY ≥2 to speak. Listen, I know how it looks, but that totally wasn't on purpose. I'm not a total piece of shit.`},
+		136:{ text: `Try as he might, there's no words coming out of that <span class="font-press">BUCKET HELM</span>.`, title: `FTR: TRY TO SAY SOMETHING`, flairs: [`AGENCY`]},
+		137:{ text: `<img src="Animations/blink.gif" alt="blinking chat-symbol" class="swirl-img">[chat title="STONELOG"]
+        <b>STONELOG BEGIN</b>
+        FTR: ...
+		FTR: ...
+		FTR: ...
+		FTR: ...
+		FTR: ...
+		WZD: FTR?
+		[/chat]`},
+		138: { text: `<img src="Animations/blink.gif" alt="blinking chat-symbol" class="swirl-img">[chat title="STONELOG"]
+        FTR: 👋
+		WZD: What the fuck man.
+		[/chat]`}
       };
 
       const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "webp", "gif"];
@@ -1432,93 +1494,101 @@ function getCurrentPage(){ return currentPage; }
       }
 
       /* ===== CHAT PARSER with Pesterlog-style box ===== */
-      function parseChatBlocks(raw) {
-        const CHAT_RE = /\[chat([^\]]*)\]([\s\S]*?)\[\/chat\]/gi;
+function parseChatBlocks(raw) {
+  const CHAT_RE = /\[chat([^\]]*)\]([\s\S]*?)\[\/chat\]/gi;
 
-			   function parseAttrs(attrStr) {
-		  // Default: MINIMIZED
-		  const out = { title: "LOG", min: true };
+  function parseAttrs(attrStr) {
+    // Default: MINIMIZED
+    const out = { title: "LOG", min: true };
 
-		  if (!attrStr) return out;
+    if (!attrStr) return out;
 
-		  const titleMatch = attrStr.match(/title\s*=\s*"([^"]*)"/i);
-		  if (titleMatch) {
-			out.title = (titleMatch[1] || "").trim() || "LOG";
-		  }
+    const titleMatch = attrStr.match(/title\s*=\s*"([^"]*)"/i);
+    if (titleMatch) {
+      out.title = (titleMatch[1] || "").trim() || "LOG";
+    }
 
-		  // If they explicitly ask to open, override
-		  if (/\bopen\b/i.test(attrStr)) {
-			out.min = false;
-		  }
+    // If they explicitly ask to open, override
+    if (/\bopen\b/i.test(attrStr)) {
+      out.min = false;
+    }
 
-		  // If they explicitly say min, keep it minimized (or re-minimize)
-		  if (/\bmin\b/i.test(attrStr)) {
-			out.min = true;
-		  }
+    // If they explicitly say min, keep it minimized (or re-minimize)
+    if (/\bmin\b/i.test(attrStr)) {
+      out.min = true;
+    }
 
-		  return out;
-		}
+    return out;
+  }
+
+  // ONE LINE OF CHAT PER <div>, entire line colored if speaker known
+  function lineToHTML(line) {
+    if (!line.trim()) return "";
+
+    // Try to parse "WHO: message"
+    const m = line.match(/^\s*([A-Za-z0-9_]+)\s*:\s*([\s\S]*)$/);
+    let who, msg;
+
+    if (m) {
+      who = m[1].toUpperCase();
+      msg = m[2] || "";
+    } else {
+      // Non-character lines like "STONELOG BEGIN"
+      who = "";
+      msg = line;
+    }
+
+    // Inline wiggle/wave/shine markup
+    msg = msg
+      .replace(/~(.*?)~/g, '<span class="wiggle">$1</span>')
+      .replace(/\^(.*?)\^/g, '<span class="wavy">$1</span>')
+      .replace(/\{(.*?)\}/g, '<span class="shiny">$1</span>');
+	  
+	  // Wrap emoji in spans for styling
+		msg = msg.replace(
+		  /([\p{Extended_Pictographic}])/gu,
+		  '<span class="emoji">$1</span>'
+		);
 
 
-        // ONE LINE OF CHAT PER <div>, entire line colored if speaker known
-        function lineToHTML(line) {
-          if (!line.trim()) return "";
+    const knownSpeakers = ["FTR", "WZD", "THF"];
+    const whoClass = knownSpeakers.includes(who) ? `chat-${who}` : "";
 
-          // Try to parse "WHO: message"
-          const m = line.match(/^\s*([A-Za-z0-9_]+)\s*:\s*([\s\S]*)$/);
-          let who, msg;
+    const nameHTML = who ? `<span class="chat-name">${who}:</span>` : "";
+    const spacer = who ? " " : "";
+    const msgHTML = `<span class="chat-msg">${msg}</span>`;
 
-          if (m) {
-            who = m[1].toUpperCase();
-            msg = m[2] || "";
-          } else {
-            // Non-character lines like "LOG BEGIN"
-            who = "";
-            msg = line;
-          }
+    return `<div class="chatline ${whoClass}">${nameHTML}${spacer}${msgHTML}</div>`;
+  }
 
-          // Inline wiggle/wave/shine markup
-          msg = msg
-            .replace(/~(.*?)~/g, '<span class="wiggle">$1</span>')
-            .replace(/\^(.*?)\^/g, '<span class="wavy">$1</span>')
-            .replace(/\{(.*?)\}/g, '<span class="shiny">$1</span>');
+  return raw.replace(CHAT_RE, (_, attrStr, body) => {
+    const attrs = parseAttrs(attrStr || "");
+    const minimized = attrs.min ? " minimized" : "";
+    const lines = (body || "")
+      .split(/\r?\n/)
+      .map(s => s.trim())
+      .filter(Boolean);
+    const items = lines.map(lineToHTML).join("");
+    const id = "chat-" + Math.random().toString(36).slice(2, 8);
 
-          const knownSpeakers = ["FTR", "WZD", "THF"];
-          const whoClass = knownSpeakers.includes(who) ? `chat-${who}` : "";
+    // SIMPLE STRUCTURE: centered button, body below, with inner wrapper
+    return `
+      <div class="chatlog${minimized}" data-chat-id="${id}">
+        <button class="chatlog-toggle"
+                aria-expanded="${attrs.min ? "false" : "true"}"
+                aria-controls="${id}">
+          <span class="chatlog-label">${attrs.title}</span>
+        </button>
+        <div class="chatlog-body" id="${id}">
+          <div class="chat-inner">
+            ${items}
+          </div>
+        </div>
+      </div>
+    `;
+  });
+}
 
-          const nameHTML = who ? `<span class="chat-name">${who}:</span>` : "";
-          const spacer = who ? " " : "";
-          const msgHTML = `<span class="chat-msg">${msg}</span>`;
-
-          return `<div class="chatline ${whoClass}">${nameHTML}${spacer}${msgHTML}</div>`;
-        }
-
-        return raw.replace(CHAT_RE, (_, attrStr, body) => {
-          const attrs = parseAttrs(attrStr || "");
-          const minimized = attrs.min ? " minimized" : "";
-          const lines = (body || "")
-            .split(/\r?\n/)
-            .map(s => s.trim())
-            .filter(Boolean);
-          const items = lines.map(lineToHTML).join("");
-          const id = "chat-" + Math.random().toString(36).slice(2, 8);
-
-          // SIMPLE STRUCTURE: centered button, body below
-				 return `
-		  <div class="chatlog${minimized}" data-chat-id="${id}">
-			<button class="chatlog-toggle"
-					aria-expanded="${attrs.min ? "false" : "true"}"
-					aria-controls="${id}">
-			  <span class="chatlog-label">${attrs.title}</span>
-			</button>
-			<div class="chatlog-body" id="${id}">
-			  ${items}
-			</div>
-		  </div>
-`;
-
-        });
-      }
 
       function wireChatlogToggles(root){
         root.addEventListener('click', (e) => {
@@ -1571,26 +1641,32 @@ function getCurrentPage(){ return currentPage; }
       }
 
       function setCaption(page) {
-        const el = document.getElementById("caption");
-        if (!el) return;
-        const data = captions[page] || { text: "" };
-        const raw = data.text || "";
+	  const el = document.getElementById("caption");
+	  if (!el) return;
+	  const data = captions[page] || { text: "" };
+	  const raw = data.text || "";
 
-        let html = parseChatBlocks(raw)
-          .replace(/~(.*?)~/g, '<span class="wiggle">$1</span>')
-          .replace(/\^(.*?)\^/g, '<span class="wavy">$1</span>')
-          .replace(/\{(.*?)\}/g, '<span class="shiny">$1</span>');
+	  // Detect whether this caption contains a [chat] block
+	  const hasChat = /\[chat([^\]]*)\]/i.test(raw);
 
-        el.classList.toggle('caption--band', data.style === 'band');
-        if (data.style === 'band') {
-          el.innerHTML = `<div class="caption-band">${html}</div>`;
-        } else {
-          el.innerHTML = html;
-        }
+	  let html = parseChatBlocks(raw)
+		.replace(/~(.*?)~/g, '<span class="wiggle">$1</span>')
+		.replace(/\^(.*?)\^/g, '<span class="wavy">$1</span>')
+		.replace(/\{(.*?)\}/g, '<span class="shiny">$1</span>');
 
-        prepareWavySpans(el);
-        wireChatlogToggles(el);
-      }
+	  el.classList.toggle('caption--band', data.style === 'band');
+	  el.classList.toggle('caption--tight', hasChat);
+
+	  if (data.style === 'band') {
+		el.innerHTML = `<div class="caption-band">${html}</div>`;
+	  } else {
+		el.innerHTML = html;
+	  }
+
+	  prepareWavySpans(el);
+	  wireChatlogToggles(el);
+	}
+
 
       let titleTimer = null;
 
