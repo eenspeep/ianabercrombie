@@ -414,35 +414,34 @@
 	  flex-direction: column;
 	  align-items: center;
 
-	  padding-top: 0px;
-	  padding-bottom: 0px;
-	  gap: 0px;           /* controls space between image, button, and box */
+	  padding-top: 0;
+	  padding-bottom: 0;
+	  gap: 0.25em;        /* tiny, controlled space between blocks */
+
+	  max-width: 82%;
+	  width: 100%;
+	  align-self: center;
+
+	  /* KEY PART: don't treat newlines as visible blank rows */
+	  white-space: normal;
 	}
 
-	/* TIGHT CAPTION – used when there's a [chat] block */
-		.comic-text.caption--tight {
-		  display: flex;
-		  flex-direction: column;
-		  align-items: center;
-		  justify-content: flex-start;
+	/* Still nuke margins on children so the gap is only from `gap:` */
+	.comic-text.caption--tight > * {
+	  margin-top: 0;
+	  margin-bottom: 0;
+	}
 
-		  /* remove vertical padding so the chatlog can hug the borders more */
-		  padding-top: 0;
-		  padding-bottom: 0;
+	/* Chatlog body inside tight captions should not collapse to height 0 */
+	.comic-text.caption--tight .chatlog-body {
+	  flex: 1 1 auto;     /* let it expand to natural size */
+	  min-height: 5em;    /* guarantees it's always visible when opened */
+	  width: 100%;
+	}
 
-		  gap: 4px;             /* small breathing room between image, button, box */
 
-		  /* keep the same width behavior as normal captions */
-		  width: 100%;
-		  max-width: 82%;
-		  align-self: center;
-		}
 
-		/* no extra margins on children (chatlog wrapper, etc.) */
-		.comic-text.caption--tight > * {
-		  margin-top: 0;
-		  margin-bottom: 0;
-		}
+
 
 
 
@@ -676,10 +675,34 @@
 
 		/* Inner wrapper lets us clamp top/bottom visually */
 		.chat-inner {
-		  padding: 0 5px;
+		  padding: 5 5px;
 		  margin-top: -4em;   /* just enough to eat the “air” above BEGIN */
-		  margin-bottom: -4em;/* and below END */
+		  margin-bottom: 0em;/* and below END */
 		}
+		
+		/* Default: aggressive crop for pure logs */
+		.chat-inner {
+		  padding: 5 5px;
+		  margin-top: 5em;
+		  margin-bottom: -5em;
+		}
+
+		/* BUT: when the chatlog is inside a caption--tight (chat + extra text),
+		   we do NOT want to crop it into oblivion */
+		.comic-text.caption--tight .chat-inner {
+		  margin-top: 0;
+		  margin-bottom: 0;
+		  padding-top: 4px;
+		  padding-bottom: 0px;
+		}
+
+		/* Give mixed-caption chatlogs a comfortable visible height */
+		.comic-text.caption--tight .chatlog-body {
+		  min-height: 10em;   /* enough for several lines */
+		  max-height: 40vh;   /* still scroll after it gets tall */
+		  overflow-y: auto;
+		}
+
 
 
 		/* Each chat line */
@@ -1202,7 +1225,7 @@
     })();
 
     (function(){
-      const totalPages = 138;
+      const totalPages = 139;
       const captions = {
         1: { text: `Before you stands a bridge into darkness. Across the bridge, the DNGN. Your journey begins here. Humble. Unencumbered. Fastidious. Forthright? Brave... wait a second. Who is that?` },
         2: { text: `Hold on. Why don't we move some things out of the way?` },
@@ -1366,7 +1389,25 @@
 		138: { text: `<img src="Animations/blink.gif" alt="blinking chat-symbol" class="swirl-img">[chat title="STONELOG"]
         FTR: 👋
 		WZD: What the fuck man.
-		[/chat]`}
+		[/chat]`},
+		139: { text: `<img src="Animations/blink.gif" alt="blinking chat-symbol" class="swirl-img">[chat title="STONELOG"]
+        FTR: 😃👋 😃👋 😃👋 😃👋 😃👋 😃👋 😃👋 😃👋
+		WZD: ??????????????????????????????????????? Hello? Where have you been?
+		FTR: 🕺💃
+		WZD: Oh, I guess I didn't consider 🕺💃. Seems pretty simple in retrospect.
+		WZD: Where are you?
+		WZD: I'm up to my brow in gnomes.
+		WZD: My robes are redenning with gnome ichor.
+		WZD: THF is nowhere to be found.
+		WZD: Some kind of bug hunt.
+		WZD: I don't know.
+		WZD: Get your tush in here.
+		WZD: I have yet to learn a translate location spell. But the scrollsmith told me I could glean it from the highest ontologues.
+		FTR: ❓
+		WZD: I'm not sure either.
+		[/chat]<div style="text-align: left;">
+  <br><span>It seems <b>FTR</b> is capable of some simple tasks I thought him unable to perform. Well done boy! As for this <b>WZD</b> on the other hand...</span>
+</div>`, title: `FTR: JUMP WITH JOVIALITY`, flairs: [`AGENCY`]},
       };
 
       const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "webp", "gif"];
