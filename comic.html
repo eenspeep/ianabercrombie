@@ -47,15 +47,30 @@
       0%   { background-position: 200% 0; }
       100% { background-position: -200% 0; }
     }
-    .shiny {
-      display:inline-block;
-      color: transparent;
-      background: linear-gradient(90deg, currentColor 0 30%, #ffffff 50%, currentColor 70% 100%);
-      background-size: 200% 100%;
-      -webkit-background-clip: text;
-      background-clip: text;
-      animation: shine 2.2s linear infinite;
-    }
+    /* Base shiny: always visible text */
+		.shiny {
+		  display: inline-block;
+		  font-weight: bold;
+		  color: inherit;             /* fallback: just use line color */
+		  position: relative;
+		}
+
+		/* Only do the gradient-clip trick when supported */
+		@supports (-webkit-background-clip: text) or (background-clip: text) {
+		  .shiny {
+			color: transparent;
+			background: linear-gradient(
+			  90deg,
+			  currentColor 0 30%,
+			  #ffffff 50%,
+			  currentColor 70% 100%
+			);
+			background-size: 200% 100%;
+			-webkit-background-clip: text;
+			background-clip: text;
+			animation: shine 2.2s linear infinite;
+		  }
+		}
 
     @media (prefers-reduced-motion: reduce) {
       .wiggle { animation: none !important; }
@@ -1225,7 +1240,7 @@
     })();
 
     (function(){
-      const totalPages = 141;
+      const totalPages = 143;
       const captions = {
         1: { text: `Before you stands a bridge into darkness. Across the bridge, the DNGN. Your journey begins here. Humble. Unencumbered. Fastidious. Forthright? Brave... wait a second. Who is that?` },
         2: { text: `Hold on. Why don't we move some things out of the way?` },
@@ -1410,6 +1425,8 @@
 </div>`, title: `FTR: JUMP WITH JOVIALITY`, flairs: [`AGENCY`]},
 		140: { text: `This <b>WZD</b> may be in too deep. Up gnome creek without a wand, so to speak.`, title: `SPECTATOR: BE THE WZD`},
 		141: { text: `Well, maybe not literally. Nice wand I guess. Way to ruin my whole thing. I've decided I don't like this pointy-headed walking robe.`},
+		142: { text: `Time to spirit this freak away to the <span class="font-press">^INTERFACE^</span></span>.`, title: ``, flairs: [``]},
+		143: { text: `A VOTE MUST TAKE PLACE IN ORDER TO PLACE WZD'S STATISTICS. PLEASE VISIT THE <a href="https://discord.gg/NezSfg2pJj">COMMUNITY EVENTS CHANNEL</a> AND VOTE BY 12/5/2025 AT 12PM EST TO PARTICIPATE. </b>`},
       };
 
       const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "webp", "gif"];
