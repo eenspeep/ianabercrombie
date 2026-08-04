@@ -25,7 +25,7 @@
   // 2) Paste YOUR account's UID (the editor's sign-in bar prints it after you
   //    log in the first time). It must match the uid in firestore.rules /
   //    storage.rules.
-  const OWNER_UID = "TODO_YOUR_UID";
+  const OWNER_UID = "URBZG88uPMNkaHhZoRRtIqvo9hl2";
 
   const hasSDK = typeof firebase !== "undefined" && typeof firebase.initializeApp === "function";
   const configured = hasSDK && FIREBASE_CONFIG.apiKey && !String(FIREBASE_CONFIG.apiKey).startsWith("TODO");
