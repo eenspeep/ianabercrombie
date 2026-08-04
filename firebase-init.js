@@ -13,12 +13,13 @@
   // 1) Paste your Firebase web config (Firebase console → Project settings →
   //    "Your apps" → SDK setup and configuration → Config):
   const FIREBASE_CONFIG = {
-    apiKey: "TODO_API_KEY",
-    authDomain: "TODO.firebaseapp.com",
-    projectId: "TODO",
-    storageBucket: "TODO.appspot.com",
-    messagingSenderId: "TODO",
-    appId: "TODO"
+    apiKey: "AIzaSyB5F0kShGzZpIvXXNZTZJWym6EmOYvzRys",
+    authDomain: "dngn-d5f30.firebaseapp.com",
+    projectId: "dngn-d5f30",
+    storageBucket: "dngn-d5f30.firebasestorage.app",
+    messagingSenderId: "565807479999",
+    appId: "1:565807479999:web:fa252d5b47469891029a0a",
+    measurementId: "G-VQXRKDQFPJ"
   };
 
   // 2) Paste YOUR account's UID (the editor's sign-in bar prints it after you
