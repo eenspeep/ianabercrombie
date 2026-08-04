@@ -966,6 +966,11 @@
 
   <div id="gnome-layer"></div>
 
+  <!-- Firebase (compat) — public config; real security via Auth + rules. See FIREBASE_SETUP.md -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="firebase-init.js"></script>
+
   <script>
     "use strict";
 
@@ -1242,7 +1247,7 @@
     })();
 
     (function(){
-      const totalPages = 143;
+      let totalPages = 143;
       const captions = {
         1: { text: `Before you stands a bridge into darkness. Across the bridge, the DNGN. Your journey begins here. Humble. Unencumbered. Fastidious. Forthright? Brave... wait a second. Who is that?` },
         2: { text: `Hold on. Why don't we move some things out of the way?` },
@@ -1504,6 +1509,7 @@ function getCurrentPage(){ return currentPage; }
 			  classes += ` tall-${ratioKey}`;
 			}
 			el.className = classes;
+				if (p.img) { el.style.backgroundImage = 'url("' + p.img + '")'; area.appendChild(el); return; }
 
 			const pageStr = String(page).padStart(2, '0');
 			const suffix  = p.suffix ? String(p.suffix) : '';
@@ -1924,6 +1930,48 @@ function parseChatBlocks(raw) {
         });
       }
 
+            async function applyFirestoreOverlay(page){
+        const FB = window.__DNGN_FB;
+        if (!FB || !FB.configured || !FB.db) return;
+        try {
+          // Let a Firestore-published latest page be reachable via navigation.
+          try {
+            const meta = await FB.db.collection('meta').doc('site').get();
+            if (meta.exists) {
+              const lp = meta.data().latestPage;
+              if (typeof lp === 'number' && lp > totalPages) { totalPages = lp; setStatus(page); }
+            }
+          } catch (e) {}
+
+          const snap = await FB.db.collection('pages').doc(String(page)).get();
+          if (!snap.exists) return;
+          const d = snap.data() || {};
+
+          // Override this page's caption (overlay on top of any built-in default).
+          const prev = captions[page] || {};
+          captions[page] = {
+            text:   (d.text != null ? d.text : (prev.text || '')),
+            title:  (d.title != null ? d.title : prev.title) || '',
+            source: (d.source != null ? d.source : prev.source),
+            flairs: Array.isArray(d.flairs) ? d.flairs : prev.flairs,
+            style:  (d.style != null ? d.style : prev.style)
+          };
+
+          // Override this page's layout/panels (panels may carry uploaded img URLs).
+          if (Array.isArray(d.panels) && d.panels.length) {
+            const lay = { columns: d.columns || 1, panels: d.panels };
+            if (d.tall) lay.tall = d.tall;
+            pageLayout[page] = lay;
+          }
+
+          setTitle(page);
+          setCaption(page);
+          renderPanels(page);
+        } catch (e) {
+          console.warn('[DNGN] Firestore overlay skipped:', e);
+        }
+      }
+
       function init(){
         const startPage = getPageFromURL();
         setCurrentPage(startPage);
@@ -1931,6 +1979,7 @@ function parseChatBlocks(raw) {
         setCaption(startPage);
         setTitle(startPage);
         setStatus(startPage);
+        applyFirestoreOverlay(startPage);
         initNav();
         initMenuBar();
         initSaveLoad();

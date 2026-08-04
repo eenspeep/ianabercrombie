@@ -9,6 +9,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Emoji&display=swap" rel="stylesheet">
+  <meta name="robots" content="noindex" />
+  <!-- Firebase (compat) — public config; real security via Auth + rules. See FIREBASE_SETUP.md -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+  <script src="firebase-init.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; width: 100%; }
@@ -112,6 +119,7 @@
       box-shadow: inset -2px -2px 0 #000, inset 2px 2px 0 #fff;
       display: grid; grid-template-rows: var(--title-h) var(--menu-h) 1fr var(--status-h);
       height: 100%; max-height: 100%; min-width: 0; min-height: 0;
+      position: relative; /* anchor for the sign-in lock overlay */
     }
     .titlebar {
       background: #e0e0e0; border-bottom: 1px solid #000; padding: 0 10px;
@@ -319,6 +327,33 @@
       .site-container { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
       .topbar-mobile { display: block; position: relative; z-index: 3; }
     }
+
+    /* ===== Firebase auth bar + publish ===== */
+    .authbar {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+      padding: 6px 8px; border: 1px solid #000; background: #eef3ff;
+      box-shadow: inset -1px -1px 0 #000, inset 1px 1px 0 #fff; font-size: .78rem;
+    }
+    .authbar .who { flex: 1 1 140px; min-width: 120px; }
+    .authbar .uid { color: #333; user-select: all; word-break: break-all; }
+    .publish-btn {
+      font-family: "Courier New", monospace; font-weight: bold; cursor: pointer;
+      border: 1px solid #000; background: #b9ff66; padding: 6px 12px;
+      box-shadow: inset -2px -2px 0 #fff, inset 2px 2px 0 #000;
+    }
+    .publish-btn:disabled { background: #e0e0e0; color: #888; cursor: not-allowed; box-shadow: inset -1px -1px 0 #ccc, inset 1px 1px 0 #fff; }
+    .publish-btn:not(:disabled):active { transform: translate(1px,1px); box-shadow: inset -2px -2px 0 #000, inset 2px 2px 0 #fff; }
+
+    .p-file-cell { grid-column: 1 / -1; display: grid; gap: 3px; }
+    .panel-row.is-flash .p-file-cell { display: none; }
+    .p-thumb { max-width: 64px; max-height: 46px; border: 1px solid #000; display: none; }
+
+    /* Lock overlay — hides the editor until the owner signs in (when configured) */
+    .lock-overlay { position: absolute; inset: 0; background: rgba(243,243,243,.97); display: none; place-items: center; z-index: 50; text-align: center; padding: 20px; }
+    .lock-overlay.show { display: grid; }
+    .lock-box { border: 2px solid #000; background: #fff; box-shadow: inset -2px -2px 0 #000, inset 2px 2px 0 #fff, 4px 4px 0 rgba(0,0,0,.2); padding: 22px 26px; max-width: 380px; display: grid; gap: 12px; }
+    .lock-box h2 { font-size: 1rem; }
+    .lock-box p { font-size: .82rem; line-height: 1.45; }
   </style>
 </head>
 <body>
@@ -360,6 +395,15 @@
     <!-- Main window -->
     <main class="main">
       <section class="win95-window" role="main" aria-label="Panel Editor Window">
+        <!-- Sign-in lock (shown only when Firebase is configured and you're not the owner) -->
+        <div class="lock-overlay" id="lock-overlay">
+          <div class="lock-box">
+            <h2>🔒 Editor locked</h2>
+            <p>Sign in with the owner account to edit and publish panels.</p>
+            <button type="button" class="publish-btn" id="lock-signin">Sign in with Google</button>
+            <p id="lock-note" style="color:#a00;"></p>
+          </div>
+        </div>
         <div class="titlebar">
           <div class="title">PANEL_EDITOR.EXE</div>
           <div class="controls">
@@ -376,6 +420,13 @@
           <div class="pane editor-form">
             <div class="pane-head">PAGE PROPERTIES</div>
             <div class="form-scroll">
+
+              <div class="authbar" id="authbar">
+                <span class="who" id="auth-who">Firebase not configured — copy-paste mode. See FIREBASE_SETUP.md</span>
+                <button type="button" class="mini-btn" id="auth-btn" style="display:none;">Sign in</button>
+                <button type="button" class="publish-btn" id="load-page-btn" style="display:none; background:#e9e9e9;" disabled>Load page</button>
+                <button type="button" class="publish-btn" id="publish-btn" style="display:none;" disabled>Publish to site</button>
+              </div>
 
               <div class="row">
                 <div class="fld" style="flex:0 0 110px;">
@@ -551,6 +602,8 @@
       if (ratioKey) classes += ` tall-${ratioKey}`;
       el.className = classes;
 
+      if (p.img) { el.style.backgroundImage = `url("${p.img}")`; area.appendChild(el); return; }
+
       const pageStr = String(page).padStart(2, '0');
       const suffix  = p.suffix ? String(p.suffix) : '';
       let loaded = false;
@@ -715,7 +768,11 @@
       const suffix = row.querySelector('.p-suffix').value.trim();
       const flash = row.querySelector('.p-flash').checked;
       if (flash) { p.flash = true; const swf = row.querySelector('.p-swf').value.trim(); if (swf) p.swf = swf; }
-      else { if (tall) p.tall = tall; if (suffix) p.suffix = suffix; }
+      else {
+        if (tall) p.tall = tall; if (suffix) p.suffix = suffix;
+        const imgUrl = row._previewURL || row.querySelector('.p-img').value || '';
+        if (imgUrl) p.img = imgUrl;
+      }
       return p;
     });
   }
@@ -760,6 +817,7 @@
     // matching the hand-written style in comic.html.
     const parts = [];
     for (const [k, v] of Object.entries(obj)){
+      if (typeof v === 'string' && v.startsWith('blob:')) continue; // preview-only object URL; not exportable
       if (Array.isArray(v)) {
         const items = v.map(item =>
           (item && typeof item === 'object')
@@ -815,16 +873,45 @@
       <div class="cell"><label>Suffix</label><input type="text" class="p-suffix" size="3" placeholder="" style="width:70px;"></div>
       <div class="cell"><label>&nbsp;</label><label class="chk"><input type="checkbox" class="p-flash"> Flash</label></div>
       <div class="cell"><label>&nbsp;</label><button type="button" class="mini-btn rm-panel">✕</button></div>
+      <div class="cell p-file-cell"><label>Image (upload — publishes to Firebase Storage)</label>
+        <input type="file" class="p-file" accept="image/*">
+        <img class="p-thumb" alt="">
+        <input type="hidden" class="p-img" value="">
+      </div>
       <div class="cell swf-cell"><label>SWF path</label><input type="text" class="p-swf" placeholder="Animations/OPdngn1.swf"></div>`;
   }
-  function addPanelRow(){
+  function addPanelRow(data){
     const row = document.createElement('div');
     row.className = 'panel-row';
     row.innerHTML = panelRowHTML();
     $('panel-rows').appendChild(row);
-    row.querySelector('.p-flash').addEventListener('change', (e) => { row.classList.toggle('is-flash', e.target.checked); update(); });
+    const flashCb = row.querySelector('.p-flash');
+    flashCb.addEventListener('change', (e) => { row.classList.toggle('is-flash', e.target.checked); update(); });
     row.querySelector('.rm-panel').addEventListener('click', () => { row.remove(); update(); });
+    const fileInp = row.querySelector('.p-file');
+    fileInp.addEventListener('change', () => {
+      const f = fileInp.files && fileInp.files[0];
+      const thumb = row.querySelector('.p-thumb');
+      if (f) { row._file = f; row._previewURL = URL.createObjectURL(f); thumb.src = row._previewURL; thumb.style.display = 'inline-block'; }
+      else   { row._file = null; row._previewURL = null; thumb.style.display = 'none'; }
+      update();
+    });
     row.querySelectorAll('input, select').forEach(inp => { inp.addEventListener('input', update); inp.addEventListener('change', update); });
+
+    // Prefill (used by "Load page" — pulls an already-published page from Firestore)
+    if (data) {
+      if (data.flash) {
+        flashCb.checked = true; row.classList.add('is-flash');
+        if (data.swf) row.querySelector('.p-swf').value = data.swf;
+      } else {
+        if (data.tall) row.querySelector('.p-tall').value = data.tall;
+        if (data.suffix) row.querySelector('.p-suffix').value = data.suffix;
+        if (data.img) {
+          row.querySelector('.p-img').value = data.img;
+          const thumb = row.querySelector('.p-thumb'); thumb.src = data.img; thumb.style.display = 'inline-block';
+        }
+      }
+    }
     update();
   }
 
@@ -849,6 +936,141 @@
     update();
   }
 
+  /* ---- Firebase: auth gate + publish/load (no repo pushes) ---- */
+  const FB = window.__DNGN_FB || { configured:false, OWNER_UID:'TODO_YOUR_UID', auth:null, db:null, storage:null };
+  let currentUser = null;
+  function isOwner(){ return !!currentUser && (FB.OWNER_UID === 'TODO_YOUR_UID' || currentUser.uid === FB.OWNER_UID); }
+  function setStatus(msg){ const el = document.querySelector('.sb-left'); if (el) el.textContent = msg; }
+
+  function refreshAuthUI(){
+    const who = $('auth-who'), authBtn = $('auth-btn'), pub = $('publish-btn'),
+          loadBtn = $('load-page-btn'), lock = $('lock-overlay'), lockNote = $('lock-note');
+    if (!FB.configured){
+      who.textContent = 'Firebase not configured — copy-paste export only. See FIREBASE_SETUP.md';
+      authBtn.style.display = 'none'; pub.style.display = 'none'; loadBtn.style.display = 'none';
+      lock.classList.remove('show');
+      return;
+    }
+    authBtn.style.display = ''; pub.style.display = ''; loadBtn.style.display = '';
+    if (!currentUser){
+      who.textContent = 'Not signed in.';
+      authBtn.textContent = 'Sign in';
+      pub.disabled = true; loadBtn.disabled = true;
+      lock.classList.add('show'); lockNote.textContent = '';
+    } else {
+      const owner = isOwner();
+      who.innerHTML = `Signed in: <b>${currentUser.email || currentUser.displayName || 'user'}</b> · UID <span class="uid">${currentUser.uid}</span>`;
+      authBtn.textContent = 'Sign out';
+      pub.disabled = !owner; loadBtn.disabled = !owner;
+      if (owner) { lock.classList.remove('show'); lockNote.textContent = ''; }
+      else { lock.classList.add('show'); lockNote.textContent = 'This account is not the owner. Set OWNER_UID to the UID above (see FIREBASE_SETUP.md).'; }
+    }
+  }
+
+  async function doSignIn(){
+    try { const provider = new firebase.auth.GoogleAuthProvider(); await FB.auth.signInWithPopup(provider); }
+    catch (e){ alert('Sign-in failed: ' + (e && e.message || e)); }
+  }
+
+  function wireAuth(){
+    if (!FB.configured || !FB.auth){ refreshAuthUI(); return; }
+    FB.auth.onAuthStateChanged(u => { currentUser = u; refreshAuthUI(); });
+    $('auth-btn').addEventListener('click', () => { currentUser ? FB.auth.signOut() : doSignIn(); });
+    $('lock-signin').addEventListener('click', doSignIn);
+  }
+
+  async function publish(){
+    if (!FB.configured || !FB.db){ alert('Firebase not configured — see FIREBASE_SETUP.md.'); return; }
+    if (!isOwner()){ alert('Sign in as the owner account to publish.'); return; }
+    const page = currentPage();
+    const pub = $('publish-btn'); const label = pub.textContent;
+    pub.disabled = true; pub.textContent = 'Publishing…'; setStatus('Publishing page ' + page + '…');
+    try {
+      // Upload any chosen panel images, then assemble the final panels array.
+      const rows = Array.from(document.querySelectorAll('#panel-rows .panel-row'));
+      const panels = [];
+      for (let i = 0; i < rows.length; i++){
+        const row = rows[i];
+        const flash = row.querySelector('.p-flash').checked;
+        const p = {};
+        if (flash){ p.flash = true; const swf = row.querySelector('.p-swf').value.trim(); if (swf) p.swf = swf; panels.push(p); continue; }
+        const tall = row.querySelector('.p-tall').value; if (tall) p.tall = tall;
+        const suffix = row.querySelector('.p-suffix').value.trim(); if (suffix) p.suffix = suffix;
+        let imgUrl = row.querySelector('.p-img').value || '';
+        if (row._file){
+          const safe = row._file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+          const ref = FB.storage.ref('panels/' + page + '/' + i + '-' + safe);
+          setStatus('Uploading image ' + (i + 1) + '…');
+          await ref.put(row._file);
+          imgUrl = await ref.getDownloadURL();
+          row.querySelector('.p-img').value = imgUrl; row._file = null; row._previewURL = null;
+        }
+        if (imgUrl) p.img = imgUrl;
+        panels.push(p);
+      }
+
+      const doc = { text: $('f-text').value || '' };
+      const title = $('f-title').value.trim(); if (title) doc.title = title;
+      const source = $('f-source').value; if (source) doc.source = source;
+      const flairs = collectFlairs(); if (flairs.length) doc.flairs = flairs;
+      const style = $('f-style').value; if (style) doc.style = style;
+      doc.columns = parseInt($('f-columns').value, 10) || 1;
+      const layoutTall = $('f-layout-tall').value; if (layoutTall) doc.tall = layoutTall;
+      doc.panels = panels;
+      doc.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+      doc.updatedBy = currentUser.uid;
+
+      await FB.db.collection('pages').doc(String(page)).set(doc);
+
+      // Keep meta/site.latestPage in sync so new pages are reachable in the comic.
+      try {
+        const metaRef = FB.db.collection('meta').doc('site');
+        await FB.db.runTransaction(async tx => {
+          const m = await tx.get(metaRef);
+          const cur = (m.exists && m.data().latestPage) || 0;
+          tx.set(metaRef, { latestPage: Math.max(cur, page) }, { merge: true });
+        });
+      } catch (e){ console.warn('meta latestPage update skipped:', e); }
+
+      setStatus('Published page ' + page + ' ✓');
+      pub.textContent = 'Published ✓';
+      setTimeout(() => { pub.textContent = label; }, 1400);
+      update();
+    } catch (e){
+      console.error(e); alert('Publish failed: ' + (e && e.message || e)); setStatus('Publish failed');
+      pub.textContent = label;
+    } finally { pub.disabled = !isOwner(); }
+  }
+
+  async function loadFromSite(){
+    if (!FB.configured || !FB.db){ return; }
+    const page = currentPage();
+    setStatus('Loading page ' + page + '…');
+    try {
+      const snap = await FB.db.collection('pages').doc(String(page)).get();
+      if (!snap.exists){ setStatus('No published page ' + page); alert('Page ' + page + ' has not been published yet.'); return; }
+      const d = snap.data() || {};
+      $('f-text').value = d.text || '';
+      $('f-title').value = d.title || '';
+      $('f-source').value = d.source || '';
+      $('f-style').value = d.style || '';
+      $('f-columns').value = String(d.columns || 1);
+      $('f-layout-tall').value = d.tall || '';
+      extraFlairs.length = 0;
+      document.querySelectorAll('.f-flair').forEach(c => c.checked = false);
+      (Array.isArray(d.flairs) ? d.flairs : []).forEach(f => {
+        const box = Array.from(document.querySelectorAll('.f-flair')).find(c => c.value === f);
+        if (box) box.checked = true; else if (!extraFlairs.includes(f)) extraFlairs.push(f);
+      });
+      renderExtraFlairs();
+      $('panel-rows').innerHTML = '';
+      const panels = (Array.isArray(d.panels) && d.panels.length) ? d.panels : [{}];
+      panels.forEach(p => addPanelRow(p));
+      setStatus('Loaded page ' + page + ' ✓');
+      update();
+    } catch (e){ console.error(e); alert('Load failed: ' + (e && e.message || e)); setStatus('Load failed'); }
+  }
+
   /* ---- Wire up ---- */
   function wire(){
     ['f-page','f-title','f-source','f-text','f-style','f-columns','f-layout-tall']
@@ -865,7 +1087,10 @@
     });
 
     $('f-toolbar').addEventListener('click', (e) => { const b = e.target.closest('.mini-btn'); if (b) applyTool(b); });
-    $('add-panel').addEventListener('click', addPanelRow);
+    $('add-panel').addEventListener('click', () => addPanelRow());
+    wireAuth();
+    $('publish-btn').addEventListener('click', publish);
+    $('load-page-btn').addEventListener('click', loadFromSite);
 
     $('copy-btn').addEventListener('click', async () => {
       const ta = $('export');

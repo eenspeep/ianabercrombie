@@ -1,0 +1,24 @@
+rules_version = '2';
+
+// Panel art uploaded from the editor. Public read (the comic displays it);
+// writes restricted to the site owner's authenticated account only.
+//
+// Replace TODO_YOUR_UID with your account UID, then publish in the Firebase
+// console (Storage → Rules) or via `firebase deploy --only storage`.
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Uploaded panel images live under panels/{page}/...
+    match /panels/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null
+                   && request.auth.uid == 'TODO_YOUR_UID';
+    }
+
+    // Deny everything else by default.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,32 @@
+rules_version = '2';
+
+// DNGN webcomic data. Public read (so anyone can view the comic); writes are
+// restricted to the site owner's authenticated account only.
+//
+// Replace TODO_YOUR_UID with your account UID (the editor's sign-in bar shows
+// it after you log in), then publish these rules in the Firebase console
+// (Firestore Database → Rules) or via `firebase deploy --only firestore:rules`.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // One document per comic page: pages/{pageNumber}
+    match /pages/{page} {
+      allow read: if true;
+      allow write: if request.auth != null
+                   && request.auth.uid == 'TODO_YOUR_UID';
+    }
+
+    // Site metadata (e.g. meta/site.latestPage for navigation).
+    match /meta/{doc} {
+      allow read: if true;
+      allow write: if request.auth != null
+                   && request.auth.uid == 'TODO_YOUR_UID';
+    }
+
+    // Deny everything else by default.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
