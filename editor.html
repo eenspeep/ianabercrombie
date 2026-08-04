@@ -1042,32 +1042,74 @@
     } finally { pub.disabled = !isOwner(); }
   }
 
+  function populateForm(d){
+    $('f-text').value = d.text || '';
+    $('f-title').value = d.title || '';
+    $('f-source').value = d.source || '';
+    $('f-style').value = d.style || '';
+    $('f-columns').value = String(d.columns || 1);
+    $('f-layout-tall').value = d.tall || '';
+    extraFlairs.length = 0;
+    document.querySelectorAll('.f-flair').forEach(c => c.checked = false);
+    (Array.isArray(d.flairs) ? d.flairs : []).forEach(f => {
+      if (!f) return; // skip blank flairs (some built-in pages carry [''])
+      const box = Array.from(document.querySelectorAll('.f-flair')).find(c => c.value === f);
+      if (box) box.checked = true; else if (!extraFlairs.includes(f)) extraFlairs.push(f);
+    });
+    renderExtraFlairs();
+    $('panel-rows').innerHTML = '';
+    const panels = (Array.isArray(d.panels) && d.panels.length) ? d.panels : [{}];
+    panels.forEach(p => addPanelRow(p));
+    update();
+  }
+
+  // Read the comic's built-in (hardcoded) pages via a same-origin hidden iframe,
+  // so "Load page" can open originals that were never published to Firestore.
+  // (Works when the editor is served over http(s)/localhost — same origin as comic.html.)
+  let builtinData = null, builtinPromise = null;
+  function loadBuiltinData(){
+    if (builtinData) return Promise.resolve(builtinData);
+    if (builtinPromise) return builtinPromise;
+    builtinPromise = new Promise((resolve) => {
+      const ifr = document.createElement('iframe');
+      ifr.style.cssText = 'position:absolute; left:-9999px; width:0; height:0; border:0;';
+      ifr.src = 'comic.html';
+      ifr.onload = () => {
+        try {
+          const raw = ifr.contentWindow && ifr.contentWindow.__DNGN_DATA;
+          builtinData = raw ? JSON.parse(JSON.stringify(raw)) : null; // clone before removing the frame
+        } catch (e) { console.warn('built-in data read failed:', e); builtinData = null; }
+        try { ifr.remove(); } catch (e) {}
+        resolve(builtinData);
+      };
+      document.body.appendChild(ifr);
+    });
+    return builtinPromise;
+  }
+
   async function loadFromSite(){
     if (!FB.configured || !FB.db){ return; }
     const page = currentPage();
     setStatus('Loading page ' + page + '…');
     try {
       const snap = await FB.db.collection('pages').doc(String(page)).get();
-      if (!snap.exists){ setStatus('No published page ' + page); alert('Page ' + page + ' has not been published yet.'); return; }
-      const d = snap.data() || {};
-      $('f-text').value = d.text || '';
-      $('f-title').value = d.title || '';
-      $('f-source').value = d.source || '';
-      $('f-style').value = d.style || '';
-      $('f-columns').value = String(d.columns || 1);
-      $('f-layout-tall').value = d.tall || '';
-      extraFlairs.length = 0;
-      document.querySelectorAll('.f-flair').forEach(c => c.checked = false);
-      (Array.isArray(d.flairs) ? d.flairs : []).forEach(f => {
-        const box = Array.from(document.querySelectorAll('.f-flair')).find(c => c.value === f);
-        if (box) box.checked = true; else if (!extraFlairs.includes(f)) extraFlairs.push(f);
+      if (snap.exists){
+        populateForm(snap.data() || {});
+        setStatus('Loaded published page ' + page + ' ✓');
+        return;
+      }
+      // Not in Firestore → fall back to the built-in page so originals are editable.
+      const bd = await loadBuiltinData();
+      const cap = (bd && bd.captions) ? bd.captions[page] : null;
+      const lay = (bd && bd.pageLayout) ? bd.pageLayout[page] : null;
+      if (!cap && !lay){ setStatus('No page ' + page); alert('Page ' + page + ' was not found in Firestore or the built-in pages.'); return; }
+      const d = Object.assign({}, cap || {}, {
+        columns: (lay && lay.columns) || 1,
+        tall: (lay && lay.tall) || '',
+        panels: (lay && lay.panels) || [{}]
       });
-      renderExtraFlairs();
-      $('panel-rows').innerHTML = '';
-      const panels = (Array.isArray(d.panels) && d.panels.length) ? d.panels : [{}];
-      panels.forEach(p => addPanelRow(p));
-      setStatus('Loaded page ' + page + ' ✓');
-      update();
+      populateForm(d);
+      setStatus('Loaded built-in page ' + page + ' — edit & Publish to override ✓');
     } catch (e){ console.error(e); alert('Load failed: ' + (e && e.message || e)); setStatus('Load failed'); }
   }
 
