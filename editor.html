@@ -671,6 +671,8 @@
   }
 
   function wireChatlogToggles(root){
+    if (root.__chatWired) return; // one delegated listener; the preview re-renders on every keystroke
+    root.__chatWired = true;
     root.addEventListener('click', (e) => {
       const btn = e.target.closest('.chatlog-toggle');
       if (!btn) return;
