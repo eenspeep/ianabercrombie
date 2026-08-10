@@ -1454,6 +1454,9 @@ const pageLayout = {
   111: { columns: 1, panels: [{ flash: true, swf: "Animations/OPdngn1.swf" }] }
 };
 
+// Expose built-in page data so the editor can load originals for editing (same-origin).
+try { window.__DNGN_DATA = { captions: captions, pageLayout: pageLayout }; } catch (e) {}
+
 let currentPage = 1;
 function setCurrentPage(p){ currentPage = p; }
 function getCurrentPage(){ return currentPage; }
