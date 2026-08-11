@@ -30,6 +30,17 @@ service cloud.firestore {
                          && request.auth.uid == 'URBZG88uPMNkaHhZoRRtIqvo9hl2';
     }
 
+    // Reader command submissions — anyone may create (validated); only the
+    // owner may read, mark handled, or delete.
+    match /submissions/{id} {
+      allow read, update, delete: if request.auth != null
+                                  && request.auth.uid == 'URBZG88uPMNkaHhZoRRtIqvo9hl2';
+      allow create: if request.resource.data.command is string
+                    && request.resource.data.command.size() > 0
+                    && request.resource.data.command.size() < 500
+                    && request.resource.data.page is int;
+    }
+
     // Deny everything else by default.
     match /{document=**} {
       allow read, write: if false;

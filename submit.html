@@ -119,6 +119,9 @@
       .topbar-inner { display: flex; justify-content: space-between; padding: 6px 10px; }
     }
   </style>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="firebase-init.js"></script>
 </head>
 <body>
   <div class="site-container">
@@ -156,7 +159,7 @@
         <div class="window-body">
           <p>Enter your command below to suggest what happens next in <b>DNGN</b>:</p>
           <div class="submission-box">
-            <form action="https://formspree.io/f/xdklokqb" method="POST">
+            <form id="submit-form" action="https://formspree.io/f/xdklokqb" method="POST">
 			<label for="command">&gt; ENTER COMMAND</label>
 			<input type="text" id="command" name="command" required placeholder="FTR: FLAIL AROUND">
 
@@ -185,6 +188,27 @@
   if (page) {
     document.getElementById("page").value = page;
   }
+
+  // If Firebase is configured, submit into the Firestore inbox instead of Formspree.
+  (function(){
+    const form = document.getElementById('submit-form');
+    if (!form) return;
+    form.addEventListener('submit', function(e){
+      const FB = window.__DNGN_FB;
+      if (!FB || !FB.configured || !FB.db) return; // fall back to native Formspree POST
+      e.preventDefault();
+      const cmd = (document.getElementById('command').value || '').trim();
+      const pg  = parseInt(document.getElementById('page').value, 10) || 1;
+      if (!cmd) return;
+      const box = form.parentNode;
+      FB.db.collection('submissions').add({
+        command: cmd.slice(0, 480), page: pg,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(), handled: false
+      }).then(function(){
+        box.innerHTML = '<p>✓ <b>Submitted!</b> Thanks — your command was received.</p>';
+      }).catch(function(err){ alert('Submit failed: ' + (err && err.message || err)); });
+    });
+  })();
 </script>
   
 </body>
