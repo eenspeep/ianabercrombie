@@ -522,6 +522,9 @@
       transform: translateY(-2px);
     }
 
+    /* First/Prev at page 1, Next/Latest at the last page */
+    .nav-disabled { opacity: .4; pointer-events: none; }
+
     .button-bar input[type="number"] {
       width: 64px;
       text-align: center;
@@ -1550,18 +1553,110 @@ function getCurrentPage(){ return currentPage; }
         const base = window.location.pathname.split("/").pop();
         return base || "comic.html";
       }
-      function goToPage(page) {
-        if (page < 1) page = 1;
-        if (page > totalPages) {
-          window.location.href = "comingsoon.html";
-          return;
-        }
+      // ===== Read-tracking (which pages the visitor has seen) =====
+      const READ_KEY = 'dngn_read_pages';
+      function getReadSet(){
+        try { return new Set((JSON.parse(localStorage.getItem(READ_KEY) || '[]') || []).map(Number)); }
+        catch { return new Set(); }
+      }
+      function isRead(p){ return getReadSet().has(Number(p)); }
+      function markRead(p){
+        try { const s = getReadSet(); s.add(Number(p)); localStorage.setItem(READ_KEY, JSON.stringify([...s])); }
+        catch {}
+      }
+
+      // ===== Firestore caches (filled by loadMeta / fetchPageDoc) =====
+      let metaCache = null;          // { latestPage, dates }
+      const fsCache = {};            // page -> doc data | null (fetched, none)
+      const preloaded = new Set();   // pages whose images we've kicked off
+      let navToken = 0;              // guards against stale async repaints
+
+      // ===== In-place (SPA) navigation — no reload =====
+      function paint(page){
+        renderPanels(page);
+        setCaption(page);
+        setTitle(page);
+        setStatus(page);
+        updateNavState(page);
+      }
+
+      function updateNavState(page){
+        const first = document.getElementById('first');
+        const prev  = document.getElementById('prev');
+        const next  = document.getElementById('next');
+        const latest= document.getElementById('latest');
+        const atStart = page <= 1, atEnd = page >= totalPages;
+        if (first)  first.classList.toggle('nav-disabled', atStart);
+        if (prev)   prev.classList.toggle('nav-disabled', atStart);
+        if (next)   next.classList.toggle('nav-disabled', atEnd);
+        if (latest) latest.classList.toggle('nav-disabled', atEnd);
+      }
+
+      async function renderPage(page, push){
+        page = Math.max(1, parseInt(page, 10) || 1);
+        setCurrentPage(page);
+
+        // Update the URL without reloading the document.
         const file = getCurrentFileName();
-        if (page === 1) {
-          window.location.href = file;
-        } else {
-          window.location.href = `${file}?page=${page}`;
+        const url = (page === 1) ? file : `${file}?page=${page}`;
+        try { (push === false ? history.replaceState : history.pushState).call(history, { page }, '', url); } catch {}
+
+        markRead(page);
+
+        // Paint immediately from what we already have (built-in, or cached Firestore).
+        if (fsCache[page]) applyDocToModel(page, fsCache[page]);
+        paint(page);
+
+        // Cold page: fetch its Firestore doc, then repaint if the user is still here.
+        if (!(page in fsCache)) {
+          const token = ++navToken;
+          const d = await fetchPageDoc(page);
+          if (token === navToken && d) { applyDocToModel(page, d); paint(page); }
         }
+
+        // Preload neighbors so the next click is instant.
+        preloadPage(page + 1);
+        preloadPage(page - 1);
+      }
+
+      function preloadPage(page){
+        if (page < 1 || page > totalPages || preloaded.has(page)) return;
+        preloaded.add(page);
+        // Prefetch the Firestore doc (fills fsCache for an instant later render).
+        if (!(page in fsCache) && window.__DNGN_FB && window.__DNGN_FB.configured) { fetchPageDoc(page); }
+        // Warm the image cache for this page's panels.
+        const d = fsCache[page];
+        const panels = (d && Array.isArray(d.panels) && d.panels.length)
+          ? d.panels
+          : ((pageLayout[page] && pageLayout[page].panels) || [{}]);
+        const pageStr = String(page).padStart(2, '0');
+        panels.forEach((p) => {
+          if (p.flash) return;
+          if (p.img) { const im = new Image(); im.src = p.img; return; }
+          const suffix = p.suffix ? String(p.suffix) : '';
+          ['gif', 'png', 'jpg'].forEach((ext) => { const im = new Image(); im.src = `${IMAGE_DIR}/page${pageStr}${suffix}.${ext}`; });
+        });
+      }
+
+      function goToPage(page) {
+        page = parseInt(page, 10);
+        if (isNaN(page)) return;
+        if (page < 1) page = 1;
+        if (page > totalPages) { window.location.href = "comingsoon.html"; return; }
+        renderPage(page, true);
+      }
+
+      function initKeyboardNav(){
+        document.addEventListener('keydown', (e) => {
+          if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) return;
+          const t = e.target;
+          if (t && ((t.matches && t.matches('input, textarea, select')) || t.isContentEditable)) return;
+          const gate = document.getElementById('epilepsy-gate');
+          if (gate && getComputedStyle(gate).display !== 'none') return;
+          if (e.key === 'ArrowRight') { e.preventDefault(); goToPage(getCurrentPage() + 1); }
+          else if (e.key === 'ArrowLeft') { e.preventDefault(); goToPage(getCurrentPage() - 1); }
+        });
+        window.addEventListener('popstate', () => { renderPage(getPageFromURL(), false); });
       }
 
       /* ===== CHAT PARSER with Pesterlog-style box ===== */
@@ -1935,60 +2030,60 @@ function parseChatBlocks(raw) {
         });
       }
 
-            async function applyFirestoreOverlay(page){
+      // ===== Firestore loaders (fill the caches declared near goToPage) =====
+      async function loadMeta(){
         const FB = window.__DNGN_FB;
         if (!FB || !FB.configured || !FB.db) return;
         try {
-          // Let a Firestore-published latest page be reachable via navigation.
-          try {
-            const meta = await FB.db.collection('meta').doc('site').get();
-            if (meta.exists) {
-              const lp = meta.data().latestPage;
-              if (typeof lp === 'number' && lp > totalPages) { totalPages = lp; setStatus(page); }
-            }
-          } catch (e) {}
-
-          const snap = await FB.db.collection('pages').doc(String(page)).get();
-          if (!snap.exists) return;
-          const d = snap.data() || {};
-
-          // Override this page's caption (overlay on top of any built-in default).
-          const prev = captions[page] || {};
-          captions[page] = {
-            text:   (d.text != null ? d.text : (prev.text || '')),
-            title:  (d.title != null ? d.title : prev.title) || '',
-            source: (d.source != null ? d.source : prev.source),
-            flairs: Array.isArray(d.flairs) ? d.flairs : prev.flairs,
-            style:  (d.style != null ? d.style : prev.style)
-          };
-
-          // Override this page's layout/panels (panels may carry uploaded img URLs).
-          if (Array.isArray(d.panels) && d.panels.length) {
-            const lay = { columns: d.columns || 1, panels: d.panels };
-            if (d.tall) lay.tall = d.tall;
-            pageLayout[page] = lay;
+          const meta = await FB.db.collection('meta').doc('site').get();
+          if (meta.exists) {
+            const d = meta.data() || {};
+            metaCache = { latestPage: (typeof d.latestPage === 'number' ? d.latestPage : totalPages), dates: d.dates || {} };
+            if (metaCache.latestPage > totalPages) { totalPages = metaCache.latestPage; updateNavState(getCurrentPage()); setStatus(getCurrentPage()); }
+          } else {
+            metaCache = { latestPage: totalPages, dates: {} };
           }
+        } catch (e) { console.warn('[DNGN] meta load failed:', e); }
+      }
 
-          setTitle(page);
-          setCaption(page);
-          renderPanels(page);
-        } catch (e) {
-          console.warn('[DNGN] Firestore overlay skipped:', e);
+      async function fetchPageDoc(page){
+        if (page in fsCache) return fsCache[page];
+        const FB = window.__DNGN_FB;
+        if (!FB || !FB.configured || !FB.db) { fsCache[page] = null; return null; }
+        try {
+          const snap = await FB.db.collection('pages').doc(String(page)).get();
+          fsCache[page] = snap.exists ? (snap.data() || {}) : null;
+        } catch (e) { fsCache[page] = null; }
+        return fsCache[page];
+      }
+
+      // Overlay a Firestore page doc onto the in-memory captions/pageLayout.
+      function applyDocToModel(page, d){
+        if (!d) return;
+        const prev = captions[page] || {};
+        captions[page] = {
+          text:   (d.text != null ? d.text : (prev.text || '')),
+          title:  (d.title != null ? d.title : prev.title) || '',
+          source: (d.source != null ? d.source : prev.source),
+          flairs: Array.isArray(d.flairs) ? d.flairs : prev.flairs,
+          style:  (d.style != null ? d.style : prev.style)
+        };
+        if (Array.isArray(d.panels) && d.panels.length) {
+          const lay = { columns: d.columns || 1, panels: d.panels };
+          if (d.tall) lay.tall = d.tall;
+          pageLayout[page] = lay;
         }
       }
 
       function init(){
         const startPage = getPageFromURL();
-        setCurrentPage(startPage);
-        renderPanels(startPage);
-        setCaption(startPage);
-        setTitle(startPage);
-        setStatus(startPage);
-        applyFirestoreOverlay(startPage);
         initNav();
         initMenuBar();
         initSaveLoad();
         initHelps();
+        initKeyboardNav();
+        loadMeta();                    // async: raise totalPages + load dates (nav bounds / archive)
+        renderPage(startPage, false);  // paint now; fetches this page's Firestore doc itself
       }
 
       if (document.readyState === 'loading') {
