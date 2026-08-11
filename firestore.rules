@@ -17,11 +17,17 @@ service cloud.firestore {
                    && request.auth.uid == 'URBZG88uPMNkaHhZoRRtIqvo9hl2';
     }
 
-    // Site metadata (e.g. meta/site.latestPage for navigation).
+    // Site metadata (e.g. meta/site.latestPage/dates, meta/characters).
     match /meta/{doc} {
       allow read: if true;
       allow write: if request.auth != null
                    && request.auth.uid == 'URBZG88uPMNkaHhZoRRtIqvo9hl2';
+    }
+
+    // Unpublished drafts — private to the owner (read AND write).
+    match /drafts/{id} {
+      allow read, write: if request.auth != null
+                         && request.auth.uid == 'URBZG88uPMNkaHhZoRRtIqvo9hl2';
     }
 
     // Deny everything else by default.
