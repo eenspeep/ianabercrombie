@@ -532,6 +532,16 @@
     .archive-link:hover { background: #eef3ff; }
     .archive-link.read { color: #551a8b; } /* purple = already read */
 
+    /* Submit-a-command modal */
+    .submit-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.4); display: none; place-items: center; z-index: 10001; padding: 20px; }
+    .submit-overlay.show { display: grid; }
+    .submit-box { width: min(440px, 100%); background: #fff; border: 2px solid #000; box-shadow: inset -2px -2px 0 #000, inset 2px 2px 0 #fff, 4px 4px 0 rgba(0,0,0,.3); }
+    .submit-head { display: flex; justify-content: space-between; align-items: center; background: #e0e0e0; border-bottom: 1px solid #000; padding: 6px 10px; font-weight: bold; }
+    .submit-body { padding: 12px; display: grid; gap: 10px; }
+    .submit-body input[type="text"] { border: 1px solid #000; padding: 8px; font-family: "Courier New", monospace; width: 100%; }
+    .submit-actions { display: flex; justify-content: flex-end; }
+    .submit-status { font-size: .85rem; min-height: 1.2em; }
+
     .button-bar input[type="number"] {
       width: 64px;
       text-align: center;
@@ -972,6 +982,19 @@
         </div>
       </section>
     </main>
+  </div>
+
+  <!-- Submit-a-command modal -->
+  <div class="submit-overlay" id="submit-modal" role="dialog" aria-modal="true" aria-label="Submit a command">
+    <div class="submit-box">
+      <div class="submit-head"><span>SUBMIT COMMAND</span><button type="button" class="btn-95 small" id="submit-cancel" aria-label="Close">✕</button></div>
+      <div class="submit-body">
+        <p>Suggest what happens next in <b>DNGN</b> (page <span id="submit-page-label">1</span>):</p>
+        <input type="text" id="submit-input" placeholder="FTR: FLAIL AROUND" maxlength="480" />
+        <div class="submit-actions"><button type="button" class="btn-95" id="submit-send">SUBMIT</button></div>
+        <p class="submit-status" id="submit-status"></p>
+      </div>
+    </div>
   </div>
 
   <div id="gnome-layer"></div>
@@ -1808,6 +1831,8 @@ function getCurrentPage(){ return currentPage; }
           if (t && ((t.matches && t.matches('input, textarea, select')) || t.isContentEditable)) return;
           const gate = document.getElementById('epilepsy-gate');
           if (gate && getComputedStyle(gate).display !== 'none') return;
+          const sm = document.getElementById('submit-modal');
+          if (sm && sm.classList.contains('show')) return;
           if (e.key === 'ArrowRight') { e.preventDefault(); goToPage(getCurrentPage() + 1); }
           else if (e.key === 'ArrowLeft') { e.preventDefault(); goToPage(getCurrentPage() - 1); }
         });
@@ -2163,12 +2188,7 @@ function parseChatBlocks(raw) {
         document.querySelectorAll('[data-action="load"]').forEach(btn => {
           btn.addEventListener('click', loadGame);
         });
-        document.querySelectorAll('[data-action="submit"]').forEach(btn => {
-          btn.addEventListener('click', () => {
-            const p = getCurrentPage();
-            window.location.href = `submit.html?page=${p}`;
-          });
-        });
+        // "Submit Command" is wired by initSubmit() → in-comic modal.
       }
 
       function initHelps(){
@@ -2292,6 +2312,60 @@ function parseChatBlocks(raw) {
         } catch (e) { console.warn('[DNGN] characters load failed:', e); }
       }
 
+      // ===== Submit-a-command modal (writes to Firestore submissions) =====
+      function openSubmit(page){
+        const modal = document.getElementById('submit-modal');
+        if (!modal) return;
+        const p = page || getCurrentPage();
+        modal.dataset.page = p;
+        const lbl = document.getElementById('submit-page-label'); if (lbl) lbl.textContent = p;
+        const inp = document.getElementById('submit-input'); if (inp) inp.value = '';
+        const st = document.getElementById('submit-status'); if (st) st.textContent = '';
+        modal.classList.add('show');
+        setTimeout(() => { if (inp) inp.focus(); }, 50);
+      }
+      function closeSubmit(){ const m = document.getElementById('submit-modal'); if (m) m.classList.remove('show'); }
+      async function sendSubmit(){
+        const modal = document.getElementById('submit-modal');
+        const page = Number(modal.dataset.page) || getCurrentPage();
+        const cmd = (document.getElementById('submit-input').value || '').trim();
+        const st = document.getElementById('submit-status');
+        if (!cmd) { st.textContent = 'Enter a command first.'; return; }
+        const FB = window.__DNGN_FB;
+        if (!FB || !FB.configured || !FB.db) { window.location.href = 'submit.html?page=' + page; return; }
+        st.textContent = 'Sending…';
+        try {
+          await FB.db.collection('submissions').add({
+            command: cmd.slice(0, 480), page: page,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(), handled: false
+          });
+          st.textContent = 'Sent! Thanks. ✓';
+          setTimeout(closeSubmit, 900);
+        } catch (e) { console.error(e); st.textContent = 'Failed: ' + (e && e.message || e); }
+      }
+      function initSubmit(){
+        const modal = document.getElementById('submit-modal');
+        if (!modal) return;
+        document.getElementById('submit-send').addEventListener('click', sendSubmit);
+        document.getElementById('submit-cancel').addEventListener('click', closeSubmit);
+        document.getElementById('submit-input').addEventListener('keydown', (e) => { if (e.key === 'Enter'){ e.preventDefault(); sendSubmit(); } });
+        modal.addEventListener('click', (e) => { if (e.target === modal) closeSubmit(); });
+        const link = document.getElementById('submit-link');
+        if (link) link.addEventListener('click', (e) => { e.preventDefault(); openSubmit(getCurrentPage()); });
+        document.querySelectorAll('[data-action="submit"]').forEach(btn => {
+          btn.addEventListener('click', (e) => { e.preventDefault(); openSubmit(getCurrentPage()); });
+        });
+        // In-caption "help him out" links (submit.html?page=N) — intercept via delegation.
+        const cap = document.getElementById('caption');
+        if (cap) cap.addEventListener('click', (e) => {
+          const a = e.target.closest('a[href^="submit.html"]');
+          if (!a) return;
+          e.preventDefault();
+          const m = (a.getAttribute('href') || '').match(/page=(\d+)/);
+          openSubmit(m ? parseInt(m[1], 10) : getCurrentPage());
+        });
+      }
+
       function init(){
         const startPage = getPageFromURL();
         initNav();
@@ -2300,6 +2374,7 @@ function parseChatBlocks(raw) {
         initHelps();
         initKeyboardNav();
         initArchive();
+        initSubmit();
         loadCharacters();
         loadMeta();                    // async: raise totalPages + load dates (nav bounds / archive)
         renderPage(startPage, false);  // paint now; fetches this page's Firestore doc itself

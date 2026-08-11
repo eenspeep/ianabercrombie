@@ -368,6 +368,12 @@
     .draft-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; border: 1px solid #000; background: #fff; padding: 6px 8px; }
     .draft-meta { font-size: .85rem; }
     .draft-actions { display: flex; gap: 4px; }
+    #subs-list { display: grid; gap: 6px; }
+    .sub-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; border: 1px solid #000; background: #fff; padding: 6px 8px; }
+    .sub-row.handled { opacity: .55; }
+    .sub-main { font-size: .85rem; }
+    .sub-when { color: #777; margin-left: 8px; font-size: .8em; }
+    .sub-actions { display: flex; gap: 4px; }
   </style>
 </head>
 <body>
@@ -453,6 +459,18 @@
             </div>
           </div>
         </div>
+
+        <!-- Submissions inbox -->
+        <div class="modal-overlay" id="subs-modal">
+          <div class="modal-box">
+            <div class="modal-head"><span>SUBMISSIONS</span><button type="button" class="mini-btn" id="subs-close">✕</button></div>
+            <div class="modal-body">
+              <label class="chk"><input type="checkbox" id="subs-unhandled"> Show unhandled only</label>
+              <div id="subs-list"></div>
+            </div>
+            <div class="modal-foot"><span class="hint" id="subs-status"></span></div>
+          </div>
+        </div>
         <div class="titlebar">
           <div class="title">PANEL_EDITOR.EXE</div>
           <div class="controls">
@@ -477,6 +495,7 @@
                 <button type="button" class="publish-btn" id="publish-btn" style="display:none;" disabled>Publish to site</button>
                 <button type="button" class="mini-btn" id="char-btn" style="display:none;">Characters</button>
                 <button type="button" class="mini-btn" id="drafts-btn" style="display:none;">Drafts</button>
+                <button type="button" class="mini-btn" id="subs-btn" style="display:none;">Inbox</button>
               </div>
 
               <div class="row">
@@ -1347,6 +1366,36 @@
   function openDraftsModal(){ $('drafts-status').textContent = ''; $('drafts-modal').classList.add('show'); loadDrafts(); }
   function closeDraftsModal(){ $('drafts-modal').classList.remove('show'); }
 
+  /* ---- Submissions inbox (owner-only) ---- */
+  async function loadSubs(){
+    const list = $('subs-list');
+    if (!FB.configured || !FB.db){ list.innerHTML = '<p class="hint">Firebase not configured.</p>'; return; }
+    if (!isOwner()){ list.innerHTML = '<p class="hint">Sign in as the owner to see submissions.</p>'; return; }
+    list.innerHTML = '<p class="hint">Loading…</p>';
+    try {
+      const snap = await FB.db.collection('submissions').orderBy('createdAt', 'desc').get();
+      let docs = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
+      if ($('subs-unhandled').checked) docs = docs.filter(d => !d.handled);
+      if (!docs.length){ list.innerHTML = '<p class="hint">No submissions.</p>'; return; }
+      list.innerHTML = '';
+      docs.forEach(d => {
+        const row = document.createElement('div'); row.className = 'sub-row' + (d.handled ? ' handled' : '');
+        const when = (d.createdAt && d.createdAt.toDate) ? d.createdAt.toDate().toISOString().slice(0, 10) : '';
+        const cmd = String(d.command || '').replace(/</g, '&lt;');
+        row.innerHTML = `<div class="sub-main"><b>p${d.page || '?'}</b> — ${cmd}<span class="sub-when">${when}</span></div>`
+          + `<div class="sub-actions"><button type="button" class="mini-btn" data-a="done">${d.handled ? 'Unhandle' : 'Mark handled'}</button>`
+          + ` <button type="button" class="mini-btn" data-a="del">✕</button></div>`;
+        row.querySelector('[data-a="done"]').addEventListener('click', () => toggleSub(d.id, !d.handled));
+        row.querySelector('[data-a="del"]').addEventListener('click', () => delSub(d.id));
+        list.appendChild(row);
+      });
+    } catch (e){ console.error(e); list.innerHTML = '<p class="hint">Load failed: ' + (e && e.message || e) + '</p>'; }
+  }
+  async function toggleSub(id, handled){ try { await FB.db.collection('submissions').doc(id).update({ handled }); loadSubs(); } catch (e){ console.error(e); } }
+  async function delSub(id){ try { await FB.db.collection('submissions').doc(id).delete(); loadSubs(); } catch (e){ console.error(e); } }
+  function openSubsModal(){ $('subs-status').textContent = ''; $('subs-modal').classList.add('show'); loadSubs(); }
+  function closeSubsModal(){ $('subs-modal').classList.remove('show'); }
+
   /* ---- Wire up ---- */
   function wire(){
     ['f-page','f-title','f-source','f-text','f-style','f-columns','f-layout-tall']
@@ -1377,6 +1426,10 @@
     $('drafts-close').addEventListener('click', closeDraftsModal);
     $('draft-save').addEventListener('click', saveDraft);
     $('drafts-publish-all').addEventListener('click', publishAllDrafts);
+    if (FB.configured) $('subs-btn').style.display = '';
+    $('subs-btn').addEventListener('click', openSubsModal);
+    $('subs-close').addEventListener('click', closeSubsModal);
+    $('subs-unhandled').addEventListener('change', loadSubs);
     loadCharacters();
 
     $('copy-btn').addEventListener('click', async () => {
