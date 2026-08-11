@@ -1872,7 +1872,6 @@ function parseChatBlocks(raw) {
 		);
 
 
-    const knownSpeakers = ["FTR", "WZD", "THF"];
     const whoClass = knownSpeakers.includes(who) ? `chat-${who}` : "";
 
     const nameHTML = who ? `<span class="chat-name">${who}:</span>` : "";
@@ -2262,6 +2261,37 @@ function parseChatBlocks(raw) {
         buildArchive();
       }
 
+      // ===== Character chat colors (data-driven; editable in the editor) =====
+      const DEFAULT_CHAR_COLORS = { FTR: '#ee2d36', WZD: '#4d74a8', THF: '#1b8d3d' };
+      let charColors = Object.assign({}, DEFAULT_CHAR_COLORS);
+      let knownSpeakers = Object.keys(charColors);
+      function injectCharColors(){
+        let el = document.getElementById('char-colors');
+        if (!el) { el = document.createElement('style'); el.id = 'char-colors'; document.head.appendChild(el); }
+        el.textContent = Object.entries(charColors).map(([name, hex]) =>
+          `.chat-${name} .chat-name,.chat-${name} .chat-msg,.chat-${name} .emoji{color:${hex}}`
+        ).join('\n');
+      }
+      function applyCharacters(map){
+        charColors = Object.assign({}, DEFAULT_CHAR_COLORS);
+        if (map && typeof map === 'object') {
+          for (const [k, v] of Object.entries(map)) {
+            if (/^[A-Za-z0-9_]+$/.test(k) && typeof v === 'string') charColors[k.toUpperCase()] = v;
+          }
+        }
+        knownSpeakers = Object.keys(charColors);
+        injectCharColors();
+      }
+      async function loadCharacters(){
+        applyCharacters(null); // inject defaults immediately
+        const FB = window.__DNGN_FB;
+        if (!FB || !FB.configured || !FB.db) return;
+        try {
+          const doc = await FB.db.collection('meta').doc('characters').get();
+          if (doc.exists) { applyCharacters(doc.data() || {}); setCaption(getCurrentPage()); }
+        } catch (e) { console.warn('[DNGN] characters load failed:', e); }
+      }
+
       function init(){
         const startPage = getPageFromURL();
         initNav();
@@ -2270,6 +2300,7 @@ function parseChatBlocks(raw) {
         initHelps();
         initKeyboardNav();
         initArchive();
+        loadCharacters();
         loadMeta();                    // async: raise totalPages + load dates (nav bounds / archive)
         renderPage(startPage, false);  // paint now; fetches this page's Firestore doc itself
       }

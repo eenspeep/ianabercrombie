@@ -354,6 +354,16 @@
     .lock-box { border: 2px solid #000; background: #fff; box-shadow: inset -2px -2px 0 #000, inset 2px 2px 0 #fff, 4px 4px 0 rgba(0,0,0,.2); padding: 22px 26px; max-width: 380px; display: grid; gap: 12px; }
     .lock-box h2 { font-size: 1rem; }
     .lock-box p { font-size: .82rem; line-height: 1.45; }
+
+    /* Reusable modal (Characters; Drafts/Submissions in later PRs) */
+    .modal-overlay { position: absolute; inset: 0; background: rgba(0,0,0,.35); display: none; place-items: center; z-index: 60; padding: 20px; }
+    .modal-overlay.show { display: grid; }
+    .modal-box { width: min(460px, 100%); max-height: 84%; display: flex; flex-direction: column; background: #fff; border: 2px solid #000; box-shadow: inset -2px -2px 0 #000, inset 2px 2px 0 #fff, 4px 4px 0 rgba(0,0,0,.25); }
+    .modal-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; background: #e0e0e0; border-bottom: 1px solid #000; padding: 6px 10px; font-weight: bold; }
+    .modal-body { padding: 12px; overflow-y: auto; display: grid; gap: 8px; }
+    .modal-foot { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-top: 1px solid #000; background: #f7f7f7; }
+    .char-row { display: grid; grid-template-columns: 1fr 46px auto; gap: 8px; align-items: center; }
+    .char-row input[type="color"] { width: 46px; height: 28px; padding: 0; border: 1px solid #000; }
   </style>
 </head>
 <body>
@@ -404,6 +414,22 @@
             <p id="lock-note" style="color:#a00;"></p>
           </div>
         </div>
+
+        <!-- Characters manager -->
+        <div class="modal-overlay" id="char-modal">
+          <div class="modal-box">
+            <div class="modal-head"><span>CHARACTERS</span><button type="button" class="mini-btn" id="char-close">✕</button></div>
+            <div class="modal-body">
+              <p class="hint">Speaker name (letters/numbers/underscore) → chat colour. Applies in the comic and this preview. FTR/WZD/THF are the defaults.</p>
+              <div id="char-rows"></div>
+              <button type="button" class="mini-btn" id="char-add">+ Add character</button>
+            </div>
+            <div class="modal-foot">
+              <button type="button" class="publish-btn" id="char-save">Save characters</button>
+              <span class="hint" id="char-status"></span>
+            </div>
+          </div>
+        </div>
         <div class="titlebar">
           <div class="title">PANEL_EDITOR.EXE</div>
           <div class="controls">
@@ -426,6 +452,7 @@
                 <button type="button" class="mini-btn" id="auth-btn" style="display:none;">Sign in</button>
                 <button type="button" class="publish-btn" id="load-page-btn" style="display:none; background:#e9e9e9;" disabled>Load page</button>
                 <button type="button" class="publish-btn" id="publish-btn" style="display:none;" disabled>Publish to site</button>
+                <button type="button" class="mini-btn" id="char-btn" style="display:none;">Characters</button>
               </div>
 
               <div class="row">
@@ -623,6 +650,39 @@
   }
 
   /* ===== CHAT PARSER (verbatim from comic.html) ===== */
+  // ===== Character chat colors (shared with comic.html; editable here) =====
+  const DEFAULT_CHAR_COLORS = { FTR: '#ee2d36', WZD: '#4d74a8', THF: '#1b8d3d' };
+  let charColors = Object.assign({}, DEFAULT_CHAR_COLORS);
+  let knownSpeakers = Object.keys(charColors);
+  function injectCharColors(){
+    let el = document.getElementById('char-colors');
+    if (!el) { el = document.createElement('style'); el.id = 'char-colors'; document.head.appendChild(el); }
+    el.textContent = Object.entries(charColors).map(([name, hex]) =>
+      `.chat-${name} .chat-name,.chat-${name} .chat-msg,.chat-${name} .emoji{color:${hex}}`
+    ).join('\n');
+  }
+  function applyCharacters(map){
+    charColors = Object.assign({}, DEFAULT_CHAR_COLORS);
+    if (map && typeof map === 'object') {
+      for (const [k, v] of Object.entries(map)) {
+        if (/^[A-Za-z0-9_]+$/.test(k) && typeof v === 'string') charColors[k.toUpperCase()] = v;
+      }
+    }
+    knownSpeakers = Object.keys(charColors);
+    injectCharColors();
+  }
+  async function loadCharacters(){
+    applyCharacters(null); // defaults immediately
+    const FB = window.__DNGN_FB;
+    if (FB && FB.configured && FB.db) {
+      try {
+        const doc = await FB.db.collection('meta').doc('characters').get();
+        if (doc.exists) applyCharacters(doc.data() || {});
+      } catch (e) { console.warn('[characters] load failed:', e); }
+    }
+    try { update(); } catch (e) {}
+  }
+
   function parseChatBlocks(raw) {
     const CHAT_RE = /\[chat([^\]]*)\]([\s\S]*?)\[\/chat\]/gi;
     function parseAttrs(attrStr) {
@@ -645,7 +705,6 @@
         .replace(/\^(.*?)\^/g, '<span class="wavy">$1</span>')
         .replace(/\{(.*?)\}/g, '<span class="shiny">$1</span>');
       msg = msg.replace(/([\p{Extended_Pictographic}])/gu, '<span class="emoji">$1</span>');
-      const knownSpeakers = ["FTR", "WZD", "THF"];
       const whoClass = knownSpeakers.includes(who) ? `chat-${who}` : "";
       const nameHTML = who ? `<span class="chat-name">${who}:</span>` : "";
       const spacer = who ? " " : "";
@@ -1115,6 +1174,47 @@
     } catch (e){ console.error(e); alert('Load failed: ' + (e && e.message || e)); setStatus('Load failed'); }
   }
 
+  /* ---- Characters manager ---- */
+  function addCharRow(name, hex){
+    const wrap = document.getElementById('char-rows');
+    const row = document.createElement('div'); row.className = 'char-row';
+    const safeName = (name || '').replace(/"/g, '');
+    const safeHex = /^#[0-9a-fA-F]{6}$/.test(hex || '') ? hex : '#888888';
+    row.innerHTML = `<input type="text" class="c-name" placeholder="NAME" value="${safeName}">`
+      + `<input type="color" class="c-hex" value="${safeHex}">`
+      + `<button type="button" class="mini-btn c-del">✕</button>`;
+    wrap.appendChild(row);
+    row.querySelector('.c-del').addEventListener('click', () => row.remove());
+  }
+  function openCharModal(){
+    const wrap = document.getElementById('char-rows'); wrap.innerHTML = '';
+    Object.entries(charColors).forEach(([n, h]) => addCharRow(n, h));
+    document.getElementById('char-status').textContent = '';
+    document.getElementById('char-modal').classList.add('show');
+  }
+  function closeCharModal(){ document.getElementById('char-modal').classList.remove('show'); }
+  async function saveCharacters(){
+    const rows = Array.from(document.querySelectorAll('#char-rows .char-row'));
+    const map = {};
+    for (const r of rows){
+      const name = (r.querySelector('.c-name').value || '').trim().toUpperCase();
+      const hex = r.querySelector('.c-hex').value;
+      if (!name) continue;
+      if (!/^[A-Za-z0-9_]+$/.test(name)){ alert('Character name "' + name + '" must be letters, numbers, or underscore only (no spaces).'); return; }
+      map[name] = hex;
+    }
+    applyCharacters(map);
+    update();
+    const st = document.getElementById('char-status');
+    if (!FB.configured || !FB.db){ st.textContent = 'Applied to preview (Firebase not configured).'; return; }
+    if (!isOwner()){ alert('Sign in as the owner to save characters.'); return; }
+    st.textContent = 'Saving…';
+    try {
+      await FB.db.collection('meta').doc('characters').set(map);
+      st.textContent = 'Saved ✓'; setTimeout(closeCharModal, 700);
+    } catch (e){ console.error(e); st.textContent = 'Save failed: ' + (e && e.message || e); }
+  }
+
   /* ---- Wire up ---- */
   function wire(){
     ['f-page','f-title','f-source','f-text','f-style','f-columns','f-layout-tall']
@@ -1135,6 +1235,12 @@
     wireAuth();
     $('publish-btn').addEventListener('click', publish);
     $('load-page-btn').addEventListener('click', loadFromSite);
+    if (FB.configured) $('char-btn').style.display = '';
+    $('char-btn').addEventListener('click', openCharModal);
+    $('char-close').addEventListener('click', closeCharModal);
+    $('char-add').addEventListener('click', () => addCharRow('', '#888888'));
+    $('char-save').addEventListener('click', saveCharacters);
+    loadCharacters();
 
     $('copy-btn').addEventListener('click', async () => {
       const ta = $('export');
