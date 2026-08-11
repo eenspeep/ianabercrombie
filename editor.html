@@ -364,6 +364,10 @@
     .modal-foot { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-top: 1px solid #000; background: #f7f7f7; }
     .char-row { display: grid; grid-template-columns: 1fr 46px auto; gap: 8px; align-items: center; }
     .char-row input[type="color"] { width: 46px; height: 28px; padding: 0; border: 1px solid #000; }
+    #drafts-list { display: grid; gap: 6px; }
+    .draft-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; border: 1px solid #000; background: #fff; padding: 6px 8px; }
+    .draft-meta { font-size: .85rem; }
+    .draft-actions { display: flex; gap: 4px; }
   </style>
 </head>
 <body>
@@ -430,6 +434,25 @@
             </div>
           </div>
         </div>
+
+        <!-- Drafts -->
+        <div class="modal-overlay" id="drafts-modal">
+          <div class="modal-box">
+            <div class="modal-head"><span>DRAFTS</span><button type="button" class="mini-btn" id="drafts-close">✕</button></div>
+            <div class="modal-body">
+              <div class="row" style="gap:8px; align-items:center;">
+                <input type="text" id="draft-label" placeholder="Draft label (optional)" style="flex:1 1 auto;">
+                <button type="button" class="publish-btn" id="draft-save" style="background:#e9e9e9;">Save current as draft</button>
+              </div>
+              <p class="hint">Prep several pages, then drop them all at once. Each draft stores its target page # and uploaded art.</p>
+              <div id="drafts-list"></div>
+            </div>
+            <div class="modal-foot">
+              <button type="button" class="publish-btn" id="drafts-publish-all">Publish all</button>
+              <span class="hint" id="drafts-status"></span>
+            </div>
+          </div>
+        </div>
         <div class="titlebar">
           <div class="title">PANEL_EDITOR.EXE</div>
           <div class="controls">
@@ -453,6 +476,7 @@
                 <button type="button" class="publish-btn" id="load-page-btn" style="display:none; background:#e9e9e9;" disabled>Load page</button>
                 <button type="button" class="publish-btn" id="publish-btn" style="display:none;" disabled>Publish to site</button>
                 <button type="button" class="mini-btn" id="char-btn" style="display:none;">Characters</button>
+                <button type="button" class="mini-btn" id="drafts-btn" style="display:none;">Drafts</button>
               </div>
 
               <div class="row">
@@ -467,6 +491,10 @@
                     <option value="user">user → SPECTATOR COMMAND</option>
                     <option value="author">author → AUTHOR COMMAND</option>
                   </select>
+                </div>
+                <div class="fld" style="flex:0 0 160px;">
+                  <label for="f-date">Date posted <span class="hint">(archive)</span></label>
+                  <input type="date" id="f-date" />
                 </div>
               </div>
 
@@ -1040,6 +1068,61 @@
     $('lock-signin').addEventListener('click', doSignIn);
   }
 
+  // ---- Shared publish helpers (used by Publish and Drafts) ----
+  async function uploadPanelImages(rows, page){
+    const panels = [];
+    for (let i = 0; i < rows.length; i++){
+      const row = rows[i];
+      const flash = row.querySelector('.p-flash').checked;
+      const p = {};
+      if (flash){ p.flash = true; const swf = row.querySelector('.p-swf').value.trim(); if (swf) p.swf = swf; panels.push(p); continue; }
+      const tall = row.querySelector('.p-tall').value; if (tall) p.tall = tall;
+      const suffix = row.querySelector('.p-suffix').value.trim(); if (suffix) p.suffix = suffix;
+      let imgUrl = row.querySelector('.p-img').value || '';
+      if (row._file){
+        const safe = row._file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const ref = FB.storage.ref('panels/' + page + '/' + i + '-' + safe);
+        setStatus('Uploading image ' + (i + 1) + '…');
+        await ref.put(row._file);
+        imgUrl = await ref.getDownloadURL();
+        row.querySelector('.p-img').value = imgUrl; row._file = null; row._previewURL = null;
+      }
+      if (imgUrl) p.img = imgUrl;
+      panels.push(p);
+    }
+    return panels;
+  }
+
+  function assembleDoc(panels){
+    const doc = { text: $('f-text').value || '' };
+    const title = $('f-title').value.trim(); if (title) doc.title = title;
+    const source = $('f-source').value; if (source) doc.source = source;
+    const flairs = collectFlairs(); if (flairs.length) doc.flairs = flairs;
+    const style = $('f-style').value; if (style) doc.style = style;
+    doc.columns = parseInt($('f-columns').value, 10) || 1;
+    const layoutTall = $('f-layout-tall').value; if (layoutTall) doc.tall = layoutTall;
+    const date = $('f-date').value; if (date) doc.date = date;
+    doc.panels = panels;
+    return doc;
+  }
+
+  // Write a page doc to pages/{page} and keep meta/site (latestPage + dates) in sync.
+  async function publishPageDoc(page, doc){
+    doc.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+    doc.updatedBy = currentUser.uid;
+    await FB.db.collection('pages').doc(String(page)).set(doc);
+    try {
+      const metaRef = FB.db.collection('meta').doc('site');
+      await FB.db.runTransaction(async tx => {
+        const m = await tx.get(metaRef);
+        const cur = (m.exists && m.data().latestPage) || 0;
+        const dates = (m.exists && m.data().dates) || {};
+        if (doc.date) dates[page] = doc.date;
+        tx.set(metaRef, { latestPage: Math.max(cur, page), dates }, { merge: true });
+      });
+    } catch (e){ console.warn('meta update skipped:', e); }
+  }
+
   async function publish(){
     if (!FB.configured || !FB.db){ alert('Firebase not configured — see FIREBASE_SETUP.md.'); return; }
     if (!isOwner()){ alert('Sign in as the owner account to publish.'); return; }
@@ -1047,52 +1130,10 @@
     const pub = $('publish-btn'); const label = pub.textContent;
     pub.disabled = true; pub.textContent = 'Publishing…'; setStatus('Publishing page ' + page + '…');
     try {
-      // Upload any chosen panel images, then assemble the final panels array.
       const rows = Array.from(document.querySelectorAll('#panel-rows .panel-row'));
-      const panels = [];
-      for (let i = 0; i < rows.length; i++){
-        const row = rows[i];
-        const flash = row.querySelector('.p-flash').checked;
-        const p = {};
-        if (flash){ p.flash = true; const swf = row.querySelector('.p-swf').value.trim(); if (swf) p.swf = swf; panels.push(p); continue; }
-        const tall = row.querySelector('.p-tall').value; if (tall) p.tall = tall;
-        const suffix = row.querySelector('.p-suffix').value.trim(); if (suffix) p.suffix = suffix;
-        let imgUrl = row.querySelector('.p-img').value || '';
-        if (row._file){
-          const safe = row._file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-          const ref = FB.storage.ref('panels/' + page + '/' + i + '-' + safe);
-          setStatus('Uploading image ' + (i + 1) + '…');
-          await ref.put(row._file);
-          imgUrl = await ref.getDownloadURL();
-          row.querySelector('.p-img').value = imgUrl; row._file = null; row._previewURL = null;
-        }
-        if (imgUrl) p.img = imgUrl;
-        panels.push(p);
-      }
-
-      const doc = { text: $('f-text').value || '' };
-      const title = $('f-title').value.trim(); if (title) doc.title = title;
-      const source = $('f-source').value; if (source) doc.source = source;
-      const flairs = collectFlairs(); if (flairs.length) doc.flairs = flairs;
-      const style = $('f-style').value; if (style) doc.style = style;
-      doc.columns = parseInt($('f-columns').value, 10) || 1;
-      const layoutTall = $('f-layout-tall').value; if (layoutTall) doc.tall = layoutTall;
-      doc.panels = panels;
-      doc.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
-      doc.updatedBy = currentUser.uid;
-
-      await FB.db.collection('pages').doc(String(page)).set(doc);
-
-      // Keep meta/site.latestPage in sync so new pages are reachable in the comic.
-      try {
-        const metaRef = FB.db.collection('meta').doc('site');
-        await FB.db.runTransaction(async tx => {
-          const m = await tx.get(metaRef);
-          const cur = (m.exists && m.data().latestPage) || 0;
-          tx.set(metaRef, { latestPage: Math.max(cur, page) }, { merge: true });
-        });
-      } catch (e){ console.warn('meta latestPage update skipped:', e); }
-
+      const panels = await uploadPanelImages(rows, page);
+      const doc = assembleDoc(panels);
+      await publishPageDoc(page, doc);
       setStatus('Published page ' + page + ' ✓');
       pub.textContent = 'Published ✓';
       setTimeout(() => { pub.textContent = label; }, 1400);
@@ -1110,6 +1151,7 @@
     $('f-style').value = d.style || '';
     $('f-columns').value = String(d.columns || 1);
     $('f-layout-tall').value = d.tall || '';
+    $('f-date').value = d.date || '';
     extraFlairs.length = 0;
     document.querySelectorAll('.f-flair').forEach(c => c.checked = false);
     (Array.isArray(d.flairs) ? d.flairs : []).forEach(f => {
@@ -1215,6 +1257,96 @@
     } catch (e){ console.error(e); st.textContent = 'Save failed: ' + (e && e.message || e); }
   }
 
+  /* ---- Drafts (Firestore, owner-only; batch-publish) ---- */
+  function draftToPageDoc(d){
+    const doc = { text: d.text || '', columns: d.columns || 1, panels: (Array.isArray(d.panels) && d.panels.length) ? d.panels : [{}] };
+    if (d.title) doc.title = d.title;
+    if (d.source) doc.source = d.source;
+    if (Array.isArray(d.flairs) && d.flairs.length) doc.flairs = d.flairs;
+    if (d.style) doc.style = d.style;
+    if (d.tall) doc.tall = d.tall;
+    if (d.date) doc.date = d.date;
+    return doc;
+  }
+  async function saveDraft(){
+    if (!FB.configured || !FB.db){ alert('Firebase not configured.'); return; }
+    if (!isOwner()){ alert('Sign in as the owner to save drafts.'); return; }
+    const page = currentPage();
+    const st = $('drafts-status'); st.textContent = 'Saving draft…';
+    try {
+      const rows = Array.from(document.querySelectorAll('#panel-rows .panel-row'));
+      const panels = await uploadPanelImages(rows, page);
+      const doc = assembleDoc(panels);
+      doc.page = page;
+      doc.label = ($('draft-label').value || '').trim() || ('Page ' + page);
+      doc.savedAt = firebase.firestore.FieldValue.serverTimestamp();
+      doc.savedBy = currentUser.uid;
+      await FB.db.collection('drafts').add(doc);
+      $('draft-label').value = '';
+      st.textContent = 'Draft saved ✓';
+      loadDrafts();
+    } catch (e){ console.error(e); st.textContent = 'Save failed: ' + (e && e.message || e); }
+  }
+  async function loadDrafts(){
+    const list = $('drafts-list');
+    if (!FB.configured || !FB.db){ list.innerHTML = '<p class="hint">Firebase not configured.</p>'; return; }
+    if (!isOwner()){ list.innerHTML = '<p class="hint">Sign in as the owner to see drafts.</p>'; return; }
+    list.innerHTML = '<p class="hint">Loading…</p>';
+    try {
+      const snap = await FB.db.collection('drafts').orderBy('savedAt', 'desc').get();
+      if (snap.empty){ list.innerHTML = '<p class="hint">No drafts yet.</p>'; return; }
+      list.innerHTML = '';
+      snap.forEach(ds => {
+        const d = ds.data() || {}; const id = ds.id;
+        const row = document.createElement('div'); row.className = 'draft-row';
+        const lbl = String(d.label || '(untitled)').replace(/</g, '&lt;');
+        row.innerHTML = `<span class="draft-meta"><b>${lbl}</b> · p${d.page || '?'}</span>`
+          + `<span class="draft-actions"><button type="button" class="mini-btn" data-a="load">Load</button>`
+          + ` <button type="button" class="mini-btn" data-a="pub">Publish</button>`
+          + ` <button type="button" class="mini-btn" data-a="del">✕</button></span>`;
+        row.querySelector('[data-a="load"]').addEventListener('click', () => { loadDraftIntoForm(d); closeDraftsModal(); });
+        row.querySelector('[data-a="pub"]').addEventListener('click', () => publishDraft(id, d));
+        row.querySelector('[data-a="del"]').addEventListener('click', () => deleteDraft(id));
+        list.appendChild(row);
+      });
+    } catch (e){ console.error(e); list.innerHTML = '<p class="hint">Load failed: ' + (e && e.message || e) + '</p>'; }
+  }
+  function loadDraftIntoForm(d){ $('f-page').value = d.page || 1; populateForm(d); }
+  async function publishDraft(id, d){
+    if (!isOwner()) return;
+    const page = Number(d.page) || currentPage();
+    const st = $('drafts-status'); st.textContent = 'Publishing draft (p' + page + ')…';
+    try {
+      await publishPageDoc(page, draftToPageDoc(d));
+      await FB.db.collection('drafts').doc(id).delete();
+      st.textContent = 'Published p' + page + ' ✓';
+      loadDrafts();
+    } catch (e){ console.error(e); st.textContent = 'Publish failed: ' + (e && e.message || e); }
+  }
+  async function publishAllDrafts(){
+    if (!isOwner()) return;
+    const st = $('drafts-status');
+    try {
+      const snap = await FB.db.collection('drafts').orderBy('page').get();
+      if (snap.empty){ st.textContent = 'No drafts to publish.'; return; }
+      let n = 0;
+      for (const ds of snap.docs){
+        const d = ds.data() || {}; const page = Number(d.page) || 0; if (!page) continue;
+        st.textContent = 'Publishing p' + page + '…';
+        await publishPageDoc(page, draftToPageDoc(d));
+        await FB.db.collection('drafts').doc(ds.id).delete();
+        n++;
+      }
+      st.textContent = 'Published ' + n + ' draft(s) ✓';
+      loadDrafts();
+    } catch (e){ console.error(e); st.textContent = 'Publish all failed: ' + (e && e.message || e); }
+  }
+  async function deleteDraft(id){
+    try { await FB.db.collection('drafts').doc(id).delete(); loadDrafts(); } catch (e){ console.error(e); }
+  }
+  function openDraftsModal(){ $('drafts-status').textContent = ''; $('drafts-modal').classList.add('show'); loadDrafts(); }
+  function closeDraftsModal(){ $('drafts-modal').classList.remove('show'); }
+
   /* ---- Wire up ---- */
   function wire(){
     ['f-page','f-title','f-source','f-text','f-style','f-columns','f-layout-tall']
@@ -1240,6 +1372,11 @@
     $('char-close').addEventListener('click', closeCharModal);
     $('char-add').addEventListener('click', () => addCharRow('', '#888888'));
     $('char-save').addEventListener('click', saveCharacters);
+    if (FB.configured) $('drafts-btn').style.display = '';
+    $('drafts-btn').addEventListener('click', openDraftsModal);
+    $('drafts-close').addEventListener('click', closeDraftsModal);
+    $('draft-save').addEventListener('click', saveDraft);
+    $('drafts-publish-all').addEventListener('click', publishAllDrafts);
     loadCharacters();
 
     $('copy-btn').addEventListener('click', async () => {
