@@ -525,6 +525,13 @@
     /* First/Prev at page 1, Next/Latest at the last page */
     .nav-disabled { opacity: .4; pointer-events: none; }
 
+    /* Archive dropdown: scrollable list of pages; read links go purple */
+    .archive-dropdown { padding: 0 !important; }
+    .archive-list { max-height: 50vh; overflow-y: auto; min-width: 240px; }
+    .archive-link { display: block; padding: 4px 10px; text-decoration: none; color: #0000ee; white-space: nowrap; font-size: .95em; }
+    .archive-link:hover { background: #eef3ff; }
+    .archive-link.read { color: #551a8b; } /* purple = already read */
+
     .button-bar input[type="number"] {
       width: 64px;
       text-align: center;
@@ -920,10 +927,10 @@
               </div>
             </div>
           </div>
-          <div class="menu-item" data-menu="view">
-            <span class="menu-label">View</span>
-            <div class="menu-dropdown" data-menu-panel="view">
-              <button type="button" data-view="archival">ARCHIVAL MODE (WIP)</button>
+          <div class="menu-item" data-menu="archive">
+            <span class="menu-label">Archive</span>
+            <div class="menu-dropdown archive-dropdown" data-menu-panel="archive">
+              <div class="archive-list" id="archive-list"></div>
             </div>
           </div>
           <div class="menu-item" data-menu="help">
@@ -1251,6 +1258,154 @@
 
     (function(){
       let totalPages = 143;
+      // First-published dates for the built-in pages, backfilled from git history
+      // (page image add-dates). Firestore pages override these via meta.dates.
+      const BUILTIN_DATES = {
+  1: "2025-09-25",
+  2: "2025-09-25",
+  3: "2025-09-25",
+  4: "2025-09-25",
+  5: "2025-09-25",
+  6: "2025-09-25",
+  7: "2025-09-25",
+  8: "2025-09-25",
+  9: "2025-09-25",
+  10: "2025-09-25",
+  11: "2025-09-25",
+  12: "2025-09-25",
+  13: "2025-09-25",
+  14: "2025-09-25",
+  15: "2025-09-25",
+  16: "2025-09-25",
+  17: "2025-09-25",
+  18: "2025-09-25",
+  19: "2025-09-25",
+  20: "2025-09-25",
+  21: "2025-09-25",
+  22: "2025-09-25",
+  23: "2025-09-25",
+  24: "2025-09-25",
+  25: "2025-09-25",
+  26: "2025-09-25",
+  27: "2025-09-25",
+  28: "2025-09-25",
+  29: "2025-09-25",
+  30: "2025-09-25",
+  31: "2025-09-25",
+  32: "2025-09-25",
+  33: "2025-09-25",
+  34: "2025-09-25",
+  35: "2025-09-25",
+  36: "2025-09-25",
+  37: "2025-09-25",
+  38: "2025-09-26",
+  39: "2025-09-30",
+  40: "2025-09-30",
+  41: "2025-09-30",
+  42: "2025-09-30",
+  43: "2025-09-30",
+  44: "2025-09-30",
+  45: "2025-09-30",
+  46: "2025-09-30",
+  47: "2025-09-30",
+  48: "2025-09-30",
+  49: "2025-09-30",
+  50: "2025-10-01",
+  51: "2025-10-02",
+  52: "2025-10-02",
+  53: "2025-10-02",
+  54: "2025-10-02",
+  55: "2025-10-02",
+  56: "2025-10-02",
+  57: "2025-10-02",
+  58: "2025-10-04",
+  59: "2025-10-04",
+  60: "2025-10-05",
+  61: "2025-10-06",
+  62: "2025-10-06",
+  63: "2025-10-06",
+  64: "2025-10-06",
+  65: "2025-10-07",
+  66: "2025-10-07",
+  67: "2025-10-08",
+  68: "2025-10-08",
+  69: "2025-10-09",
+  70: "2025-10-09",
+  71: "2025-10-09",
+  72: "2025-10-09",
+  73: "2025-10-09",
+  74: "2025-10-09",
+  75: "2025-10-10",
+  76: "2025-10-10",
+  77: "2025-10-10",
+  78: "2025-10-10",
+  79: "2025-10-10",
+  80: "2025-10-10",
+  81: "2025-10-16",
+  82: "2025-10-16",
+  83: "2025-10-16",
+  84: "2025-10-16",
+  85: "2025-10-16",
+  86: "2025-10-16",
+  87: "2025-10-16",
+  88: "2025-10-16",
+  89: "2025-10-16",
+  90: "2025-10-16",
+  91: "2025-10-16",
+  92: "2025-10-16",
+  93: "2025-10-21",
+  94: "2025-10-21",
+  95: "2025-10-21",
+  96: "2025-10-21",
+  97: "2025-10-21",
+  98: "2025-10-21",
+  99: "2025-10-21",
+  100: "2025-10-21",
+  101: "2025-10-21",
+  102: "2025-10-22",
+  103: "2025-10-22",
+  104: "2025-10-22",
+  105: "2025-10-22",
+  106: "2025-10-22",
+  107: "2025-10-22",
+  108: "2025-10-23",
+  109: "2025-10-23",
+  110: "2025-10-23",
+  111: "2025-10-30",
+  112: "2025-11-25",
+  113: "2025-11-25",
+  114: "2025-11-25",
+  115: "2025-11-25",
+  116: "2025-11-25",
+  117: "2025-11-25",
+  118: "2025-11-25",
+  119: "2025-11-25",
+  120: "2025-11-25",
+  121: "2025-11-25",
+  122: "2025-11-25",
+  123: "2025-11-27",
+  124: "2025-11-27",
+  125: "2025-11-27",
+  126: "2025-11-27",
+  127: "2025-11-29",
+  128: "2025-11-29",
+  129: "2025-11-29",
+  130: "2025-11-29",
+  131: "2025-11-29",
+  132: "2025-11-29",
+  133: "2025-11-29",
+  134: "2025-12-02",
+  135: "2025-12-02",
+  136: "2025-12-02",
+  137: "2025-12-02",
+  138: "2025-12-02",
+  139: "2025-12-02",
+  140: "2025-12-03",
+  141: "2025-12-03",
+  142: "2025-12-03",
+  143: "2025-12-03",
+      };
+
       const captions = {
         1: { text: `Before you stands a bridge into darkness. Across the bridge, the DNGN. Your journey begins here. Humble. Unencumbered. Fastidious. Forthright? Brave... wait a second. Who is that?` },
         2: { text: `Hold on. Why don't we move some things out of the way?` },
@@ -2075,6 +2230,38 @@ function parseChatBlocks(raw) {
         }
       }
 
+      // ===== Archive (collapsed menu → list of pages with dates; read = purple) =====
+      function dateFor(page){
+        const md = (metaCache && metaCache.dates) ? metaCache.dates[page] : null;
+        return md || BUILTIN_DATES[page] || "???";
+      }
+      function buildArchive(){
+        const list = document.getElementById('archive-list');
+        if (!list) return;
+        let html = '';
+        for (let n = 1; n <= totalPages; n++){
+          const readCls = isRead(n) ? ' read' : '';
+          html += `<a class="archive-link${readCls}" href="?page=${n}" data-nav-page="${n}">Page ${n} — ${dateFor(n)}</a>`;
+        }
+        list.innerHTML = html;
+      }
+      function initArchive(){
+        const item = document.querySelector('.menu-item[data-menu="archive"]');
+        const list = document.getElementById('archive-list');
+        if (!item || !list) return;
+        const label = item.querySelector('.menu-label');
+        if (label) label.addEventListener('click', buildArchive); // refresh each time it opens
+        list.addEventListener('click', (e) => {
+          const a = e.target.closest('.archive-link');
+          if (!a) return;
+          e.preventDefault();
+          item.classList.remove('menu-open');                     // close the menu
+          const n = parseInt(a.getAttribute('data-nav-page'), 10);
+          if (!isNaN(n)) goToPage(n);
+        });
+        buildArchive();
+      }
+
       function init(){
         const startPage = getPageFromURL();
         initNav();
@@ -2082,6 +2269,7 @@ function parseChatBlocks(raw) {
         initSaveLoad();
         initHelps();
         initKeyboardNav();
+        initArchive();
         loadMeta();                    // async: raise totalPages + load dates (nav bounds / archive)
         renderPage(startPage, false);  // paint now; fetches this page's Firestore doc itself
       }
